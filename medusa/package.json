@@ -1,0 +1,26 @@
+{
+  "name": "threeweeq-medusa",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "medusa develop",
+    "build": "medusa build",
+    "start": "medusa start",
+    "db:migrate": "medusa db:migrate",
+    "db:rollback": "medusa db:rollback",
+    "seed": "medusa exec ./src/scripts/seed.ts"
+  },
+  "dependencies": {
+    "@medusajs/admin-sdk": "2.22.0",
+    "@medusajs/cli": "2.22.0",
+    "@medusajs/framework": "2.22.0",
+    "@medusajs/medusa": "2.22.0",
+    "express": "^4.21.2",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20",
+    "typescript": "^5"
+  }
+}

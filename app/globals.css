@@ -1,0 +1,478 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Self-hosted brand fonts (local WOFF2 in /public/fonts — zero external
+   requests). Arabic (Lyon Arabic Display) covers every Arabic glyph; Latin
+   (Ador Hairline) covers Latin glyphs, digits and punctuation. `unicode-range`
+   keeps the two families from ever competing: each glyph resolves to its
+   script's file in BOTH theme tokens below.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Lyon Arabic Display";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 700;
+  src: url(/fonts/lyon-arabic-display-regular.woff2) format("woff2");
+  unicode-range: U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC,U+102E0-102FB,U+10E60-10E7E,U+10EC2-10EC4,U+10EFC-10EFF,U+1EE00-1EE03,U+1EE05-1EE1F,U+1EE21-1EE22,U+1EE24,U+1EE27,U+1EE29-1EE32,U+1EE34-1EE37,U+1EE39,U+1EE3B,U+1EE42,U+1EE47,U+1EE49,U+1EE4B,U+1EE4D-1EE4F,U+1EE51-1EE52,U+1EE54,U+1EE57,U+1EE59,U+1EE5B,U+1EE5D,U+1EE5F,U+1EE61-1EE62,U+1EE64,U+1EE67-1EE6A,U+1EE6C-1EE72,U+1EE74-1EE77,U+1EE79-1EE7C,U+1EE7E,U+1EE80-1EE89,U+1EE8B-1EE9B,U+1EEA1-1EEA3,U+1EEA5-1EEA9,U+1EEAB-1EEBB,U+1EEF0-1EEF1;
+}
+
+@font-face {
+  font-family: "Ador Hairline";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 700;
+  src: url(/fonts/ador-hairline-bold.woff2) format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@theme inline {
+  /* One breakpoint for the whole experience: phone composition → desktop at
+     1024px (Tailwind's default `md` remapped onto the same 64rem line). */
+  --breakpoint-md: 64rem;
+
+  --font-primary: "Lyon Arabic Display", "Ador Hairline", "Segoe UI", Tahoma, Arial, sans-serif;
+  --font-secondary: "Ador Hairline", "Lyon Arabic Display", "Segoe UI", Tahoma, Arial, sans-serif;
+
+  /* Brand palette — four colours only: midnight navy depth, deep navy for
+     secondary surfaces, gold accent, sand text.
+     Contrast measured against midnight navy (#020A14):
+       sand 100% 15.21 | sand 80% 10.15 | sand 70% 8.06  → all sizes OK
+       gold 100% 6.82 | gold 90% 5.76                    → all sizes OK
+       gold 80% 4.87 | gold 70% 4.08                    → large type only
+     Running text sits at sand 80% (10.15:1) so the page never reads thin. */
+  --color-royal-navy: #020a14;
+  --color-deep-navy: #061b30;
+  --color-gold: #b58e4b;
+  --color-sand: #e8dcc8;
+
+  /* Type scale — one ladder used by every section. */
+  --text-display: clamp(2.5rem, 6vw, 5rem);
+  --text-display--line-height: 1.12;
+  --text-lead: clamp(1.125rem, 1.4vw, 1.375rem);
+  --text-lead--line-height: 1.65;
+  --text-h2: clamp(1.75rem, 3.2vw, 3rem);
+  --text-h2--line-height: 1.22;
+  --text-h3: clamp(1.375rem, 2vw, 1.75rem);
+  --text-h3--line-height: 1.35;
+  --text-body: clamp(1rem, 1.1vw, 1.125rem);
+  --text-body--line-height: 1.7;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.55;
+  --text-micro: 0.75rem;
+  --text-micro--line-height: 1.4;
+
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  --background: #020a14;
+  --foreground: #e8dcc8;
+}
+
+html {
+  background-color: var(--background);
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
+/* The room behind the page: one fixed pool of deep navy at the centre that
+   falls away to midnight navy at the edges. Fixed, so the glow stays put
+   while the content moves over it. */
+body {
+  color: var(--foreground);
+  font-family: var(--font-secondary);
+  background-color: var(--background);
+  background-image: radial-gradient(
+    ellipse 90% 70% at 50% 40%,
+    #061b30 0%,
+    #020a14 78%
+  );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
+
+::selection {
+  background: #b58e4b;
+  color: #061b30;
+}
+
+:focus-visible {
+  outline: 1px solid rgba(232, 220, 200, 0.7);
+  outline-offset: 3px;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a,
+button {
+  touch-action: manipulation;
+}
+
+button {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   Arabic typography guardrails.
+
+   Latin display type (Ador Hairline) wants wide tracking to feel luxurious.
+   Arabic (Lyon Arabic Display) must never be letter-spaced: tracked Arabic
+   breaks the cursive joins between letters and reads as broken type.
+   `font-primary` is the Arabic-first family token, so its tracking is pinned
+   to 0. Latin display type uses `font-secondary` (Ador Hairline) instead —
+   that one keeps its tracking utilities.
+   ========================================================================== */
+
+.font-primary {
+  letter-spacing: 0;
+  font-feature-settings: "liga" 1, "calt" 1;
+}
+
+/* ==========================================================================
+   The hero picture and its light.
+
+   The picture is the whole screen. It is held in a wrapper that runs two
+   percent past the section on every side, so the slow drift can grow the
+   frame for ever without ever uncovering an edge.
+
+   The shadow layer is the one gradient the site is allowed: a neutral
+   gradient (one colour, its alpha changing) that shapes the light on the
+   photograph so the type never stands on raw pixels. One ink — rgba(22,30,36)
+   — through four layers, because the site is judged on gradients that stay
+   one colour and change only their alpha; a tinted or hard-edged gradient
+   reads as decoration and is rejected.
+
+     1. the light  — a wide ellipse over the arch, open in the middle so
+                     the gate keeps its glow, closing as it leaves
+     2. the shadow — a pool under the type column, soft enough that the
+                     light above it survives
+     3. the lens  — a vignette that closes the corners of the frame
+     4. the floor  — the foot of the screen settles into the dark
+
+   On a phone the picture is read differently: the type sits at the top and
+   the gate stands clear in the middle, so the layers turn vertical — dark
+   under the type, open over the gate, dark again under the foot.
+   ========================================================================== */
+
+.hero-drift {
+  position: absolute;
+  inset: -2%;
+  z-index: 0;
+}
+
+.hero-media {
+  object-position: var(--hero-position, 50% 50%);
+}
+
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  background-image:
+    linear-gradient(
+      to left,
+      rgba(6, 27, 48, 0.9) 0%,
+      rgba(6, 27, 48, 0) 40%
+    ),
+    radial-gradient(
+      circle at 40% 50%,
+      rgba(6, 27, 48, 0) 0%,
+      rgba(6, 27, 48, 0) 25%,
+      rgba(6, 27, 48, 0.5) 60%,
+      rgba(6, 27, 48, 0.95) 100%
+    );
+}
+
+@media (max-width: 63.999rem) {
+  .hero-media {
+    object-position: var(--hero-position-narrow, 50% 50%);
+  }
+
+  .hero-scrim {
+    background-image:
+      radial-gradient(
+        120% 78% at 50% 46%,
+        rgba(22, 30, 36, 0) 40%,
+        rgba(22, 30, 36, 0.28) 70%,
+        rgba(22, 30, 36, 0.6) 88%,
+        rgba(22, 30, 36, 0.82) 100%
+      ),
+      linear-gradient(
+        to bottom,
+        rgba(22, 30, 36, 0.95) 0%,
+        rgba(22, 30, 36, 0.92) 34%,
+        rgba(22, 30, 36, 0.55) 48%,
+        rgba(22, 30, 36, 0.12) 60%,
+        rgba(22, 30, 36, 0.08) 74%,
+        rgba(22, 30, 36, 0.45) 88%,
+        rgba(22, 30, 36, 0.78) 100%
+      );
+  }
+}
+
+/* ==========================================================================
+   Motion layer.
+
+   One curve for the whole site: `--ease-out-expo` (cubic-bezier .22 1 .36 1).
+   One rule: every hidden state lives inside `prefers-reduced-motion:
+   no-preference`, so the reduced page is the finished page and no loop runs
+   when the visitor asked for stillness.
+
+    Contract:
+      hero type parts  — 0.8s, fade + 12px rise (8px on a phone), 0–240ms
+      hero photograph  — 0.8s, scale .98 → 1, no travel, then a slow drift
+      hero parallax    — pointer: picture −20px, type +10px, 1–1.2s,
+                         power2.out, written by GSAP; silent under
+                         `prefers-reduced-motion: reduce`
+      scroll reveals   — 1s, 12px rise (8px on a phone), 0.1s after entering
+      button feedback  — scale 1.01 hover / 0.99 press, 0.25s
+    ========================================================================== */
+
+:root {
+  --travel: 12px;
+}
+
+@media (max-width: 63.999rem) {
+  :root {
+    --travel: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-part-1 {
+    animation: hero-rise 800ms var(--ease-out-expo) both;
+  }
+
+  .hero-part-2 {
+    animation: hero-rise 800ms var(--ease-out-expo) both;
+  }
+
+  .hero-part-3 {
+    animation: hero-rise 800ms var(--ease-out-expo) 60ms both;
+  }
+
+  .hero-part-4 {
+    animation: hero-rise 800ms var(--ease-out-expo) 120ms both;
+  }
+
+  .hero-part-5 {
+    animation: hero-rise 800ms var(--ease-out-expo) 180ms both;
+  }
+
+  .hero-part-6 {
+    animation: hero-rise 800ms var(--ease-out-expo) 240ms both;
+  }
+
+  .hero-media {
+    animation: hero-settle 800ms var(--ease-out-expo) both;
+  }
+
+  .hero-drift {
+    animation: hero-drift 26s cubic-bezier(0.33, 1, 0.68, 1) infinite alternate;
+  }
+
+  .scroll-cue-mark {
+    animation: cue-lift 2400ms cubic-bezier(0.33, 1, 0.68, 1) infinite;
+    animation-play-state: paused;
+  }
+
+  [data-playing="true"] .scroll-cue-mark {
+    animation-play-state: running;
+  }
+
+  [data-reveal="out"] {
+    opacity: 0;
+    transform: translateY(var(--travel));
+    transition:
+      opacity 1000ms var(--ease-out-expo) 100ms,
+      transform 1000ms var(--ease-out-expo) 100ms;
+  }
+
+  [data-reveal="in"] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The primary button: one pass of champagne light across the gold, on hover
+   or keyboard focus. The band rests outside the button, so nothing shows at
+   rest and an interrupted pass simply stops. */
+.cta-sheen {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 40%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-160%) skewX(-12deg);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .group:hover .cta-sheen,
+  .group:focus-visible .cta-sheen {
+    animation: cta-sheen 700ms var(--ease-out-expo);
+  }
+}
+
+@keyframes cta-sheen {
+  from {
+    transform: translateX(-160%) skewX(-12deg);
+  }
+  to {
+    transform: translateX(360%) skewX(-12deg);
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--travel));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-settle {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* The drift animates the `scale` property, not `transform`: the pointer
+   parallax writes a `transform` (translation) on the same element, and the
+   two compose — translate first, then scale — so neither cancels the other.
+   A CSS animation on `transform` would win over the inline style and the
+   picture would sit still under the pointer. The base scale is the
+   `scale-105` class on the element itself. */
+@keyframes hero-drift {
+  from {
+    scale: 1.05;
+  }
+  to {
+    scale: 1.085;
+  }
+}
+
+@keyframes cue-lift {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(8px);
+  }
+}
+
+/* ==========================================================================
+   The hero gallery.
+
+   Four civilizations, one picture at a time. The picture changes by itself
+   every few seconds and nothing else on the screen moves: the photograph
+   carries the transition name, so the browser captures it as a single image
+   and the swap is a dissolve between two pictures — the type, the buttons
+   and the caption stand still.
+
+   Everything here is motion, so it lives inside
+   `prefers-reduced-motion: no-preference`: with stillness asked for the
+   picture does not change at all (the component skips the transition and
+   never starts the timer).
+   ========================================================================== */
+
+.hero-photo {
+  view-transition-name: hero-photo;
+}
+
+/* the frames that are fetched but not shown: in the cache and in the
+   decoder, so the next swap has its pixels ready */
+.gallery-warm {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* the root holds everything that does not change: it is given its new
+     state at once, and only the picture animates */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  ::view-transition-group(hero-photo) {
+    animation-duration: 700ms;
+    animation-timing-function: var(--ease-out-expo);
+  }
+
+  ::view-transition-old(hero-photo) {
+    animation: gallery-out 700ms var(--ease-out-expo) both;
+  }
+
+  ::view-transition-new(hero-photo) {
+    animation: gallery-in 700ms var(--ease-out-expo) both;
+  }
+}
+
+@keyframes gallery-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes gallery-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

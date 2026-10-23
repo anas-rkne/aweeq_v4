@@ -1,0 +1,1742 @@
+3WWEQ — تحليل تفصيلي ومقترح معماري متكامل
+حالة المستند: مقترح للمراجعة والموافقة — لا يتضمن كود تنفيذي. ملاحظة تسمية: المستودع يعتمد 3WWEQ في PRODUCT.md وapp/layout.tsx، بينما طلبك يكتب 3WEEQ. سأستخدم 3WWEQ في هذا المستند، ويجب حسم الاسم نهائياً قبل الدومين والفوترة والعلامة التجارية.
+
+0. الحكم التنفيذي
+المشروع الحالي ليس متجراً؛ هو واجهة سينمائية عالية الجودة لمنتج واحد، بدون أي طبقة تجارة أو بيانات أو مصادقة أو دفع. البنية المقترحة يجب أن تحافظ على هذه الواجهة كما هي، وتبني تحتها نواة تجارة مستقلة (Headless Commerce Core) قابلة للتوسع من منتج واحد إلى آلاف المنتجات، ومن موقع واحد إلى ويب + تطبيق + نقاط بيع.
+
+القرارات الخمسة الحاسمة:
+
+الواجهة: Next.js 16 App Router الحالي، مع إعادة هيكلة Routes إلى [locale] وRoute Groups، وعدم إعادة بناء التصميم.
+النواة التجارية: Medusa v2 كـ Modular Commerce Core على Node/TypeScript، بدلاً من بناء NestJS من الصفر أو الاعتماد على BaaS/CMS كمتجر.
+قاعدة البيانات: PostgreSQL (Neon أو Supabase Postgres) + Redis للحالات المؤقتة والطوابير.
+المحتوى التحريري: Sanity للقصص والمجلة والحضارات فقط، وليس لبيانات السعر أو المخزون أو الطلبات.
+البنية: Modular Monolith منظم حسب Domain-Driven Design، وليس Microservices في الإطلاق.
+المدة التقديرية للوصول إلى بيع RAFID: 10–14 أسبوعاً، منها 1–2 أسبوع تأسيس و4–6 أسابيع MVP.
+
+1. تحليل الوضع الحالي للمشروع
+1.1 ما هو موجود فعلاً
+المجال	الحالة الفعلية	الأثر المعماري
+الإطار	Next.js 16.3.8 + React 19.2.8 + TypeScript + Tailwind v4	أساس ممتاز، لكن إصدار Next 16 يغيّر نموذج التخزين المؤقت وmiddleware
+اللغة والاتجاه	lang="ar" وdir="rtl" في app/layout.tsx:23	RTL أصلي، لا حاجة لإعادة انعكاس لاحقة
+الخطوط	محلية في public/fonts مع preload	أداء ممتاز، لا طلبات خارجية
+الحركة	GSAP + Lenis + Three.js مثبتة	جاهزة لتجربة سينمائية، لكنها ثقيلة على مسارات التجارة
+الصفحة الرئيسية	Hero, About, First Chapter, Featured Fragrance, Portal	5 أقسام تقريباً من أصل 10 في PRODUCT.md
+التجارة	لا يوجد Cart, Checkout, Products API, Orders, Payments	70% من العمل المتبقي
+المصادقة	لا يوجد	مطلوب OTP/Passwordless
+i18n	next-intl مثبت لكنه غير مهيأ ولا يوجد proxy.ts ولا Message Catalogs	لا يمكن إطلاق نسخة إنجليزية حقيقية الآن
+البحث	زر بحث بلا وظيفة في app/components/site-header.tsx:251	يحتاج Search Index
+السلة	شارة "2" ثابتة في app/components/site-header.tsx:265	وهم واجهة، ليست حالة حقيقية
+SEO	Metadata أساسية فقط، لا JSON-LD ولا Sitemap ولا hreflang	غير كافٍ لمتجر فاخر
+التحليلات	لا يوجد Consent Mode ولا Server-side Events	لا يمكن قياس التحويل بدقة
+الاختبارات	لا يوجد Test Runner ولا CI	خطر عالٍ قبل الدفع
+Git	لا يبدو أن المجلد Git repository	مانع أساسي لـ CI/CD والمراجعات
+1.2 مشكلات بنيوية يجب حلها قبل البناء
+ملفان ليسا Routes: app/p وapp/packiging ملفان بلا امتداد، ويحتويان نصوص Prompts ومكوّنات، وليسا صفحات Next صالحة. يجب نقلهما إلى docs/ أو حذفهما.
+خطأ Runtime في السجل: dev.log يحتوي NotFoundError: Failed to execute 'removeChild'، وتحذير sizes لصورة الهيرو. يجب إغلاقهما قبل إضافة طبقات جديدة.
+وزن الأصول كارثي على مسار التجارة:
+152 إطاراً في public/featured_frames بحجم إجمالي يقارب 15 MB، وتُحمَّل كلها دفعة واحدة في app/components/featured-fragrance.tsx:26-41.
+صور التغليف 13 صورة PNG بحجم 2.4–3.3 MB لكل صورة.
+first_chapter/main_first_chapter.png حوالي 3 MB، وhero_img.png حوالي 1.5 MB، وفيديو 7.2 MB.
+هذا لا يتوافق مع هدف "تحميل أقل من ثانية" على شبكات الجوال في الخليج.
+الصفحة الرئيسية غير مكتملة: أقسام More Civilizations وBeyond Fragrances وJournal وNewsletter وFooter وPackaging غير موجودة كمسارات فعلية.
+تعارض اسم العلامة: 3WWEQ مقابل 3WEEQ مقابل 3SWEQ المذكور في PRODUCT.md. هذا قرار مالك وليس قرار تقني.
+لا فصل بين Marketing وCommerce: تحميل GSAP/Lenis/Three.js في مسار الدفع سيرفع INP ويزيد المخاطر. يجب فصل حزمة الواجهة السينمائية عن حزمة المتجر.
+1.3 الاستنتاج
+لا نعيد بناء الواجهة. ننقلها إلى بنية قابلة للنمو، ننظف الأصول، ونضيف نواة تجارة مستقلة. الواجهة الحالية أصل تسويقي، وليست أساساً معمارياً للمتجر.
+
+2. المبادئ المعمارية والقرارات الأساسية
+2.1 المبادئ
+Modular Monolith أولاً: كل Domain وحدة مستقلة داخل تطبيق واحد. لا Microservices قبل أن تثبت الحاجة التشغيلية.
+الخادم هو مصدر الحقيقة: السعر، المخزون، الخصم، والطلب لا تُحسب في المتصفح أبداً.
+API-First: المتجر، التطبيق، ونقاط البيع تستهلك نفس الـ APIs.
+PostgreSQL هو Source of Truth: البحث والكاش والتحليلات نسخ مشتقة، وليست مصادر حقيقة.
+Event-Driven Side Effects: البريد، الواتساب، نقاط الولاء، والتحليلات تتم عبر Outbox/Queue، وليس داخل طلب الدفع.
+Idempotency في كل عملية مالية: إنشاء الطلب، الدفع، الاسترداد، والـ Webhooks.
+الخصوصية والأمان بالتصميم: لا تخزين بطاقات، أقل قدر من PII، وتشفير الحقول الحساسة.
+i18n وRTL مكوّنان أساسيان: ليسا طبقة ترجمة فوق نظام إنجليزي.
+ميزانيات أداء ملزمة: LCP < 1.8s على 4G، INP < 200ms، CLS < 0.05، JavaScript أقل من 200KB على صفحة المنتج.
+اشترِ Commodity وابنِ التمايز: لا تبنِ محرك دفع أو بحث من الصفر؛ ابنِ تجربة العميل والقصص.
+2.2 القرارات المعمارية (ADRs)
+القرار	الاختيار	البديل المرفوض	السبب
+ADR-01	Modular Monolith	Microservices	فريق صغير، تكلفة تشغيل أقل، معاملات ACID أسهل
+ADR-02	Medusa v2	NestJS من الصفر	يوفر Catalog/Cart/Order/Payment/Fulfillment/Promotion/Tax جاهزة وقابلة للتوسيع
+ADR-03	PostgreSQL	MongoDB	الطلبات والمخزون والدفع تحتاج ACID وقيوداً علائقية وتقارير
+ADR-04	Server-side Cart	Cart في LocalStorage	يمنع التلاعب بالسعر، ويدعم الأجهزة المتعددة والاستئناف
+ADR-05	OTP/Passwordless	كلمات مرور تقليدية	مناسب لجمهور الخليج، أقل احتكاكاً، وأكثر أماناً
+ADR-06	Tap + Stripe	بوابة واحدة	تغطية محلية خليجية + تغطية عالمية واحتياطي
+ADR-07	Cloudinary + Mux	Vercel Blob للفيديو	تحويلات الصور وHLS والتكيف مع الشبكة
+ADR-08	Sanity للمحتوى فقط	Sanity لكل شيء	فصل المحتوى التحريري عن بيانات التجارة الحساسة
+ADR-09	Vercel + Railway/Fly + Neon	Self-host كامل	سرعة إطلاق، مع قابلية نقل لاحقة
+ADR-10	Cache Components في Next 16	ISR الكلاسيكي فقط	النموذج الحديث في Next 16 مع نفس النتيجة
+2.3 المعمارية المرجعية
+flowchart LR
+  U[Web / Mobile / POS] --> CF[Cloudflare WAF + CDN]
+  CF --> N[Next.js Storefront<br/>Vercel]
+  N -->|Store API / Server Actions| M[Medusa v2<br/>Commerce Core]
+  N -->|Content API| S[Sanity CMS]
+  N -->|Search| ME[Meilisearch]
+  M --> PG[(PostgreSQL)]
+  M --> R[(Redis)]
+  M --> W[Workers / Workflows]
+  W --> P[Tap / Stripe]
+  W --> C[Email / WhatsApp]
+  W --> A[Analytics / Warehouse]
+  AD[Medusa Admin + Ops] --> M
+  IMG[Cloudinary / Mux / R2] --> N
+المسار الأساسي: المتصفح لا يتصل بقاعدة البيانات أبداً. Next.js يعمل كـ Backend-for-Frontend (BFF) ويستدعي Medusa Store API بمفاتيح Publishable فقط. مفاتيح Admin تبقى على الخادم حصراً.
+
+Part A — اختيار Stack التقني وتبريره
+A.1 الواجهة الأمامية
+الاختيار: Next.js 16 App Router + React Server Components + Server Actions + Tailwind v4 + next-intl + Zustand.
+
+البنية المقترحة للـ Storefront:
+
+app/
+  [locale]/
+    (marketing)/
+      page.tsx
+      story/page.tsx
+      civilizations/[slug]/page.tsx
+      journal/[slug]/page.tsx
+    (shop)/
+      products/[slug]/page.tsx
+      collections/[slug]/page.tsx
+      cart/page.tsx
+      checkout/page.tsx
+    (account)/
+      account/orders/page.tsx
+      account/addresses/page.tsx
+      account/wishlist/page.tsx
+  api/
+    webhooks/[provider]/route.ts
+    revalidate/route.ts
+    search/route.ts
+  proxy.ts
+المبادئ:
+
+proxy.ts في Next 16 (بديل middleware) لتحديد اللغة والعملة وإعادة التوجيه، وليس لعمليات المصادقة الثقيلة.
+Server Components لجلب المنتجات والبيانات الثابتة.
+Server Actions لعمليات السلة، التسجيل في Waitlist، والنشرة البريدية.
+Zustand لحالة الواجهة فقط: فتح السلة، عدد القطع المتفائل، حالة الـ Drawer. وليس لحساب السعر النهائي.
+فصل حزمة Marketing السينمائية عن حزمة Shop. لا يتم تحميل GSAP/Lenis/Three.js على صفحة الدفع إلا عند الحاجة.
+next/image مع Loader مخصص لـ Cloudinary لاحقاً، وnext/font/local أو الإبقاء على @font-face الحالي مع preload.
+لماذا لا نستخدم Shopify/Theme: تجربة العلامة سينمائية ومخصصة، وفريق الواجهة موجود. لكن يجب ألا تتحول الواجهة إلى مصدر منطق تجاري.
+
+A.2 طبقة الخادم: Medusa v2 وليس BaaS أو CMS
+مصفوفة التقييم
+الخيار	نقاط القوة	الثغرات الحرجة لـ 3WWEQ	الحكم
+NestJS مخصص	تحكم كامل، DDD نقي	بناء Cart/Checkout/Inventory/Promotions/Tax/Fulfillment/Returns من الصفر = 6–12 شهراً ومخاطر دفع عالية	مرفوض للمرحلة 1
+Supabase BaaS	Postgres + Auth + Storage + Realtime بسرعة	لا يوجد محرك تجارة؛ RLS لا يكفي لضمان المخزون والأسعار؛ ستبني كل شيء يدوياً	مناسب كقاعدة بيانات، لا كمنصة تجارة
+Firebase	سريع للتطبيقات	NoSQL غير مناسب للطلبات والعلاقات المالية؛ قيود الاستعلامات	مرفوض
+Sanity / Strapi	تحرير محتوى ممتاز	ليس متجراً: لا Cart، لا Orders، لا Payments، لا Inventory	مناسب للمحتوى فقط
+Medusa v2	وحدات Product/Order/Cart/Payment/Fulfillment/Inventory/Promotion/Tax، Workflows، Admin، Store API، Regions، Sales Channels، مفتوح المصدر	يحتاج DevOps وفريقاً يفهم Node	الاختيار
+Shopify Plus	أسرع إطلاق وأقل عبء تشغيلي	تكلفة شهرية، قيود على تخصيص الـ Checkout، ملكية بيانات أقل	بديل احتياطي إن كان الوقت حرجاً
+القرار: Medusa v2 كـ Commerce Core، مع بناء Custom Modules للحضارات، قوائم الانتظار، الولاء، والـ Clienteling. هذا يحقق DDD عملياً: كل Bounded Context وحدة مستقلة بعقود واضحة، لكنها تعمل داخل عملية واحدة قابلة للنشر.
+
+لماذا هو الأنسب للعلامة الفاخرة:
+
+تحكم كامل في تجربة الدفع بدون قيود SaaS.
+ملكية بيانات العميل والطلب.
+دعم Multi-region وMulti-currency وSales Channels من البداية.
+إمكانية إضافة نقاط بيع (POS) وتطبيق جوال على نفس الـ API.
+قابلية بناء Workflows خاصة: تخصيص، تغليف هدايا، موافقة يدوية على الطلبات عالية القيمة، إطلاق محدود.
+المحتوى التحريري: Sanity للمجلة، قصص الحضارات، وصفحات الحملات. بيانات المنتج التجارية (السعر، SKU، المخزون، الحالة) تبقى في Medusa. إذا احتاج المحرر نصاً طويلاً للمنتج، نستخدم جدول ترجمة داخل Medusa أو كتلة Sanity مرتبطة بمعرّف المنتج، مع بقاء السعر والمخزون في Medusa فقط.
+
+A.3 قاعدة البيانات
+الاختيار: PostgreSQL.
+
+الأسباب:
+
+الطلبات، المدفوعات، الاستردادات، والمخزون تحتاج ACID وقيوداً علائقية.
+العلاقات كثيرة: منتج ← متغير ← سعر ← مخزون ← طلب ← دفع ← شحن ← مرتجع.
+تقارير المتجر (AOV، Sell-through، Refund Rate) أسهل بكثير في SQL.
+JSONB يمنح مرونة للخصائص المتغيرة (النوتات العطرية، الأبعاد، المواد) دون التضحية بالعلاقات.
+Postgres يدعم SELECT FOR UPDATE وقيود CHECK وpartial indexes، وهي ضرورية لمنع البيع الزائد في الإصدارات المحدودة.
+الاستضافة: Neon (فرعيات قاعدة بيانات، Serverless، PITR) أو Supabase Postgres إن أردت لوحة تحكم موحدة. المهم: نفس المنطقة الجغرافية قدر الإمكان مع خادم Medusa، وPgBouncer للاتصالات.
+
+Redis: Upstash أو Redis مُدار، للجلسات، rate limiting، أقفال المخزون المؤقتة، والطوابير.
+
+البحث: Meilisearch في البداية (دعم جيد للعربية والأخطاء الإملائية والفلاتر)، والانتقال إلى Algolia عند الحاجة العالمية. فهرس البحث يُبنى من أحداث Medusa، وليس مصدر حقيقة.
+
+A.4 المصادقة
+الاختيار الموصى به: مصادقة أصلية داخل Medusa + OTP للهاتف + Magic Link للبريد، بدون كلمات مرور افتراضية.
+
+التفاصيل:
+
+Guest Checkout إلزامي. لا نجبر العميل على إنشاء حساب لشراء عطر واحد.
+OTP عبر Unifonic أو Twilio Verify أو Msegat، بحد 5 دقائق وصلاحيات محاولات صارمة.
+الجلسات عبر Cookies آمنة HttpOnly + Secure + SameSite=Lax، مع تدوير الجلسة وإمكانية الإبطال.
+ربط حساب الضيف بالحساب بعد الشراء عبر البريد أو الهاتف.
+Passkeys لاحقاً كخيار للعملاء الدائمين.
+لوحة الإدارة: 2FA إلزامي + RBAC + سجل تدقيق.
+البدائل:
+
+Clerk: أفضل بديل مُدار (Phone OTP، Passkeys، حماية Bots، DX ممتاز)، لكنه يضيف تكلفة وتبعية ومزامنة هوية مع Medusa.
+Auth0: قوي للمؤسسات لكنه مكلف ومعقد لمشروع بهذا الحجم.
+Supabase Auth: مناسب فقط إذا اخترت Supabase كمنصة بيانات، ويبقى الربط مع Medusa عبئاً إضافياً.
+الحكم: ابدأ بـ Medusa Auth + OTP مخصص. انتقل إلى Clerk فقط إذا أصبحت إدارة الهوية عبئاً تشغيلياً.
+
+A.5 بوابات الدفع
+الاستراتيجية: نمط Payment Adapter داخل Medusa، مع مزوّد أساسي لكل سوق ومزوّد احتياطي.
+
+المزوّد	السوق	المزايا	الدور
+Tap Payments	الخليج	KNET، mada، Apple Pay، Google Pay، 3DS، Tokenization، Multi-currency	أساسي للخليج
+Stripe	عالمي + الإمارات	Cards، Apple Pay، Google Pay، Radar، أدوات مطورين ممتازة	أساسي للعالمي / احتياطي
+Moyasar	السعودية	mada، STC Pay، Apple Pay، 3DS	بديل سعودي قوي
+HyperPay	MENA	تغطية واسعة، Risk Management، acquirers متعددة	خيار مؤسسي
+Checkout.com	عالمي/خليجي	Enterprise، تغطية acquirers	خيار مؤسسي
+Tabby / Tamara	الخليج	BNPL	اختياري للإصدارات والمجموعات
+قواعد التنفيذ:
+
+لا تمر بيانات البطاقة عبر خوادمنا. نستخدم Hosted Fields / Payment Elements / Redirect + 3DS، ونحقق PCI-DSS SAQ A.
+Multi-currency: سعر العرض بالعملة المحلية (SAR/AED/KWD/QAR/USD/GBP/EUR)، مع price_list لكل سوق، وتحويل يومي لأسعار الصرف، وتثبيت السعر عند بدء الدفع لمدة 15 دقيقة.
+Apple Pay / Google Pay: التحقق من الدومين، Merchant ID، واختبار كامل على Safari/Chrome وأجهزة حقيقية.
+3DS / SCA: إلزامي حيث ينطبق، مع التعامل مع فشل التحدي وإعادة المحاولة.
+الاحتياط: إذا فشل مزوّد، نعرض مزوّداً بديلاً دون فقدان السلة.
+التسوية: تقرير يومي لمطابقة مدفوعات المزوّد مع الطلبات، وكشف الفروقات تلقائياً.
+A.6 الوسائط والأصول
+النوع	الاختيار	السبب
+صور المنتجات	Cloudinary	تحويلات AVIF/WebP، Responsive، Focal Point، Signed Uploads، DAM، CDN عالمي
+فيديو 4K / 3D	Mux	HLS تكيفي، Poster، تحليلات مشاهدة، عدم تحميل 4K كامل على الجوال
+الأصول الأصلية والأرشيف	Cloudflare R2	تخزين رخيص بدون Egress، مناسب للمasters وframe sequences
+صور الهيرو الحالية	تحسين فوري إلى AVIF/WebP + أحجام متعددة	إزالة 15 MB من الإطارات وتحويلها إلى فيديو قصير
+Vercel Blob	رفع مؤقت فقط	ليس مناسباً للفيديو الثقيل أو الـ DAM
+قاعدة الأداء: لا يُقدَّم ملف 4K للجوال. Mux يقدم 720p/1080p حسب الشبكة، وCloudinary يقدم f_auto,q_auto مع srcset. صفحة المنتج يجب ألا تتجاوز 1.5 MB من الصور في التحميل الأول.
+
+A.7 بقية الـ Stack
+الطبقة	الاختيار
+CMS	Sanity
+Email	Resend أو Postmark
+WhatsApp/SMS	Unifonic أو Twilio
+Search	Meilisearch ثم Algolia عند التوسع
+Cache/Queue	Redis + BullMQ/Workflows
+Analytics	GA4 + Meta CAPI + TikTok/Snap CAPI + Warehouse
+Error Tracking	Sentry
+Observability	OpenTelemetry + Grafana/Better Stack
+Feature Flags	GrowthBook أو Vercel Edge Config
+Error/Status	Better Stack + Status Page
+Part B — نموذج البيانات والـ ERD
+B.1 قواعد النمذجة
+المبالغ أعداد صحيحة (Minor Units): amount_minor وليس float. العملة مخزنة صراحةً.
+Snapshots في الطلبات: نحتفظ باسم المنتج والسعر والعنوان وقت الشراء، حتى لو تغيّر المنتج لاحقاً.
+Soft Delete: deleted_at للمنتجات والعملاء، مع منع الحذف النهائي للطلبات المالية.
+Translation Tables: كل نص قابل للترجمة له جدول ترجمة مستقل، وليس JSONB فقط.
+Idempotency Keys: على إنشاء الطلب، الدفع، الاسترداد، والـ Webhook.
+Audit Log: كل تغيير إداري حساس له سجل غير قابل للتعديل.
+لا حذف للأسعار القديمة: valid_from / valid_to للحفاظ على التاريخ المالي.
+B.2 الـ ERD المفاهيمي
+erDiagram
+  CIVILIZATION ||--o{ PRODUCT : contains
+  CATEGORY ||--o{ PRODUCT : classifies
+  COLLECTION ||--o{ COLLECTION_PRODUCT : includes
+  PRODUCT ||--o{ COLLECTION_PRODUCT : belongs
+  PRODUCT ||--o{ PRODUCT_TRANSLATION : translated
+  PRODUCT ||--o{ PRODUCT_VARIANT : has
+  PRODUCT_VARIANT ||--o{ PRICE : priced
+  PRODUCT_VARIANT ||--o{ INVENTORY_ITEM : stocked
+  STOCK_LOCATION ||--o{ INVENTORY_ITEM : holds
+  CUSTOMER ||--o{ ADDRESS : has
+  CUSTOMER ||--o{ CART : owns
+  CUSTOMER ||--o{ ORDER : places
+  CART ||--o{ CART_LINE : contains
+  CART ||--o| ORDER : converts
+  ORDER ||--o{ ORDER_LINE : contains
+  ORDER ||--o{ PAYMENT : paid_by
+  ORDER ||--o{ FULFILLMENT : shipped_by
+  ORDER ||--o{ REFUND : refunded_by
+  ORDER ||--o{ REVIEW : generates
+  PRODUCT ||--o{ REVIEW : receives
+  CUSTOMER ||--o{ WAITLIST_ENTRY : joins
+  CIVILIZATION ||--o{ WAITLIST_ENTRY : targets
+  CUSTOMER ||--o| LOYALTY_ACCOUNT : has
+  LOYALTY_ACCOUNT ||--o{ LOYALTY_TRANSACTION : ledger
+  PROMOTION ||--o{ PROMOTION_USAGE : used
+  ORDER ||--o{ PROMOTION_USAGE : applies
+B.3 الكيانات والحقول الأساسية
+1) الهوية والعملاء
+الكيان	الحقول الأساسية	العلاقات والقواعد
+customer	id, email, phone_e164, first_name, last_name, locale, currency, has_account, created_at, deleted_at	email فريد عند وجوده، phone فريد عند وجوده
+customer_profile	customer_id, preferences JSONB, fragrance_profile JSONB, acquisition_source, consent_marketing, consent_analytics	1:1 مع customer
+address	customer_id, label, line1, line2, city, province, postal_code, country_code, phone, is_default_shipping, is_default_billing, validation_status	N:1 مع customer
+auth_identity	provider, entity_id, provider_metadata	OTP/Email/Passkey
+otp_challenge	phone_or_email_hash, code_hash, expires_at, attempts, consumed_at	لا يُخزَّن الكود صريحاً
+session	token_hash, customer_id, ip, user_agent, expires_at, revoked_at	جلسات قابلة للإبطال
+wishlist_item	customer_id, product_id, variant_id, created_at	فريد لكل عميل ومنتج
+customer_group	name, type (VIP/wholesale), priority	لربط الأسعار والخصومات
+2) الكتالوج والحضارات
+الكيان	الحقول الأساسية	العلاقات والقواعد
+civilization	id, slug, name, era, story, hero_media_id, accent_color, launch_at, status, sort_order	بابل، مصر، الصين، اليونان، الخليج
+category	id, parent_id, slug, type, position, status	شجرة فئات: عطور، بخور، مجوهرات، أقمشة، جلديات
+collection	id, slug, title, story, type, starts_at, ends_at, hero_media_id, is_drop, status	"The 2026 Royal Collection"
+product	id, slug, status, product_type, civilization_id, collection_id, is_limited, edition_size, is_preorder, preorder_ships_at, max_per_customer, published_at, metadata JSONB	المنتج ينتمي لحضارة واحدة ويمكن أن ينتمي لعدة مجموعات
+product_translation	product_id, locale, name, subtitle, description, story, ingredients, seo_title, seo_description	فريد (product_id, locale)
+product_variant	id, product_id, sku, barcode, title, size_ml, concentration, weight_g, dimensions, is_default, status	SKU فريد
+price	variant_id, currency_code, price_list_id, amount_minor, compare_at_minor, cost_minor, tax_inclusive, valid_from, valid_to	فريد (variant, currency, price_list, valid_from)
+price_list	name, type, currency_code, customer_group_id, priority	Retail / VIP / Wholesale
+media_asset	provider, public_id, url, mime, width, height, duration, bytes, blurhash, alt_translations, focal_point	Cloudinary/Mux/R2
+product_media	product_id, media_id, role (hero/gallery/video/3d/packaging), position, variant_id	ترتيب الوسائط
+product_option	product_id, name	الحجم، التركيز
+product_option_value	option_id, value	50ml / 100ml
+variant_option_value	variant_id, option_value_id	ربط المتغير بالخيارات
+product_relationship	product_id, related_product_id, type (cross_sell/upsell/bundle)	علاقات التسويق
+bundle_component	bundle_product_id, component_variant_id, quantity	علب الهدايا
+ملاحظة مهمة لـ 10,000 منتج: لا تنشئ جدولاً لكل فئة. استخدم product_type + category + metadata لخصائص كل فئة. أضف جداول Attribute فقط للحقول التي تحتاج فلترة أو تقارير (مثل concentration, family, origin).
+
+3) المخزون والإصدارات المحدودة
+الكيان	الحقول الأساسية	القواعد
+stock_location	id, name, type (warehouse/popup/3PL), address, priority	مستودع رئيسي + مواقع Pop-up
+inventory_item	variant_id, location_id, stocked_quantity, reserved_quantity, incoming_quantity, safety_stock, version	فريد (variant, location)
+inventory_reservation	inventory_item_id, cart_id, order_id, quantity, expires_at, status	TTL 15 دقيقة، يمنع البيع الزائد
+serial_unit	variant_id, serial_number, status, order_item_id, assigned_at	للإصدارات المرقّمة (500 زجاجة)
+stock_adjustment	inventory_item_id, quantity, reason, admin_id, created_at	سجل تدقيق
+منع البيع الزائد: عملية الحجز تتم داخل Transaction واحدة مع SELECT ... FOR UPDATE أو UPDATE ... WHERE stocked - reserved >= qty، وإذا كانت النتيجة صفراً يُرفض الطلب. لا تعتمد على فحص في التطبيق ثم كتابة منفصلة.
+
+4) السلة والطلب والدفع
+الكيان	الحقول الأساسية	القواعد
+cart	id, customer_id, email, phone, currency_code, region, locale, status, subtotal_minor, discount_minor, shipping_minor, tax_minor, total_minor, expires_at	Guest cart مسموح
+cart_line	cart_id, variant_id, quantity, unit_price_minor, title_snapshot, metadata (engraving/gift)	السعر يُعاد التحقق منه عند الدفع
+cart_adjustment	cart_id, promotion_id, amount_minor, type	خصومات
+order	id, display_id, customer_id, email, phone, status, payment_status, fulfillment_status, currency_code, presentment_currency, exchange_rate, subtotal_minor, discount_minor, shipping_minor, tax_minor, total_minor, paid_minor, refunded_minor, source (web/app/pos), risk_score, placed_at	display_id مقروء للإنسان
+order_line	order_id, variant_id, sku_snapshot, title_snapshot, quantity, unit_price_minor, total_minor, fulfilled_quantity, returned_quantity, tax_lines JSONB	Snapshot كامل
+order_address	order_id, type (shipping/billing), name, lines, city, country, phone	Snapshot وليس FK
+payment	order_id, provider, method, provider_payment_id, status, amount_minor, currency_code, captured_minor, idempotency_key, error_code	لا تخزين PAN
+payment_attempt	payment_id, attempt_no, status, three_ds_status, redirect_url, error_code	محاولات فاشلة
+refund	payment_id, amount_minor, reason, provider_refund_id, status, admin_id	كلي أو جزئي
+fulfillment	order_id, provider, carrier, tracking_number, tracking_url, status, shipped_at, delivered_at	شحنات متعددة
+fulfillment_item	fulfillment_id, order_line_id, quantity	شحن جزئي
+return_request	order_id, rma_number, reason, status, refund_id, restock_location_id	RMA
+order_event	order_id, event_type, payload JSONB, actor, created_at	Timeline
+webhook_event	provider, event_id, payload JSONB, signature_valid, processed_at, attempts, status	فريد (provider, event_id)
+outbox_event	aggregate_type, aggregate_id, event_type, payload, published_at	Exactly-once side effects
+5) التقييمات والانتظار والولاء
+الكيان	الحقول الأساسية	القواعد
+review	product_id, customer_id, order_id, order_item_id, rating, title, body, locale, status, verified_purchase, helpful_count	فريد (order_item_id)؛ التقييم فقط بعد التسليم
+review_media	review_id, media_id	صور العميل
+review_vote	review_id, customer_id, value	Helpful
+waitlist_entry	email, phone, target_type, target_id, locale, source, status, consent, double_opt_in_token, confirmed_at, priority_score	فريد (target, email)
+drop	collection_id, opens_at, closes_at, allocation, per_customer_limit, access_level (public/VIP/waitlist), status	إطلاق محدود
+drop_allocation	drop_id, variant_id, quantity, reserved_quantity	تخصيص المخزون
+preorder	order_id, variant_id, deposit_minor, balance_due_at, ships_at, status	طلب مسبق
+promotion	code, type, scope, value, currency_code, min_subtotal_minor, max_discount_minor, usage_limit, per_customer_limit, starts_at, ends_at, customer_group_id, stackable, status	كوبونات وفترات VIP
+promotion_usage	promotion_id, customer_id, order_id, used_at	فريد (promotion, customer, order)
+gift_card	code, balance_minor, currency_code, expires_at, status	هدايا فاخرة
+loyalty_tier	name, threshold_minor, benefits JSONB, early_access_hours	Sand / Gold / Royal
+loyalty_account	customer_id, tier_id, points_balance, lifetime_points, year_spend_minor	1:1
+loyalty_transaction	account_id, order_id, points, type (earn/redeem/adjust/expire), expires_at, created_at	Ledger غير قابل للتعديل
+referral	referrer_customer_id, referee_customer_id, code, status, reward_issued_at	برنامج الإحالة
+6) المحتوى والتشغيل
+الكيان	الحقول الأساسية
+journal_post	slug, locale, title, excerpt, body (Portable Text), cover_media_id, author, civilization_id, tags, status, published_at, seo
+page	slug, locale, title, body, type (privacy/terms/shipping/returns)
+navigation	locale, location, items JSONB
+admin_user	email, name, role_id, two_factor_enabled, status
+role / permission	name, scopes
+audit_log	actor_id, action, entity_type, entity_id, before JSONB, after JSONB, ip, created_at
+feature_flag	key, description, enabled, rules JSONB
+job	queue, type, payload, status, attempts, run_at
+B.4 الفهارس والقيود الحرجة
+product_translation (locale, slug) فريد.
+product_variant (sku) فريد.
+price (variant_id, currency_code, price_list_id, valid_from) فريد.
+inventory_item (variant_id, location_id) فريد.
+inventory_reservation (expires_at) partial index للحجوزات النشطة.
+order (display_id) فريد، وorder (customer_id, placed_at) للتاريخ.
+payment (provider, provider_payment_id) فريد.
+webhook_event (provider, event_id) فريد.
+review (order_item_id) فريد.
+waitlist_entry (target_type, target_id, email) فريد.
+promotion_usage (promotion_id, customer_id, order_id) فريد.
+GIN على product.metadata وtags للفلترة.
+Trigram/Full-text على أسماء المنتجات للبحث الاحتياطي.
+Part C — رحلة العميل وتدفق البيانات
+C.1 التصفح والاكتشاف
+المسار: GET /ar/products/rafid → Next.js Server Component → Medusa Store API → Cache Components.
+
+آلية Next 16:
+
+تفعيل cacheComponents: true في next.config.ts.
+استخدام use cache + cacheLife('hours') + cacheTag('product:rafid') لصفحة المنتج.
+عند نشر المنتج من Medusa أو Sanity، يُستدعى Webhook إلى /api/revalidate ينفذ revalidateTag('product:rafid').
+الصفحة تُبنى كـ Static Shell (الصور، النصوص، السعر الأساسي)، والـ Cart/Stock/Recommendations تُحمَّل كـ Dynamic Islands عبر Suspense.
+لا نستخدم ISR بالمعنى القديم فقط؛ النموذج الجديد يحقق نفس النتيجة مع تحكم أدق.
+البحث: /api/search على الخادم → Meilisearch. لا يُعرَّض مفتاح البحث في المتصفح. دعم الأخطاء الإملائية العربية وتطبيع الألف والهمزة والتاء المربوطة.
+
+بطاقة المنتج: صورة واحدة مهيمنة، السعر بالعملة المحلية، حالة المخزون، شارة "Limited Edition" عند الحاجة، وزر "اكتشف رافد".
+
+C.2 السلة
+القرار: Server-side Cart هو المصدر الوحيد للحقيقة.
+
+عند أول إضافة، Medusa ينشئ Cart ويعيد cart_id.
+cart_id يُخزَّن في Cookie: HttpOnly, Secure, SameSite=Lax, مدة 30 يوماً.
+Zustand يحتفظ بحالة واجهة متفائلة (عدد القطع، فتح Drawer)، لكنه لا يحسب السعر النهائي.
+عند تسجيل الدخول، يتم دمج سلة الضيف مع سلة الحساب.
+كل عملية إضافة/تعديل تعيد التحقق من السعر والمخزون والحد الأقصى للعميل.
+لا يتم تخزين الأسعار أو المخزون في localStorage.
+Guest Checkout: مسموح بالكامل. لا نطلب حساباً إلا بعد إتمام الشراء، ونعرض إنشاء حساب اختياري مع حفظ العنوان.
+
+السلة المتروكة: Workflow بعد 1 ساعة و24 ساعة، مع احترام الموافقة التسويقية، وروابط استئناف آمنة.
+
+C.3 الدفع (Checkout)
+الخطوات:
+
+Contact: بريد + هاتف E.164. OTP اختياري لاستئناف السلة أو التحقق من العميل.
+Address: إدخال يدوي + Address Autocomplete (Google Places/Loqate) مع تحقق من صحة العنوان.
+Shipping: حساب الخيارات عبر Aramex/DHL/SMSA. السعر حسب الوزن الحجمي، الوجهة، والتأمين.
+Tax & Duties: حساب VAT حسب الدولة. للخليج: أسعار شاملة الضريبة (DDP). للخارج: DAP مع توضيح الرسوم الجمركية.
+Payment: اختيار البطاقة، Apple Pay، Google Pay، mada، KNET، أو BNPL إن فعّل.
+Review: ملخص نهائي، شروط البيع، سياسة الإرجاع، وتأكيد الطلب.
+قواعد حرجة:
+
+إنشاء الطلب يتم بـ Idempotency Key لمنع التكرار عند إعادة المحاولة.
+حجز المخزون يتم قبل إنشاء جلسة الدفع، ويُحرَّر تلقائياً بعد 15 دقيقة إذا لم يكتمل الدفع.
+السعر يُعاد حسابه على الخادم لحظة الدفع؛ أي تغيير يُعرض للعميل قبل التأكيد.
+لا يُعتبر الطلب مؤكداً إلا بعد تأكيد الدفع من الـ Webhook، وليس من رد المتصفح.
+التحقق من العنوان والهاتف و3DS يقلل الاحتيال، مع مراجعة يدوية للطلبات عالية القيمة.
+الشحن الدولي:
+
+GCC: Aramex + DHL Express + SMSA (السعودية) + Emirates Post.
+Global: DHL Express مع HS Code وبيان جمركي.
+العطور الكحولية: سلعة خطرة (UN1266)؛ يجب التحقق من قيود كل ناقل ودولة قبل عرض السعر. بعض الدول تمنع الشحن الجوي للعطور الكحولية.
+DDP vs DAP: DDP للخليج لتجربة فاخرة بلا مفاجآت جمركية، وDAP للأسواق العالمية مع إفصاح واضح.
+C.4 معالجة الدفع والـ Webhooks
+sequenceDiagram
+  autonumber
+  actor C as العميل
+  participant S as Storefront (Next)
+  participant M as Medusa
+  participant P as Payment Provider
+  participant W as Webhook Worker
+  participant E as Email/WhatsApp
+
+  C->>S: تأكيد الطلب
+  S->>M: Complete Checkout + Idempotency Key
+  M->>M: حجز المخزون ذرياً
+  M->>P: إنشاء Payment Session
+  P-->>S: Client Secret / Redirect
+  S->>P: 3DS / Apple Pay
+  P-->>W: payment.captured (موقّع)
+  W->>W: التحقق + منع التكرار + Queue
+  W->>M: Capture + Confirm Order
+  M->>E: تأكيد الطلب + تعليمات الشحن
+  M-->>S: Order Confirmed
+  S-->>C: صفحة الشكر
+قواعد الـ Webhook:
+
+التحقق من التوقيع على Raw Body قبل أي تحليل.
+تخزين event_id في webhook_event مع قيد فريد لمنع المعالجة المزدوجة.
+الرد بـ 200 سريعاً ثم المعالجة في Queue.
+دعم الأحداث المتأخرة أو غير المرتبة عبر State Machine محصّن.
+إعادة المحاولة مع Backoff، ثم Dead Letter Queue ومراجعة يدوية.
+تسوية يومية بين مزوّد الدفع والطلبات، لكشف المدفوعات اليتيمة أو المفقودة.
+مصفوفة الفشل:
+
+الحالة	السلوك
+بطاقة مرفوضة	إبقاء السلة، رسالة واضحة، اقتراح طريقة أخرى
+فشل 3DS	إعادة المحاولة دون فقدان الطلب
+Webhook متأخر	الطلب يبقى Pending، لا تأكيد للعميل حتى يصل
+Webhook مكرر	تجاهل بعد التحقق من event_id
+مبلغ غير مطابق	تجميد الطلب ومراجعة يدوية
+فشل بعد الحجز	تحرير الحجز بعد TTL وإخطار العميل
+استرداد جزئي	Ledger منفصل وتحديث حالة الدفع
+Chargeback	تجميد الحساب، جمع الأدلة، إخطار الفريق المالي
+C.5 ما بعد الشراء
+تأكيد الطلب خلال 60 ثانية: بريد + واتساب (إن وافق العميل).
+معلومات الشحن مع رقم التتبع ورابط الناقل.
+التغليف: تعليمات العناية، بطاقة القصة، QR لتجربة unboxing رقمية.
+بعد التسليم: طلب تقييم بعد 7 أيام، فقط للمشتري الموثّق.
+الولاء: إضافة النقاط بعد انتهاء فترة الإرجاع (وليس عند الشحن) لتجنب الاحتيال.
+الإرجاع: RMA خلال 14 يوماً للعبوات غير المفتوحة، مع استثناءات صحية واضحة.
+إعادة الشراء: تذكير ذكي بعد استهلاك تقديري، دون إزعاج.
+Part D — لوحة الإدارة والعمليات
+D.1 لوحة التحكم
+الأساس: Medusa Admin للتجارة، مع Ops Console مخصص (Next.js) للعمليات الخاصة بالعلامة:
+
+لوحة يومية: مبيعات، طلبات معلقة، مخزون منخفض، Waitlist، شحنات متأخرة.
+Customer 360: الطلبات، القيمة الدائمة، التصنيف، التفضيلات، ملاحظات الـ Clienteling، حالة الموافقات.
+Order Management: طابور SLA، فلترة حسب الحالة/البلد/القيمة، تعديل العنوان قبل الشحن، شحن جزئي، إلغاء، استرداد، إعادة إرسال بريد.
+Fraud Review: درجة مخاطر، عنوان، سرعة الطلبات، سجل الجهاز، قرار يدوي.
+Drop Control: فتح/إغلاق الإطلاق، تخصيص الكمية، نافذة VIP، Kill Switch.
+Audit Log: من فعل ماذا ومتى.
+الأدوار: Owner، Operations، Content Editor، Customer Care، Finance، Developer. لا أحد يملك كل الصلاحيات افتراضياً.
+
+D.2 إدارة المخزون والإصدارات المحدودة
+مخزون لكل موقع (مستودع، Pop-up، 3PL).
+حجوزات مؤقتة للسلات، وحركات مخزون مسجلة.
+edition_size = 500، مع عدّاد بيع فعلي وserial_unit لكل زجاجة.
+حد أقصى للعميل الواحد (max_per_customer) يمنع تجميع الإصدارات.
+تنبيهات نفاد، وتقرير Sell-through لكل حضارة/مجموعة.
+منع البيع الزائد عبر قيد قاعدة البيانات، وليس فحص واجهة.
+تسوية المخزون مع المستودع أسبوعياً، وجرد دوري.
+D.3 إدارة المحتوى
+Product Wizard: بيانات عربية/إنجليزية، صور، فيديو، 3D، SEO، سعر، مخزون، نشر مجدول.
+Media Manager: رفع مباشر إلى Cloudinary/Mux مع Signed Uploads، وليس عبر خادم التطبيق.
+Preview: رابط معاينة آمن قبل النشر.
+Workflow: Draft → Review → Published، مع سجل نسخ.
+Sanity Studio للمجلة وقصص الحضارات، مع روابط مرجعية إلى المنتجات.
+لا يحتاج المالك إلى كتابة كود لإضافة منتج أو حملة.
+D.4 التحليلات
+مقاييس أساسية:
+
+المقياس	التعريف
+Conversion Rate	الطلبات / الجلسات
+AOV	إجمالي الإيراد / عدد الطلبات
+Cart Abandonment	سلات غير مكتملة / سلات منشأة
+Checkout Abandonment	بدأ الدفع ولم يكمل / بدأ الدفع
+Sell-through	المبيع / المتاح في الإصدار
+Waitlist Conversion	المسجلون الذين اشتروا / المسجلون
+Refund Rate	قيمة الاسترداد / الإيراد
+Return Rate	المرتجعات / الطلبات
+Repeat Rate	عملاء اشتروا أكثر من مرة / العملاء
+LTV	القيمة المتوقعة للعميل
+VIP Share	نسبة الإيراد من الشرائح العليا
+Contribution Margin	الإيراد − تكلفة المنتج − الشحن − الدفع − الإرجاع
+التنفيذ: أحداث خادمية (Server-side) عبر Medusa Events + GA4 Measurement Protocol + Meta CAPI، مع Consent Mode. لا نعتمد على Pixel فقط بسبب Ad Blockers وiOS.
+
+Part E — الميزات المتقدمة والاستعداد للمستقبل
+E.1 تعدد اللغات وRTL
+العربية افتراضية، الإنجليزية ثانوية: /ar/... و/en/....
+proxy.ts يكتشف اللغة من المسار أو Accept-Language ويحوّل.
+next-intl للـ UI Messages، وجداول ترجمة في قاعدة البيانات للمنتجات والمحتوى.
+dir يُضبط في Layout حسب اللغة، وليس عبر CSS معكوس.
+Slugs مترجمة مع 301 من القديم إلى الجديد.
+hreflang وSitemap لكل لغة، وCanonical صحيح.
+تنسيق العملة والتواريخ عبر Intl، مع خيار التقويم الهجري إن رغب المالك.
+العربية: ممنوع letter-spacing، وتطبيع البحث (أ/إ/آ، ة/ه، التشكيل).
+البريد والواتساب: قوالب RTL منفصلة، وليس ترجمة آلية.
+العملة مستقلة عن اللغة: عميل عربي في لندن قد يرى GBP.
+E.2 الطلبات المسبقة وقوائم الانتظار
+Waitlist مزدوجة التأكيد (Double Opt-In) لكل حضارة/منتج/إطلاق.
+تسجيل بدون حساب، مع بريد أو هاتف.
+أولوية اختيارية للإحالات، ونافذة وصول مبكر.
+إشعارات بريد/واتساب عند فتح الإطلاق، مع أكواد فريدة.
+Drop Mechanics: كمية محددة، حد لكل عميل، Waiting Room عند الذروة، وBot Protection.
+Pre-order: عربون أو كامل، تاريخ شحن متوقع، وسياسة إلغاء واضحة.
+قياس التحويل من Waitlist إلى شراء، وليس فقط عدد التسجيلات.
+E.3 نظام VIP والولاء
+شرائح: Sand → Gold → Royal (أو أسماء من هوية العلامة).
+نقاط لكل عملة، باستثناء الخصومات والإرجاع.
+مزايا: وصول مبكر 24 ساعة، شحن سريع مجاني، تغليف خاص، هدايا ميلاد، دعوات إطلاق، وخدمة Clienteling.
+Ledger غير قابل للتعديل، مع انتهاء صلاحية النقاط وسجل تدقيق.
+لا تُعرض الخصومات علناً؛ الولاء تجربة خاصة وليس "خصم 20%".
+ربط الولاء بـ Medusa Customer Groups وPromotions، وليس نظاماً منفصلاً.
+E.4 لماذا Headless؟
+الواجهة السينمائية تحتاج حرية كاملة لا توفرها منصات الـ Themes.
+نفس الـ API يخدم الموقع، التطبيق، ونقاط البيع.
+إمكانية إضافة Storefront جديد أو سوق إقليمي دون تكرار النواة.
+فصل المحتوى عن التجارة يسمح للفريق التحريري بالعمل دون لمس الأسعار.
+ملكية البيانات تسمح بالتحليلات المتقدمة وCRM وClienteling.
+قابلية استبدال أي مزوّد (دفع، شحن، بحث) عبر Adapters.
+التكلفة: تحتاج فريقاً هندسياً وDevOps. لهذا نبدأ بـ Modular Monolith وليس Microservices، ونستخدم خدمات مُدارة.
+
+E.5 Omnichannel
+Mobile App: React Native/Expo لاحقاً، يستهلك نفس Store API ونفس المصادقة.
+POS: Medusa Sales Channels + Stock Locations؛ بيع في Pop-up، خصم من نفس المخزون، وربط الطلبات بالعميل.
+Clienteling: ملف عميل موحد، تفضيلات، تاريخ الشراء، وملاحظات المستشار.
+BOPIS / Same-day: لاحقاً حسب شراكات الشحن.
+Part F — الأمان والقانون والبنية التحتية
+F.1 الاستضافة
+المكوّن	الخيار
+Storefront	Vercel (Pro/Enterprise)
+Medusa API/Workers	Railway أو Fly.io أو AWS ECS Fargate
+PostgreSQL	Neon أو Supabase Postgres (نفس المنطقة)
+Redis	Upstash
+CDN/WAF	Cloudflare
+Media	Cloudinary + Mux + R2
+Email	Resend / Postmark
+Search	Meilisearch مُدار
+Observability	Sentry + OpenTelemetry + Grafana
+المنطقة: يفضل الخليج (AWS me-central-1 أو ما يعادله) لقاعدة البيانات وMedusa لتقليل زمن الاستجابة. Vercel يوزع الواجهة عالمياً.
+
+F.2 CI/CD
+Pipeline في GitHub Actions:
+
+Install مع Cache (pnpm).
+Lint + Typecheck.
+Unit Tests (Vitest).
+Integration Tests مع Testcontainers (Postgres/Redis).
+Build.
+E2E Smoke (Playwright): PDP → Cart → Checkout (Sandbox).
+Security: Dependency Scan + CodeQL + Secret Scan.
+Deploy Preview لكل PR.
+Migration Check على قاعدة staging.
+موافقة يدوية للإنتاج.
+Canary 10% ثم 100%، مع Rollback فوري.
+Post-deploy Smoke + Health Checks.
+قواعد: Migrations متوافقة للخلف، لا حذف عمود في نفس نشر إضافة بديله، ونسخة احتياطية قبل كل Migration إنتاجية.
+
+F.3 الأمان
+TLS 1.3 + HSTS + CSP Nonce + X-Frame-Options + Referrer-Policy + Permissions-Policy.
+CSRF Protection للجلسات، وSameSite Cookies.
+Rate Limiting على OTP، تسجيل الدخول، البحث، الـ Checkout، والـ Webhooks.
+Cloudflare Turnstile على Waitlist/Newsletter/Checkout.
+OTP: 5 دقائق، 5 محاولات، منع إعادة الإرسال المتكرر، وحماية SMS Pumping.
+Admin: 2FA إلزامي، RBAC، IP Allowlist اختياري، Session قصيرة.
+تشفير الحقول الحساسة (الهاتف، ملاحظات العميل) وTLS at Rest.
+عدم تسجيل PII في Logs؛ إخفاء البريد/الهاتف.
+PCI-DSS SAQ A؛ لا تخزين بطاقات؛ Tokenization فقط.
+Webhook Signature Verification + Replay Protection.
+Dependency Scanning + SAST + DAST + Penetration Test قبل الإطلاق.
+backups مشفرة + PITR + اختبار استعادة دوري.
+Incident Response Plan + قنوات إبلاغ + Status Page.
+الاحتيال:
+
+3DS إلزامي حيث ينطبق.
+AVS/CVV، سرعة الطلبات، Device Fingerprint، Blocklists.
+مراجعة يدوية للطلبات فوق حد معين أو للعناوين المشبوهة.
+Signifyd/Riskified لاحقاً إذا زاد الحجم.
+Chargeback Alerts (Ethoca/Verifi) إن توفرت.
+F.4 القانون والامتثال
+الخصوصية: GDPR (للعملاء الأوروبيين)، CCPA (كاليفورنيا)، UAE PDPL، Saudi PDPL.
+الموافقات: Cookie Consent منفصل عن التسويق؛ Analytics لا يعمل قبل الموافقة.
+DSAR: تصدير وحذف بيانات العميل خلال المدة القانونية.
+DPA مع كل مزوّد يعالج بيانات شخصية.
+الشروط: Terms of Service، Privacy Policy، Shipping Policy، Returns/Refund Policy، Cookie Policy.
+الضرائب: تسجيل VAT في السعودية/الإمارات حسب الحد، وفاتورة متوافقة مع الفاتورة الإلكترونية (ZATCA في السعودية) عند الحاجة.
+تنظيم العطور: IFRA، تسجيل/إشعار مستحضرات التجميل (SFDA في السعودية، ESMA/MOHAP في الإمارات)، ملصقات عربية، رقم التشغيلة، تاريخ الانتهاء.
+الشحن: تصنيف العطور الكحولية كبضائع خطرة، MSDS، وقيود الناقلين والدول.
+العمر: 18+ لبعض الأسواق إن لزم.
+F.5 السعة: ماذا يحدث عند بيع 10,000 عطر في ساعة؟
+الحساب:
+
+10,000 طلب/ساعة = 2.8 طلب/ثانية تقريباً. هذا رقم متواضع لـ PostgreSQL إذا صُممت الفهارس والـ Transactions بشكل صحيح.
+عنق الزجاجة الحقيقي ليس API، بل:
+تنازع المخزون على الإصدار المحدود.
+حدود مزوّد الدفع (Rate Limits).
+الحمل المتزامن على صفحة الإطلاق (قد يكون 100,000 زائر في نفس الدقيقة).
+الحلول:
+
+حجز مخزون ذري + طابور + Waiting Room على Cloudflare.
+CDN وCache Components لصفحات المنتج؛ لا تصل كل الطلبات لقاعدة البيانات.
+Medusa Stateless خلف Load Balancer، مع PgBouncer.
+Redis للجلسات والـ Rate Limiting والطوابير.
+فصل الكتابات الثقيلة (بريد، تحليلات، ولاء) عن مسار الدفع.
+Idempotency يمنع الطلبات المكررة عند إعادة المحاولة.
+Read Replica للكتالوج والتقارير عند الحاجة.
+Load Test بـ k6 على 5× الحمل المتوقع قبل الإطلاق.
+Partitioning للطلبات عند تجاوز عشرات الملايين، وليس قبل ذلك.
+لا Microservices قبل أن تثبت المقاييس أن Monolith هو العنق.
+4. خارطة التنفيذ المرحلية
+Sprint 0 — التأسيس (1–2 أسبوع)
+المخرجات:
+
+حسم اسم العلامة والدومين والكيان القانوني.
+Git repository + حماية الفروع + CODEOWNERS.
+Monorepo اختياري (pnpm + Turborepo) أو فصل apps/storefront وservices/commerce.
+بيئات Dev/Staging/Production وقواعد بيانات منفصلة.
+تنظيف app/p وapp/packiging، إصلاح خطأ removeChild وتحذير sizes.
+تحويل 152 إطاراً إلى فيديو HLS/MP4 محسّن أو تسلسل تحميل تدريجي.
+تحسين صور التغليف إلى AVIF/WebP.
+تفعيل next-intl وproxy.ts وبناء /ar و/en.
+تفعيل Consent Management وGA4.
+فتح حسابات Tap/Stripe وشحن Aramex/DHL (KYC يستغرق وقتاً — ابدأ فوراً).
+مسودات السياسات القانونية.
+معيار الخروج: الموقع الحالي يعمل على بيئة Staging مع لغتين، وأصول محسّنة، وCI أساسي.
+
+Sprint 1 — MVP البيع (4–6 أسابيع)
+النطاق:
+
+نشر Medusa v2 + PostgreSQL + Redis.
+كتالوج RAFID: منتج، متغيرات (50ml/100ml إن وجدت)، سعر، مخزون، صور، فيديو.
+صفحة منتج + سلة + Checkout كامل.
+Tap للخليج + Stripe للعالمي (أو واحد حسب الأهلية).
+شحن: خيار خليجي وخيار دولي، مع حساب الوزن والرسوم.
+بريد تأكيد الطلب + رقم تتبع.
+Medusa Admin: عرض الطلبات، تحديث الحالة، إدارة المخزون.
+صفحات قانونية، SEO أساسي، JSON-LD للمنتج.
+اختبارات E2E وLoad Test.
+معيار الخروج: يمكن شراء RAFID فعلياً، الدفع ينجح، الطلب يظهر في الإدارة، والبريد يصل.
+
+Sprint 2 — النمو (4–6 أسابيع)
+النطاق:
+
+حسابات العملاء + OTP + سجل الطلبات + العناوين + المفضلة.
+Waitlist للحضارات القادمة + Double Opt-In + إشعارات واتساب.
+تقييمات موثقة + صور عملاء + إدارة مراجعة.
+أكواد خصم وحملات.
+Sanity للمجلة وقصص الحضارات.
+أساس الولاء (نقاط، شرائح، وصول مبكر).
+لوحة تحليلات + Server-side Events.
+قواعد احتيال ومراجعة يدوية.
+تحسينات SEO: hreflang، Sitemap، Journal.
+معيار الخروج: العميل يستطيع إنشاء حساب، التسجيل في Waitlist، تقييم منتج، والعلامة تستطيع نشر قصة جديدة بدون كود.
+
+Sprint 3 — التوسع (6–8 أسابيع)
+النطاق:
+
+Multi-currency كامل + أسعار لكل سوق.
+Drops وPre-orders بإدارة تخصيص وWaiting Room.
+VIP tiers ووصول مبكر وClienteling.
+إضافة الحضارات الأربع والمنتجات الجديدة والفئات.
+بحث Meilisearch متقدم بالعربية.
+POS لـ Pop-up + تطبيق جوال لاحقاً (نفس API).
+تكامل 3PL/ERP وتقارير مالية.
+Multi-region Read Replica واختبارات Chaos.
+A/B Testing وFeature Flags.
+معيار الخروج: المتجر يدعم 10,000 منتج، 5 حضارات، أسواقاً متعددة، وبيعاً في قنوات متعددة دون إعادة كتابة.
+
+5. المخاطر والقرارات المفتوحة
+المخاطرة	الأثر	التخفيف
+تعارض اسم 3WEEQ/3WWEQ	علامة، دومين، فواتير	حسم فوري قبل Sprint 0
+تأخر KYC لدى Tap/Stripe	تأخير الإطلاق	بدء الطلب الآن + Stripe كاحتياط
+قيود شحن العطور الكحولية	فقدان أسواق	التحقق من الناقلين والدول قبل عرض الشحن
+الأصول الثقيلة الحالية	LCP سيئ ورفض جوال	تحويل الإطارات إلى فيديو وتحسين PNG
+عدم وجود Git	لا CI/CD ولا Rollback	إنشاء Repository فوراً
+محتوى/صور/أسعار غير جاهزة	تأخير المحتوى	Placeholders موسومة + خطة تصوير
+البيع الزائد في الإصدارات	سمعة ومال	حجز ذري + Serial Units + مراقبة
+الاحتيال والـ Chargebacks	خسائر	3DS + مراجعة يدوية + تأمين
+تعقيد الترجمة العربية	تجربة ضعيفة	جداول ترجمة + مراجعة لغوية + اختبار RTL
+Overengineering	تأخير	Modular Monolith + ميزات حسب الحاجة
+قرارات مطلوبة منك قبل Sprint 1:
+
+الاسم النهائي والدومين.
+الكيان القانوني ودولة التسجيل والـ VAT.
+الأسعار والعملات وطرق البيع (50ml/100ml/Discovery Set).
+بوابة الدفع المفضلة وشركة الشحن.
+سياسة الإرجاع وفترة الضمان.
+هل نبدأ بترقيم الزجاجات (Serialized)؟
+ميزانية التصوير والفيديو النهائي.
+البريد الرسمي ورقم واتساب للخدمة.
+هل المطلوب حساب إنجليزي/عربي منفصل على السوشيال؟
+موعد الإطلاق المستهدف.
+6. التوصية النهائية
+ابدأ بـ Modular Monolith مبني على Medusa v2 + PostgreSQL + Next.js 16، مع Cloudinary/Mux للأصول، وOTP للهوية، وTap/Stripe للدفع، وVercel/Railway/Neon للتشغيل. لا تبنِ NestJS من الصفر، ولا تستخدم Supabase كمنصة تجارة كاملة، ولا تجعل Sanity مصدراً للأسعار أو المخزون. افصل المحتوى التحريري عن التجارة، وابنِ التجربة السينمائية فوق API نظيف.
+
+الخطوة التالية بعد موافقتك: الدخول في Phase B — تصميم قاعدة البيانات التفصيلي: DDL مفهوم، القيود، الفهارس، حالات الطلب، وسياسات الحجز والتزامن، ثم تحويلها إلى Migrations قابلة للتنفيذ.
+
+
+اسم البراند 3weeq لا يصلح كبداية اسم Schema/Table في SQL، لذلك نستخدم Schemas وظيفية: catalog, engagement, commerce, content, ops.
+
+B.1 الـ ERD
+erDiagram
+  %% Medusa-owned core
+  PRODUCT ||--|| PRODUCT_PROFILE : extends
+  PRODUCT_VARIANT ||--|| VARIANT_PROFILE : extends
+  PRODUCT_COLLECTION ||--|| COLLECTION_PROFILE : extends
+  CUSTOMER ||--o| LOYALTY_ACCOUNT : owns
+  ORDER ||--|| ORDER_PROFILE : extends
+  ORDER_ITEM ||--|| ORDER_ITEM_PROFILE : extends
+  PROMOTION ||--|| PROMOTION_PROFILE : extends
+
+  %% Brand taxonomy
+  CIVILIZATION ||--o{ CIVILIZATION_TRANSLATION : translated
+  CIVILIZATION ||--o{ PRODUCT_PROFILE : groups
+  CIVILIZATION ||--o{ DROP : hosts
+  CIVILIZATION ||--o{ WAITLIST_ENTRY : targets
+
+  PRODUCT ||--o{ PRODUCT_TRANSLATION : translated
+  PRODUCT ||--o{ PRODUCT_MEDIA : has
+  PRODUCT ||--o{ PRODUCT_RELATIONSHIP : related
+  PRODUCT ||--o{ WAITLIST_ENTRY : targets
+  PRODUCT ||--o{ REVIEW : receives
+
+  PRODUCT_COLLECTION ||--o{ DROP : contains
+  DROP ||--o{ DROP_ALLOCATION : allocates
+  DROP ||--o{ WAITLIST_ENTRY : targets
+
+  MEDIA_ASSET ||--o{ PRODUCT_MEDIA : used_in
+  MEDIA_ASSET ||--o{ REVIEW_MEDIA : used_in
+  MEDIA_ASSET ||--o{ JOURNAL_POST : cover
+
+  PRODUCT_VARIANT ||--o{ SERIAL_UNIT : serialized
+  ORDER_ITEM ||--o| SERIAL_UNIT : assigned_to
+
+  ORDER_ITEM ||--o| REVIEW : verifies
+  REVIEW ||--o{ REVIEW_MEDIA : has
+
+  LOYALTY_TIER ||--o{ LOYALTY_ACCOUNT : tier
+  LOYALTY_ACCOUNT ||--o{ LOYALTY_TRANSACTION : ledger
+  ORDER ||--o{ LOYALTY_TRANSACTION : earns
+  ORDER ||--o| PREORDER : preordered
+B.2 PostgreSQL DDL — التأسيس والكتالوج
+يُنفَّذ بعد Medusa core migrations. الجداول المشار إليها بـ public.* مملوكة لـ Medusa.
+
+-- ============================================================
+-- 3weeq — Phase B canonical schema
+-- PostgreSQL 16+
+-- ============================================================
+
+create extension if not exists pgcrypto;
+create extension if not exists pg_trgm;
+
+create schema if not exists catalog;
+create schema if not exists engagement;
+create schema if not exists commerce;
+create schema if not exists content;
+create schema if not exists ops;
+
+create or replace function ops.touch_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+-- ------------------------------------------------------------
+-- MEDIA
+-- ------------------------------------------------------------
+create table catalog.media_asset (
+  id             uuid primary key default gen_random_uuid(),
+  provider       text not null check (provider in ('cloudinary','mux','r2','external')),
+  public_id      text not null,
+  resource_type  text not null check (resource_type in ('image','video','model','document')),
+  url            text not null,
+  mime_type      text,
+  width          integer check (width is null or width > 0),
+  height         integer check (height is null or height > 0),
+  duration_ms    integer check (duration_ms is null or duration_ms >= 0),
+  bytes          bigint check (bytes is null or bytes >= 0),
+  blurhash       text,
+  focal_point    jsonb not null default '{"x":0.5,"y":0.5}'::jsonb,
+  alt            jsonb not null default '{}'::jsonb,
+  folder         text,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
+  unique (provider, public_id)
+);
+
+-- ------------------------------------------------------------
+-- CIVILIZATIONS
+-- ------------------------------------------------------------
+create table catalog.civilization (
+  id             uuid primary key default gen_random_uuid(),
+  code           text not null unique
+                 check (code ~ '^[a-z][a-z0-9_]*$'),
+  slug           text not null unique
+                 check (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
+  status         text not null default 'draft'
+                 check (status in ('draft','announced','live','archived')),
+  launch_at      timestamptz,
+  sort_order     integer not null default 0,
+  accent_color   text check (accent_color is null or accent_color ~ '^#[0-9A-Fa-f]{6}$'),
+  hero_media_id  uuid references catalog.media_asset(id) on delete set null,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
+  deleted_at     timestamptz
+);
+
+create table catalog.civilization_translation (
+  civilization_id uuid not null references catalog.civilization(id) on delete cascade,
+  locale          text not null check (locale ~ '^[a-z]{2}(-[A-Z]{2})?$'),
+  name            text not null,
+  epithet         text,
+  summary         text,
+  story           text,
+  seo_title       text,
+  seo_description text,
+  primary key (civilization_id, locale)
+);
+
+-- ------------------------------------------------------------
+-- PRODUCT TYPES (extensible, not hard-coded enum)
+-- ------------------------------------------------------------
+create table catalog.product_type (
+  code       text primary key check (code ~ '^[a-z][a-z0-9_]*$'),
+  name_ar    text not null,
+  name_en    text not null,
+  sort_order integer not null default 0
+);
+
+-- ------------------------------------------------------------
+-- COLLECTIONS (Medusa owns product_collection)
+-- ------------------------------------------------------------
+create table catalog.collection_profile (
+  collection_id    text primary key
+                   references public.product_collection(id) on delete cascade,
+  civilization_id  uuid references catalog.civilization(id) on delete set null,
+  collection_type  text not null default 'permanent'
+                   check (collection_type in ('permanent','seasonal','limited','drop','capsule')),
+  starts_at        timestamptz,
+  ends_at          timestamptz,
+  hero_media_id    uuid references catalog.media_asset(id) on delete set null,
+  is_drop          boolean not null default false,
+  metadata         jsonb not null default '{}'::jsonb,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now(),
+  check (ends_at is null or starts_at is null or ends_at > starts_at)
+);
+
+create table catalog.collection_translation (
+  collection_id   text not null references public.product_collection(id) on delete cascade,
+  locale          text not null check (locale ~ '^[a-z]{2}(-[A-Z]{2})?$'),
+  title           text not null,
+  subtitle        text,
+  story           text,
+  seo_title       text,
+  seo_description text,
+  primary key (collection_id, locale)
+);
+B.3 DDL — المنتجات والامتدادات
+-- ------------------------------------------------------------
+-- PRODUCTS (Medusa owns product / product_variant)
+-- ------------------------------------------------------------
+create table catalog.product_profile (
+  product_id        text primary key
+                    references public.product(id) on delete cascade,
+  civilization_id   uuid references catalog.civilization(id) on delete set null,
+  product_type      text not null references catalog.product_type(code) on delete restrict,
+  fragrance_family  text,
+  concentration     text,
+  gender            text check (gender is null or gender in ('unisex','feminine','masculine')),
+  origin_country    char(2) check (origin_country is null or origin_country ~ '^[A-Z]{2}$'),
+  is_limited        boolean not null default false,
+  edition_size      integer check (edition_size is null or edition_size > 0),
+  is_preorder       boolean not null default false,
+  preorder_ships_at date,
+  max_per_customer  integer check (max_per_customer is null or max_per_customer > 0),
+  hero_media_id     uuid references catalog.media_asset(id) on delete set null,
+  published_at      timestamptz,
+  metadata          jsonb not null default '{}'::jsonb,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  deleted_at        timestamptz,
+  check (not is_limited or edition_size is not null),
+  check (not is_preorder or preorder_ships_at is not null)
+);
+
+create table catalog.product_translation (
+  product_id        text not null references public.product(id) on delete cascade,
+  locale            text not null check (locale ~ '^[a-z]{2}(-[A-Z]{2})?$'),
+  slug              text not null,
+  name              text not null,
+  subtitle          text,
+  short_description text,
+  description       text,
+  story             text,
+  ingredients       text,
+  ritual            text,
+  seo_title         text,
+  seo_description   text,
+  primary key (product_id, locale),
+  unique (locale, slug)
+);
+
+create table catalog.variant_profile (
+  variant_id        text primary key
+                    references public.product_variant(id) on delete cascade,
+  size_ml           numeric(8,2) check (size_ml is null or size_ml > 0),
+  concentration     text,
+  fragrance_family  text,
+  top_notes         jsonb not null default '{}'::jsonb,
+  heart_notes       jsonb not null default '{}'::jsonb,
+  base_notes        jsonb not null default '{}'::jsonb,
+  longevity_hours   integer check (longevity_hours is null or longevity_hours >= 0),
+  sillage           text,
+  packaging_type    text,
+  weight_g          integer check (weight_g is null or weight_g > 0),
+  dimensions_mm     jsonb,
+  metadata          jsonb not null default '{}'::jsonb,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now()
+);
+
+create table catalog.product_media (
+  id          uuid primary key default gen_random_uuid(),
+  product_id  text not null references public.product(id) on delete cascade,
+  variant_id  text references public.product_variant(id) on delete cascade,
+  media_id    uuid not null references catalog.media_asset(id) on delete restrict,
+  role        text not null
+              check (role in ('hero','gallery','packaging','video','model_3d','lifestyle','size_guide')),
+  position    integer not null default 0 check (position >= 0),
+  created_at  timestamptz not null default now()
+);
+
+create unique index product_media_order_uq
+on catalog.product_media (product_id, coalesce(variant_id, ''), role, position);
+
+create table catalog.product_relationship (
+  product_id         text not null references public.product(id) on delete cascade,
+  related_product_id text not null references public.product(id) on delete cascade,
+  relation_type      text not null
+                     check (relation_type in ('cross_sell','upsell','bundle','replacement')),
+  position           integer not null default 0,
+  primary key (product_id, related_product_id, relation_type),
+  check (product_id <> related_product_id)
+);
+
+-- ------------------------------------------------------------
+-- LIMITED-EDITION SERIALS
+-- ------------------------------------------------------------
+create table catalog.serial_unit (
+  id            uuid primary key default gen_random_uuid(),
+  variant_id    text not null references public.product_variant(id) on delete restrict,
+  serial_number text not null,
+  status        text not null default 'available'
+                check (status in ('available','reserved','sold','returned','void')),
+  order_id      text references public."order"(id) on delete restrict,
+  order_item_id text references public.order_item(id) on delete restrict,
+  assigned_at   timestamptz,
+  created_at    timestamptz not null default now(),
+  unique (variant_id, serial_number),
+  check (status <> 'sold' or order_item_id is not null)
+);
+B.4 DDL — Waitlist وDrops وReviews وLoyalty
+-- ------------------------------------------------------------
+-- DROPS
+-- ------------------------------------------------------------
+create table engagement.drop (
+  id                 uuid primary key default gen_random_uuid(),
+  collection_id      text not null references public.product_collection(id) on delete cascade,
+  civilization_id    uuid references catalog.civilization(id) on delete set null,
+  slug               text not null unique
+                     check (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
+  status             text not null default 'draft'
+                     check (status in ('draft','scheduled','live','paused','ended','cancelled')),
+  access_level       text not null default 'public'
+                     check (access_level in ('public','waitlist','vip','invite')),
+  opens_at           timestamptz not null,
+  closes_at          timestamptz,
+  per_customer_limit integer not null default 1 check (per_customer_limit > 0),
+  metadata           jsonb not null default '{}'::jsonb,
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now(),
+  check (closes_at is null or closes_at > opens_at)
+);
+
+create table engagement.drop_allocation (
+  drop_id           uuid not null references engagement.drop(id) on delete cascade,
+  variant_id        text not null references public.product_variant(id) on delete restrict,
+  quantity          integer not null check (quantity > 0),
+  reserved_quantity integer not null default 0
+                    check (reserved_quantity >= 0 and reserved_quantity <= quantity),
+  version           integer not null default 0,
+  primary key (drop_id, variant_id)
+);
+
+-- ------------------------------------------------------------
+-- WAITLIST (Civilization / Product / Drop)
+-- ------------------------------------------------------------
+create table engagement.waitlist_entry (
+  id                      uuid primary key default gen_random_uuid(),
+  email                   text,
+  phone_e164              text,
+  first_name              text,
+  locale                  text not null default 'ar'
+                          check (locale ~ '^[a-z]{2}(-[A-Z]{2})?$'),
+  civilization_id         uuid references catalog.civilization(id) on delete cascade,
+  product_id              text references public.product(id) on delete cascade,
+  drop_id                 uuid references engagement.drop(id) on delete cascade,
+  source                  text not null default 'website',
+  status                  text not null default 'pending'
+                          check (status in ('pending','confirmed','notified','converted','unsubscribed')),
+  consent_marketing       boolean not null default false,
+  confirmation_token_hash text,
+  token_expires_at        timestamptz,
+  confirmation_sent_at    timestamptz,
+  confirmed_at            timestamptz,
+  notified_at             timestamptz,
+  unsubscribed_at         timestamptz,
+  priority_score          integer not null default 0,
+  metadata                jsonb not null default '{}'::jsonb,
+  created_at              timestamptz not null default now(),
+  updated_at              timestamptz not null default now(),
+  check (email is not null or phone_e164 is not null),
+  check (num_nonnulls(civilization_id, product_id, drop_id) = 1),
+  check (email is null or email ~* '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'),
+  check (phone_e164 is null or phone_e164 ~ '^\+[1-9][0-9]{6,14}$'),
+  check (status <> 'confirmed' or confirmed_at is not null)
+);
+
+create unique index waitlist_target_contact_uq
+on engagement.waitlist_entry (
+  coalesce(civilization_id::text, product_id, drop_id::text),
+  coalesce(lower(email), phone_e164)
+)
+where status <> 'unsubscribed';
+
+create table engagement.waitlist_event (
+  id                bigint generated always as identity primary key,
+  waitlist_entry_id uuid not null references engagement.waitlist_entry(id) on delete cascade,
+  event_type        text not null,
+  payload           jsonb not null default '{}'::jsonb,
+  created_at        timestamptz not null default now()
+);
+
+-- ------------------------------------------------------------
+-- REVIEWS (verified purchase only)
+-- ------------------------------------------------------------
+create table engagement.review (
+  id                uuid primary key default gen_random_uuid(),
+  product_id        text not null references public.product(id) on delete cascade,
+  customer_id       text not null references public.customer(id) on delete cascade,
+  order_id          text not null references public."order"(id) on delete cascade,
+  order_item_id     text not null references public.order_item(id) on delete cascade,
+  rating            smallint not null check (rating between 1 and 5),
+  title             text,
+  body              text,
+  locale            text not null check (locale ~ '^[a-z]{2}(-[A-Z]{2})?$'),
+  status            text not null default 'pending'
+                    check (status in ('pending','approved','rejected','hidden')),
+  verified_purchase boolean not null default true,
+  helpful_count     integer not null default 0 check (helpful_count >= 0),
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  unique (order_item_id)
+);
+
+create table engagement.review_media (
+  review_id uuid not null references engagement.review(id) on delete cascade,
+  media_id  uuid not null references catalog.media_asset(id) on delete cascade,
+  position  integer not null default 0,
+  primary key (review_id, media_id, position)
+);
+
+-- ------------------------------------------------------------
+-- LOYALTY (append-only ledger)
+-- ------------------------------------------------------------
+create table engagement.loyalty_tier (
+  id                 uuid primary key default gen_random_uuid(),
+  code               text not null unique,
+  name_ar            text not null,
+  name_en            text not null,
+  threshold_minor    bigint not null default 0 check (threshold_minor >= 0),
+  currency_code      char(3) not null default 'SAR'
+                     check (currency_code ~ '^[A-Z]{3}$'),
+  early_access_hours integer not null default 0 check (early_access_hours >= 0),
+  benefits           jsonb not null default '{}'::jsonb,
+  sort_order         integer not null default 0
+);
+
+create table engagement.loyalty_account (
+  customer_id      text primary key references public.customer(id) on delete cascade,
+  tier_id          uuid references engagement.loyalty_tier(id) on delete set null,
+  points_balance   integer not null default 0 check (points_balance >= 0),
+  lifetime_points  integer not null default 0 check (lifetime_points >= 0),
+  year_spend_minor bigint not null default 0 check (year_spend_minor >= 0),
+  joined_at        timestamptz not null default now(),
+  updated_at       timestamptz not null default now()
+);
+
+create table engagement.loyalty_transaction (
+  id               uuid primary key default gen_random_uuid(),
+  customer_id      text not null references engagement.loyalty_account(customer_id) on delete cascade,
+  order_id         text references public."order"(id) on delete set null,
+  points           integer not null,
+  balance_after    integer not null check (balance_after >= 0),
+  transaction_type text not null
+                   check (transaction_type in ('earn','redeem','adjust','expire','refund')),
+  expires_at       timestamptz,
+  created_at       timestamptz not null default now()
+);
+
+create unique index loyalty_order_earn_uq
+on engagement.loyalty_transaction (order_id, transaction_type)
+where order_id is not null and transaction_type = 'earn';
+
+-- ------------------------------------------------------------
+-- CONSENT + NEWSLETTER
+-- ------------------------------------------------------------
+create table engagement.consent_record (
+  id             uuid primary key default gen_random_uuid(),
+  customer_id    text references public.customer(id) on delete set null,
+  email          text,
+  phone_e164     text,
+  consent_type   text not null
+                 check (consent_type in ('marketing_email','marketing_whatsapp','analytics','terms','privacy','cookies')),
+  granted        boolean not null,
+  policy_version text not null,
+  source         text,
+  ip             inet,
+  created_at     timestamptz not null default now(),
+  check (customer_id is not null or email is not null or phone_e164 is not null)
+);
+
+create table engagement.newsletter_subscriber (
+  id                      uuid primary key default gen_random_uuid(),
+  email                   text not null,
+  locale                  text not null default 'ar',
+  status                  text not null default 'pending'
+                          check (status in ('pending','confirmed','unsubscribed')),
+  consent_marketing       boolean not null default false,
+  confirmation_token_hash text,
+  confirmed_at            timestamptz,
+  unsubscribed_at         timestamptz,
+  created_at              timestamptz not null default now(),
+  updated_at              timestamptz not null default now()
+);
+
+create unique index newsletter_email_uq
+on engagement.newsletter_subscriber (lower(email));
+B.5 DDL — الطلبات والمحتوى والعمليات
+-- ------------------------------------------------------------
+-- COMMERCE EXTENSIONS
+-- ------------------------------------------------------------
+create table commerce.promotion_profile (
+  promotion_id     text primary key references public.promotion(id) on delete cascade,
+  scope            text not null default 'order'
+                   check (scope in ('order','product','collection','civilization','shipping','vip_early_access')),
+  civilization_id  uuid references catalog.civilization(id) on delete set null,
+  collection_id    text references public.product_collection(id) on delete set null,
+  vip_tier_id      uuid references engagement.loyalty_tier(id) on delete set null,
+  early_access_at  timestamptz,
+  metadata         jsonb not null default '{}'::jsonb,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now()
+);
+
+create table commerce.order_profile (
+  order_id           text primary key references public."order"(id) on delete cascade,
+  source             text not null default 'web'
+                     check (source in ('web','app','pos','phone','whatsapp')),
+  civilization_id    uuid references catalog.civilization(id) on delete set null,
+  vip_tier_id        uuid references engagement.loyalty_tier(id) on delete set null,
+  gift_wrap          boolean not null default false,
+  gift_message       text,
+  requires_signature boolean not null default false,
+  risk_score         numeric(5,2) check (risk_score is null or (risk_score >= 0 and risk_score <= 100)),
+  risk_level         text check (risk_level is null or risk_level in ('low','medium','high','blocked')),
+  clienteling_notes  text,
+  metadata           jsonb not null default '{}'::jsonb,
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now()
+);
+
+create table commerce.order_item_profile (
+  order_item_id  text primary key references public.order_item(id) on delete cascade,
+  serial_unit_id uuid references catalog.serial_unit(id) on delete set null,
+  engraving_text text,
+  gift_message   text,
+  customization  jsonb not null default '{}'::jsonb,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+create table commerce.preorder (
+  order_id       text primary key references public."order"(id) on delete cascade,
+  ships_at       date not null,
+  deposit_minor  bigint not null default 0 check (deposit_minor >= 0),
+  balance_due_at date,
+  status         text not null default 'pending'
+                 check (status in ('pending','paid','ready','fulfilled','cancelled')),
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+-- ------------------------------------------------------------
+-- CONTENT
+-- ------------------------------------------------------------
+create table content.journal_post (
+  id              uuid primary key default gen_random_uuid(),
+  civilization_id uuid references catalog.civilization(id) on delete set null,
+  slug            text not null,
+  locale          text not null check (locale ~ '^[a-z]{2}(-[A-Z]{2})?$'),
+  title           text not null,
+  excerpt         text,
+  body            jsonb not null default '[]'::jsonb,
+  cover_media_id  uuid references catalog.media_asset(id) on delete set null,
+  author_name     text,
+  tags            text[] not null default '{}',
+  status          text not null default 'draft'
+                  check (status in ('draft','review','published','archived')),
+  published_at    timestamptz,
+  seo_title       text,
+  seo_description text,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  unique (locale, slug)
+);
+
+-- ------------------------------------------------------------
+-- OPS
+-- ------------------------------------------------------------
+create table ops.webhook_event (
+  id              uuid primary key default gen_random_uuid(),
+  provider        text not null,
+  event_id        text not null,
+  event_type      text not null,
+  payload         jsonb not null,
+  signature_valid boolean not null default false,
+  status          text not null default 'received'
+                  check (status in ('received','processing','processed','failed','ignored')),
+  attempts        integer not null default 0,
+  last_error      text,
+  received_at     timestamptz not null default now(),
+  processed_at    timestamptz,
+  unique (provider, event_id)
+);
+
+create table ops.outbox_event (
+  id             uuid primary key default gen_random_uuid(),
+  aggregate_type text not null,
+  aggregate_id   text not null,
+  event_type     text not null,
+  payload        jsonb not null,
+  status         text not null default 'pending'
+                 check (status in ('pending','processing','published','failed')),
+  attempts       integer not null default 0,
+  available_at   timestamptz not null default now(),
+  created_at     timestamptz not null default now(),
+  published_at   timestamptz
+);
+
+create table ops.idempotency_key (
+  key          text primary key,
+  scope        text not null,
+  request_hash text not null,
+  response     jsonb,
+  status       text not null default 'in_progress'
+               check (status in ('in_progress','completed','failed')),
+  expires_at   timestamptz not null,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+
+create table ops.audit_log (
+  id          bigint generated always as identity primary key,
+  actor_id    text,
+  actor_type  text not null default 'admin'
+              check (actor_type in ('admin','customer','system','webhook')),
+  action      text not null,
+  entity_type text not null,
+  entity_id   text not null,
+  before      jsonb,
+  after       jsonb,
+  ip          inet,
+  user_agent  text,
+  created_at  timestamptz not null default now()
+);
+B.6 الفهارس والـ Triggers
+create index civilization_status_idx
+on catalog.civilization (status, sort_order);
+
+create index product_profile_civ_idx
+on catalog.product_profile (civilization_id, published_at desc)
+where deleted_at is null;
+
+create index product_translation_name_trgm_idx
+on catalog.product_translation using gin (name gin_trgm_ops);
+
+create index collection_profile_civ_idx
+on catalog.collection_profile (civilization_id, collection_type);
+
+create index product_media_product_idx
+on catalog.product_media (product_id, role, position);
+
+create index serial_unit_status_idx
+on catalog.serial_unit (variant_id, status);
+
+create index drop_status_idx
+on engagement.drop (status, opens_at);
+
+create index waitlist_target_status_idx
+on engagement.waitlist_entry (civilization_id, product_id, drop_id, status, created_at desc);
+
+create index review_product_idx
+on engagement.review (product_id, status, created_at desc);
+
+create index loyalty_tx_customer_idx
+on engagement.loyalty_transaction (customer_id, created_at desc);
+
+create index order_profile_risk_idx
+on commerce.order_profile (risk_level, created_at desc);
+
+create index webhook_event_status_idx
+on ops.webhook_event (status, received_at);
+
+create index outbox_event_pending_idx
+on ops.outbox_event (status, available_at)
+where status = 'pending';
+
+create index audit_entity_idx
+on ops.audit_log (entity_type, entity_id, created_at desc);
+
+-- updated_at triggers
+do $$
+declare
+  r record;
+begin
+  for r in
+    select table_schema, table_name
+    from information_schema.columns
+    where column_name = 'updated_at'
+      and table_schema in ('catalog','engagement','commerce','content')
+  loop
+    execute format(
+      'drop trigger if exists trg_touch_updated_at on %I.%I',
+      r.table_schema, r.table_name
+    );
+    execute format(
+      'create trigger trg_touch_updated_at
+       before update on %I.%I
+       for each row execute function ops.touch_updated_at()',
+      r.table_schema, r.table_name
+    );
+  end loop;
+end $$;
+
+-- loyalty ledger is append-only
+create or replace function engagement.reject_loyalty_mutation()
+returns trigger
+language plpgsql
+as $$
+begin
+  raise exception 'loyalty_transaction is append-only';
+end;
+$$;
+
+create trigger loyalty_transaction_append_only
+before update or delete on engagement.loyalty_transaction
+for each row execute function engagement.reject_loyalty_mutation();
+B.7 Prisma Schema — مرآة تصميمية للجداول الحرجة
+تذكير: هذا ليس ORM التشغيل في Medusa. للتوثيق، لعقود الأنواع، أو لخدمة قراءة مستقبلية. لا تشغّل prisma migrate على قاعدة Medusa.
+
+// DESIGN MIRROR ONLY — Medusa v2 uses MikroORM/Knex.
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["catalog", "engagement", "commerce", "content", "ops"]
+}
+
+model Civilization {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String    @unique
+  slug        String    @unique
+  status      String    @default("draft")
+  launchAt    DateTime? @map("launch_at") @db.Timestamptz(6)
+  sortOrder   Int       @default(0) @map("sort_order")
+  accentColor String?   @map("accent_color")
+  heroMediaId String?   @map("hero_media_id") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  translations CivilizationTranslation[]
+  products     ProductProfile[]
+  drops        Drop[]
+  waitlist     WaitlistEntry[]
+
+  @@index([status, sortOrder])
+  @@map("civilization")
+  @@schema("catalog")
+}
+
+model CivilizationTranslation {
+  civilizationId String @map("civilization_id") @db.Uuid
+  locale         String
+  name           String
+  epithet        String?
+  summary        String?
+  story          String?
+  seoTitle       String? @map("seo_title")
+  seoDescription String? @map("seo_description")
+
+  civilization Civilization @relation(fields: [civilizationId], references: [id], onDelete: Cascade)
+
+  @@id([civilizationId, locale])
+  @@map("civilization_translation")
+  @@schema("catalog")
+}
+
+model ProductType {
+  code      String @id
+  nameAr    String @map("name_ar")
+  nameEn    String @map("name_en")
+  sortOrder Int    @default(0) @map("sort_order")
+
+  products ProductProfile[]
+
+  @@map("product_type")
+  @@schema("catalog")
+}
+
+model ProductProfile {
+  productId       String    @id @map("product_id")
+  civilizationId  String?   @map("civilization_id") @db.Uuid
+  productType     String    @map("product_type")
+  fragranceFamily String?   @map("fragrance_family")
+  concentration   String?
+  gender          String?
+  originCountry   String?   @map("origin_country") @db.Char(2)
+  isLimited       Boolean   @default(false) @map("is_limited")
+  editionSize     Int?      @map("edition_size")
+  isPreorder      Boolean   @default(false) @map("is_preorder")
+  preorderShipsAt DateTime? @map("preorder_ships_at") @db.Date
+  maxPerCustomer  Int?      @map("max_per_customer")
+  heroMediaId     String?   @map("hero_media_id") @db.Uuid
+  publishedAt     DateTime? @map("published_at") @db.Timestamptz(6)
+  metadata        Json      @default("{}")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  civilization  Civilization? @relation(fields: [civilizationId], references: [id], onDelete: SetNull)
+  productTypeRef ProductType  @relation(fields: [productType], references: [code], onDelete: Restrict)
+
+  @@index([civilizationId, publishedAt])
+  @@map("product_profile")
+  @@schema("catalog")
+}
+
+model ProductTranslation {
+  productId        String
+  locale           String
+  slug             String
+  name             String
+  subtitle         String?
+  shortDescription String? @map("short_description")
+  description      String?
+  story            String?
+  ingredients      String?
+  ritual           String?
+  seoTitle         String? @map("seo_title")
+  seoDescription   String? @map("seo_description")
+
+  @@id([productId, locale])
+  @@unique([locale, slug])
+  @@map("product_translation")
+  @@schema("catalog")
+}
+
+model VariantProfile {
+  variantId       String   @id @map("variant_id")
+  sizeMl          Decimal? @map("size_ml") @db.Decimal(8, 2)
+  concentration   String?
+  fragranceFamily String?  @map("fragrance_family")
+  topNotes        Json     @default("{}") @map("top_notes")
+  heartNotes      Json     @default("{}") @map("heart_notes")
+  baseNotes       Json     @default("{}") @map("base_notes")
+  longevityHours  Int?     @map("longevity_hours")
+  sillage         String?
+  packagingType   String?  @map("packaging_type")
+  weightG         Int?     @map("weight_g")
+  dimensionsMm    Json?    @map("dimensions_mm")
+  metadata        Json     @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("variant_profile")
+  @@schema("catalog")
+}
+
+model MediaAsset {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider     String
+  publicId     String  @map("public_id")
+  resourceType String  @map("resource_type")
+  url          String
+  mimeType     String? @map("mime_type")
+  width        Int?
+  height       Int?
+  durationMs   Int?    @map("duration_ms")
+  bytes        BigInt?
+  blurhash     String?
+  focalPoint   Json    @default("{\"x\":0.5,\"y\":0.5}") @map("focal_point")
+  alt          Json    @default("{}")
+  folder       String?
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  productMedia ProductMedia[]
+
+  @@unique([provider, publicId])
+  @@map("media_asset")
+  @@schema("catalog")
+}
+
+model ProductMedia {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId String   @map("product_id")
+  variantId String?  @map("variant_id")
+  mediaId   String   @map("media_id") @db.Uuid
+  role      String
+  position  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  media MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@index([productId, role, position])
+  @@map("product_media")
+  @@schema("catalog")
+}
+
+model CollectionProfile {
+  collectionId   String    @id @map("collection_id")
+  civilizationId String?   @map("civilization_id") @db.Uuid
+  collectionType String    @default("permanent") @map("collection_type")
+  startsAt       DateTime? @map("starts_at") @db.Timestamptz(6)
+  endsAt         DateTime? @map("ends_at") @db.Timestamptz(6)
+  heroMediaId    String?   @map("hero_media_id") @db.Uuid
+  isDrop         Boolean   @default(false) @map("is_drop")
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  civilization Civilization? @relation(fields: [civilizationId], references: [id], onDelete: SetNull)
+
+  @@map("collection_profile")
+  @@schema("catalog")
+}
+
+model CollectionTranslation {
+  collectionId   String
+  locale         String
+  title          String
+  subtitle       String?
+  story          String?
+  seoTitle       String? @map("seo_title")
+  seoDescription String? @map("seo_description")
+
+  @@id([collectionId, locale])
+  @@map("collection_translation")
+  @@schema("catalog")
+}
+
+model Drop {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collectionId     String    @map("collection_id")
+  civilizationId   String?   @map("civilization_id") @db.Uuid
+  slug             String    @unique
+  status           String    @default("draft")
+  accessLevel      String    @default("public") @map("access_level")
+  opensAt          DateTime  @map("opens_at") @db.Timestamptz(6)
+  closesAt         DateTime? @map("closes_at") @db.Timestamptz(6)
+  perCustomerLimit Int       @default(1) @map("per_customer_limit")
+  metadata         Json      @default("{}")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  civilization Civilization?    @relation(fields: [civilizationId], references: [id], onDelete: SetNull)
+  allocations  DropAllocation[]
+  waitlist     WaitlistEntry[]
+
+  @@index([status, opensAt])
+  @@map("drop")
+  @@schema("engagement")
+}
+
+model DropAllocation {
+  dropId           String @map("drop_id") @db.Uuid
+  variantId        String @map("variant_id")
+  quantity         Int
+  reservedQuantity Int    @default(0) @map("reserved_quantity")
+  version          Int    @default(0)
+
+  drop Drop @relation(fields: [dropId], references: [id], onDelete: Cascade)
+
+  @@id([dropId, variantId])
+  @@map("drop_allocation")
+  @@schema("engagement")
+}
+
+model WaitlistEntry {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                 String?
+  phoneE164             String?   @map("phone_e164")
+  firstName             String?   @map("first_name")
+  locale                String    @default("ar")
+  civilizationId        String?   @map("civilization_id") @db.Uuid
+  productId             String?   @map("product_id")
+  dropId                String?   @map("drop_id") @db.Uuid
+  source                String    @default("website")
+  status                String    @default("pending")
+  consentMarketing      Boolean   @default(false) @map("consent_marketing")
+  confirmationTokenHash String?   @map("confirmation_token_hash")
+  tokenExpiresAt        DateTime? @map("token_expires_at") @db.Timestamptz(6)
+  confirmationSentAt    DateTime? @map("confirmation_sent_at") @db.Timestamptz(6)
+  confirmedAt           DateTime? @map("confirmed_at") @db.Timestamptz(6)
+  notifiedAt            DateTime? @map("notified_at") @db.Timestamptz(6)
+  unsubscribedAt        DateTime? @map("unsubscribed_at") @db.Timestamptz(6)
+  priorityScore         Int       @default(0) @map("priority_score")
+  metadata              Json      @default("{}")
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  civilization Civilization? @relation(fields: [civilizationId], references: [id], onDelete: Cascade)
+  drop         Drop?         @relation(fields: [dropId], references: [id], onDelete: Cascade)
+
+  @@index([civilizationId, status, createdAt])
+  @@index([dropId, status, createdAt])
+  @@map("waitlist_entry")
+  @@schema("engagement")
+}
+ملاحظة: Prisma لا يعبّر عن CHECK constraints، ولا عن الـ Partial/Expression Unique Indexes، ولا الـ Triggers. كلها تبقى في SQL Migration الرسمي.
+
+B.8 خريطة Medusa → 3weeq
+Medusa Core	يملك	امتداد 3weeq
+product	العنوان، الحالة، handle، variants	product_profile, product_translation, product_media
+product_variant	SKU، الخيارات، الأسعار، المخزون	variant_profile, serial_unit
+product_collection	المجموعات	collection_profile, collection_translation
+customer	الهوية، العناوين، الطلبات	loyalty_account, review, consent_record
+order / order_item	الطلب، الدفع، الشحن	order_profile, order_item_profile, preorder
+promotion	الكوبونات والقواعد	promotion_profile
+inventory_*	المخزون الفعلي	drop_allocation فقط لسقف الإطلاق
+cart / checkout	السلة والدفع	لا نعيد تعريفها
+ترتيب الـ Migrations:
+
+Medusa core migrations.
+catalog (media → civilization → product_type → collection → product).
+engagement (drop → waitlist → review → loyalty → consent).
+commerce / content / ops.
+Seed الحضارات وWaitlist.
+B.9 قواعد التكامل والسلامة
+القاعدة	التنفيذ
+Waitlist لها هدف واحد فقط	num_nonnulls(civilization_id, product_id, drop_id) = 1
+منع تكرار Waitlist لنفس الهدف	Unique expression index على (target, lower(email) or phone)
+تقييم واحد لكل Order Item	unique(order_item_id)
+تقييم موثّق فقط	الربط بـ order_item + حالة approved بعد التسليم
+منع البيع الزائد	حجز ذري في Medusa + drop_allocation للـ Drops
+كل زجاجة محدودة	serial_unit فريد لكل variant + serial_number
+الولاء غير قابل للتعديل	Trigger يمنع UPDATE/DELETE على loyalty_transaction
+الدفع Idempotent	ops.idempotency_key + ops.webhook_event(provider, event_id)
+الأحداث الجانبية	ops.outbox_event بدلاً من البريد внутри طلب الدفع
+نمط حجز الـ Drop (SQL فقط، ليس API):
+
+update engagement.drop_allocation
+set reserved_quantity = reserved_quantity + $1,
+    version = version + 1
+where drop_id = $2
+  and variant_id = $3
+  and quantity - reserved_quantity >= $1
+returning drop_id, variant_id, reserved_quantity, version;
+إذا أعادت zero rows، فهذا يعني نفاد التخصيص، ولا يتم إنشاء الطلب.
+
+B.10 Seed الحضارات الخمس
+insert into catalog.product_type (code, name_ar, name_en, sort_order) values
+  ('fragrance','عطور','Fragrance',1),
+  ('incense','بخور','Incense',2),
+  ('jewelry','مجوهرات','Jewelry',3),
+  ('textile','أقمشة','Textiles',4),
+  ('leather','جلديات','Leather Goods',5),
+  ('artifact','تحف','Artifacts',6)
+on conflict (code) do nothing;
+
+insert into catalog.civilization (code, slug, status, sort_order) values
+  ('babylon','babylon','live',1),
+  ('egypt','egypt','announced',2),
+  ('china','china','announced',3),
+  ('greece','greece','announced',4),
+  ('gulf','gulf','announced',5)
+on conflict (code) do nothing;
+
+insert into catalog.civilization_translation
+  (civilization_id, locale, name, epithet, summary)
+select c.id, v.locale, v.name, v.epithet, v.summary
+from (values
+  ('babylon','ar','بابل','الفصل الأول','من بين النهرين، حيث وُلدت الحكايات الأولى.'),
+  ('babylon','en','Babylon','The First Chapter','Between the rivers, where the first stories were born.'),
+  ('egypt','ar','مصر','أرض النيل','حيث يلتقي الخلود بالذهب.'),
+  ('egypt','en','Egypt','The Land of the Nile','Where eternity meets gold.'),
+  ('china','ar','الصين','إمبراطورية الحرير','حيث تصبح التفاصيل فناً.'),
+  ('china','en','China','The Silk Empire','Where detail becomes art.'),
+  ('greece','ar','اليونان','فجر الحكمة','حيث تُصاغ الأسطورة.'),
+  ('greece','en','Greece','Dawn of Wisdom','Where myth is shaped.'),
+  ('gulf','ar','الخليج','ملتقى البحار','حيث تتقاطع التجارة والحكايات.'),
+  ('gulf','en','The Gulf','Where Seas Meet','Where trade and tales intersect.')
+) as v(code, locale, name, epithet, summary)
+join catalog.civilization c on c.code = v.code
+on conflict (civilization_id, locale) do nothing;
+الخطوة التالية
+هذا هو Phase B كاملاً. قبل أن أحوّله إلى Migrations فعلية، أحتاج تأكيدك على ثلاث نقاط:
+
+SQL هو المصدر الرسمي وPrisma مرآة تصميمية فقط — موافق؟
+هل RAFID سيكون له أكثر من حجم/متغير (50ml / 100ml / Discovery Set)؟
+هل نبدأ بترقيم الزجاجات (serial_unit) من الإطلاق الأول، أم نؤجله؟
+بعد تأكيدك، الخطوة التالية ستكون: ملفات Migrations + Seed + Repository Interfaces، بدون API code.
+

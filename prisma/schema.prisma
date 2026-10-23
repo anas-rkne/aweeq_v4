@@ -1,0 +1,616 @@
+// DESIGN MIRROR ONLY.
+// The canonical schema is the Medusa/MikroORM migrations in
+// medusa/src/modules/threeweeq/migrations. Do not run `prisma migrate`.
+// This file exists so the data model can be read and reviewed in one place.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["catalog", "engagement", "commerce", "content", "ops"]
+}
+
+// ---------------------------------------------------------------------------
+// catalog
+// ---------------------------------------------------------------------------
+
+model MediaAsset {
+  id           String    @id @db.Text
+  storage_key  String    @unique @db.Text
+  url          String    @db.Text
+  mime_type    String    @db.Text
+  width        Int?
+  height       Int?
+  bytes        BigInt?
+  alt_ar       String?   @db.Text
+  alt_en       String?   @db.Text
+  blurhash     String?   @db.Text
+  focal_x      Decimal?  @db.Decimal(5, 4)
+  focal_y      Decimal?  @db.Decimal(5, 4)
+  metadata     Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at   DateTime? @db.Timestamptz(6)
+
+  @@map("media_asset")
+  @@schema("catalog")
+}
+
+model Civilization {
+  id            String    @id @db.Text
+  code          String    @unique @db.Text
+  status        String    @default("draft") @db.Text
+  launch_at     DateTime? @db.Timestamptz(6)
+  sort_order    Int       @default(0)
+  accent_color  String?   @db.Text
+  hero_media_id String?   @db.Text
+  metadata      Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at    DateTime? @db.Timestamptz(6)
+
+  @@index([status, sort_order])
+  @@map("civilization")
+  @@schema("catalog")
+}
+
+model CivilizationTranslation {
+  civilization_id String   @db.Text
+  locale          String   @db.Text
+  name            String   @db.Text
+  subtitle        String?  @db.Text
+  description     String?  @db.Text
+  story           String?  @db.Text
+  seo_title       String?  @db.Text
+  seo_description String?  @db.Text
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@id([civilization_id, locale])
+  @@map("civilization_translation")
+  @@schema("catalog")
+}
+
+model ProductType {
+  id             String    @id @db.Text
+  code           String    @unique @db.Text
+  name_ar        String    @db.Text
+  name_en        String    @db.Text
+  description_ar String?   @db.Text
+  description_en String?   @db.Text
+  sort_order     Int       @default(0)
+  is_active      Boolean   @default(true)
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at     DateTime? @db.Timestamptz(6)
+
+  @@map("product_type")
+  @@schema("catalog")
+}
+
+model CollectionProfile {
+  id              String    @id @db.Text
+  handle          String    @unique @db.Text
+  civilization_id String    @db.Text
+  product_type_id String?   @db.Text
+  status          String    @default("draft") @db.Text
+  sort_order      Int       @default(0)
+  hero_media_id   String?   @db.Text
+  launch_at       DateTime? @db.Timestamptz(6)
+  metadata        Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at      DateTime? @db.Timestamptz(6)
+
+  @@index([civilization_id, status])
+  @@map("collection_profile")
+  @@schema("catalog")
+}
+
+model CollectionTranslation {
+  collection_id   String   @db.Text
+  locale          String   @db.Text
+  title           String   @db.Text
+  subtitle        String?  @db.Text
+  description     String?  @db.Text
+  story           String?  @db.Text
+  seo_title       String?  @db.Text
+  seo_description String?  @db.Text
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@id([collection_id, locale])
+  @@map("collection_translation")
+  @@schema("catalog")
+}
+
+model ProductProfile {
+  product_id        String    @id @db.Text
+  civilization_id   String    @db.Text
+  collection_id     String?   @db.Text
+  product_type_id   String    @db.Text
+  status            String    @default("draft") @db.Text
+  is_limited        Boolean   @default(false)
+  is_serialized     Boolean   @default(false)
+  edition_size      Int?
+  max_per_customer  Int?
+  launch_at         DateTime? @db.Timestamptz(6)
+  hero_media_id     String?   @db.Text
+  olfactory_pyramid Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  specifications    Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  metadata          Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at        DateTime? @db.Timestamptz(6)
+
+  @@index([civilization_id, status])
+  @@index([collection_id])
+  @@index([product_type_id])
+  @@map("product_profile")
+  @@schema("catalog")
+}
+
+model ProductTranslation {
+  product_id      String   @db.Text
+  locale          String   @db.Text
+  title           String   @db.Text
+  subtitle        String?  @db.Text
+  short_description String? @db.Text
+  description     String?  @db.Text
+  story           String?  @db.Text
+  ingredients     String?  @db.Text
+  ritual          String?  @db.Text
+  seo_title       String?  @db.Text
+  seo_description String?  @db.Text
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@id([product_id, locale])
+  @@map("product_translation")
+  @@schema("catalog")
+}
+
+model VariantProfile {
+  variant_id   String    @id @db.Text
+  product_id   String    @db.Text
+  size_ml      Int?
+  concentration String?  @db.Text
+  packaging    String?   @db.Text
+  is_serialized Boolean  @default(false)
+  edition_size Int?
+  metadata     Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at   DateTime? @db.Timestamptz(6)
+
+  @@index([product_id])
+  @@map("variant_profile")
+  @@schema("catalog")
+}
+
+model ProductMedia {
+  product_id String   @db.Text
+  media_id   String   @db.Text
+  role       String   @default("gallery") @db.Text
+  sort_order Int      @default(0)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@id([product_id, media_id, role])
+  @@index([product_id, role, sort_order])
+  @@map("product_media")
+  @@schema("catalog")
+}
+
+model ProductRelationship {
+  source_product_id String   @db.Text
+  target_product_id String   @db.Text
+  relation_type     String   @db.Text
+  sort_order        Int      @default(0)
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+
+  @@id([source_product_id, target_product_id, relation_type])
+  @@index([target_product_id, relation_type])
+  @@map("product_relationship")
+  @@schema("catalog")
+}
+
+model SerialUnit {
+  id             String    @id @db.Text
+  product_id     String    @db.Text
+  variant_id     String    @db.Text
+  serial         String    @db.Text
+  edition_number Int
+  edition_size   Int
+  status         String    @default("allocated") @db.Text
+  order_id       String?   @db.Text
+  order_item_id  String?   @db.Text
+  allocated_at   DateTime  @default(now()) @db.Timestamptz(6)
+  sold_at        DateTime? @db.Timestamptz(6)
+  voided_at      DateTime? @db.Timestamptz(6)
+  metadata       Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@unique([product_id, serial])
+  @@unique([variant_id, edition_number])
+  @@index([variant_id, status])
+  @@index([order_id])
+  @@map("serial_unit")
+  @@schema("catalog")
+}
+
+// ---------------------------------------------------------------------------
+// engagement
+// ---------------------------------------------------------------------------
+
+model Drop {
+  id                 String    @id @db.Text
+  slug               String    @unique @db.Text
+  civilization_id    String    @db.Text
+  product_id         String?   @db.Text
+  title_ar           String    @db.Text
+  title_en           String    @db.Text
+  status             String    @default("draft") @db.Text
+  opens_at           DateTime? @db.Timestamptz(6)
+  closes_at          DateTime? @db.Timestamptz(6)
+  total_units        Int       @default(0)
+  per_customer_limit Int       @default(1)
+  requires_waitlist  Boolean   @default(false)
+  metadata           Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at         DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at         DateTime? @db.Timestamptz(6)
+
+  @@map("drop")
+  @@schema("engagement")
+}
+
+model DropAllocation {
+  id               String   @id @db.Text
+  drop_id          String   @db.Text
+  variant_id       String   @db.Text
+  quantity         Int      @default(0)
+  reserved_quantity Int     @default(0)
+  sold_quantity    Int      @default(0)
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([drop_id, variant_id])
+  @@map("drop_allocation")
+  @@schema("engagement")
+}
+
+model WaitlistEntry {
+  id              String    @id @db.Text
+  civilization_id String    @db.Text
+  drop_id         String?   @db.Text
+  email           String    @db.Text
+  customer_id     String?   @db.Text
+  locale          String    @default("ar") @db.Text
+  source          String?   @db.Text
+  status          String    @default("pending") @db.Text
+  confirmed_at    DateTime? @db.Timestamptz(6)
+  invited_at      DateTime? @db.Timestamptz(6)
+  converted_at    DateTime? @db.Timestamptz(6)
+  metadata        Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at      DateTime? @db.Timestamptz(6)
+
+  @@unique([civilization_id, email])
+  @@index([status, created_at])
+  @@map("waitlist_entry")
+  @@schema("engagement")
+}
+
+model WaitlistEvent {
+  id         String   @id @db.Text
+  entry_id   String   @db.Text
+  event_type String   @db.Text
+  payload    Json     @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("waitlist_event")
+  @@schema("engagement")
+}
+
+model Review {
+  id                  String    @id @db.Text
+  product_id          String    @db.Text
+  customer_id         String?   @db.Text
+  order_id            String?   @db.Text
+  rating              Int
+  title               String?   @db.Text
+  body                String?   @db.Text
+  locale              String    @default("ar") @db.Text
+  status              String    @default("pending") @db.Text
+  is_verified_purchase Boolean  @default(false)
+  helpful_count       Int       @default(0)
+  published_at        DateTime? @db.Timestamptz(6)
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at          DateTime? @db.Timestamptz(6)
+
+  @@unique([customer_id, product_id])
+  @@index([product_id, status, published_at])
+  @@map("review")
+  @@schema("engagement")
+}
+
+model ReviewMedia {
+  id         String   @id @db.Text
+  review_id  String   @db.Text
+  media_id   String   @db.Text
+  sort_order Int      @default(0)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([review_id, media_id])
+  @@map("review_media")
+  @@schema("engagement")
+}
+
+model LoyaltyTier {
+  id         String   @id @db.Text
+  code       String   @unique @db.Text
+  name_ar    String   @db.Text
+  name_en    String   @db.Text
+  min_points Int      @default(0)
+  benefits   Json     @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  sort_order Int      @default(0)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("loyalty_tier")
+  @@schema("engagement")
+}
+
+model LoyaltyAccount {
+  id              String   @id @db.Text
+  customer_id     String   @unique @db.Text
+  tier_id         String?  @db.Text
+  points_balance  Int      @default(0)
+  lifetime_points Int      @default(0)
+  status          String   @default("active") @db.Text
+  enrolled_at     DateTime @default(now()) @db.Timestamptz(6)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("loyalty_account")
+  @@schema("engagement")
+}
+
+model LoyaltyTransaction {
+  id            String   @id @db.Text
+  account_id    String   @db.Text
+  order_id      String?  @db.Text
+  type          String   @db.Text
+  points        Int
+  balance_after Int
+  reason        String?  @db.Text
+  metadata      Json     @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([account_id, created_at])
+  @@map("loyalty_transaction")
+  @@schema("engagement")
+}
+
+model ConsentRecord {
+  id             String   @id @db.Text
+  customer_id    String?  @db.Text
+  email          String?  @db.Text
+  purpose        String   @db.Text
+  granted        Boolean
+  policy_version String?  @db.Text
+  source         String?  @db.Text
+  ip             String?  @db.Inet
+  user_agent     String?  @db.Text
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("consent_record")
+  @@schema("engagement")
+}
+
+model NewsletterSubscriber {
+  id              String    @id @db.Text
+  email           String    @unique @db.Text
+  locale          String    @default("ar") @db.Text
+  status          String    @default("pending") @db.Text
+  source          String?   @db.Text
+  confirmed_at    DateTime? @db.Timestamptz(6)
+  unsubscribed_at DateTime? @db.Timestamptz(6)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at      DateTime? @db.Timestamptz(6)
+
+  @@map("newsletter_subscriber")
+  @@schema("engagement")
+}
+
+// ---------------------------------------------------------------------------
+// commerce
+// ---------------------------------------------------------------------------
+
+model PromotionProfile {
+  id              String   @id @db.Text
+  promotion_id    String   @unique @db.Text
+  civilization_id String?  @db.Text
+  product_id      String?  @db.Text
+  kind            String   @default("campaign") @db.Text
+  metadata        Json     @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("promotion_profile")
+  @@schema("commerce")
+}
+
+model OrderProfile {
+  id              String   @id @db.Text
+  order_id        String   @unique @db.Text
+  customer_id     String?  @db.Text
+  civilization_id String?  @db.Text
+  drop_id         String?  @db.Text
+  locale          String   @default("ar") @db.Text
+  gift_message    String?  @db.Text
+  packaging_code  String?  @db.Text
+  metadata        Json     @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([order_id])
+  @@map("order_profile")
+  @@schema("commerce")
+}
+
+model OrderItemProfile {
+  id             String   @id @db.Text
+  order_id       String   @db.Text
+  order_item_id  String   @unique @db.Text
+  product_id     String?  @db.Text
+  variant_id     String?  @db.Text
+  serial_unit_id String?  @unique @db.Text
+  civilization_id String? @db.Text
+  metadata       Json     @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([order_id])
+  @@map("order_item_profile")
+  @@schema("commerce")
+}
+
+model Preorder {
+  id                String    @id @db.Text
+  customer_id       String?   @db.Text
+  email             String    @db.Text
+  product_id        String    @db.Text
+  variant_id        String    @db.Text
+  drop_id           String?   @db.Text
+  quantity          Int       @default(1)
+  status            String    @default("pending") @db.Text
+  payment_intent_id String?   @db.Text
+  expires_at        DateTime? @db.Timestamptz(6)
+  converted_order_id String?  @db.Text
+  metadata          Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([status, expires_at])
+  @@map("preorder")
+  @@schema("commerce")
+}
+
+// ---------------------------------------------------------------------------
+// content
+// ---------------------------------------------------------------------------
+
+model JournalPost {
+  id              String    @id @db.Text
+  slug            String    @unique @db.Text
+  civilization_id String?   @db.Text
+  product_id      String?   @db.Text
+  status          String    @default("draft") @db.Text
+  cover_media_id  String?   @db.Text
+  author_name     String?   @db.Text
+  reading_minutes Int?
+  tags            String[]  @default([])
+  published_at    DateTime? @db.Timestamptz(6)
+  title_ar        String    @db.Text
+  title_en        String    @db.Text
+  excerpt_ar      String?   @db.Text
+  excerpt_en      String?   @db.Text
+  body_ar         String?   @db.Text
+  body_en         String?   @db.Text
+  metadata        Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at      DateTime? @db.Timestamptz(6)
+
+  @@index([status, published_at])
+  @@index([civilization_id])
+  @@map("journal_post")
+  @@schema("content")
+}
+
+// ---------------------------------------------------------------------------
+// ops
+// ---------------------------------------------------------------------------
+
+model WebhookEvent {
+  id          String    @id @db.Text
+  provider    String    @db.Text
+  external_id String?   @db.Text
+  event_type  String    @db.Text
+  payload     Json      @db.JsonB
+  headers     Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  status      String    @default("received") @db.Text
+  attempts    Int       @default(0)
+  last_error  String?   @db.Text
+  received_at DateTime  @default(now()) @db.Timestamptz(6)
+  processed_at DateTime? @db.Timestamptz(6)
+
+  @@index([provider, external_id])
+  @@index([status, received_at])
+  @@map("webhook_event")
+  @@schema("ops")
+}
+
+model OutboxEvent {
+  id             String    @id @db.Text
+  aggregate_type String    @db.Text
+  aggregate_id   String    @db.Text
+  event_type     String    @db.Text
+  payload        Json      @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  status         String    @default("pending") @db.Text
+  attempts       Int       @default(0)
+  available_at   DateTime  @default(now()) @db.Timestamptz(6)
+  last_error     String?   @db.Text
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  published_at   DateTime? @db.Timestamptz(6)
+
+  @@index([status, available_at])
+  @@map("outbox_event")
+  @@schema("ops")
+}
+
+model IdempotencyKey {
+  key             String    @id @db.Text
+  scope           String    @db.Text
+  request_hash    String?   @db.Text
+  response_status Int?
+  response_body   Json?     @db.JsonB
+  status          String    @default("in_progress") @db.Text
+  locked_until    DateTime? @db.Timestamptz(6)
+  expires_at      DateTime? @db.Timestamptz(6)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([expires_at])
+  @@map("idempotency_key")
+  @@schema("ops")
+}
+
+model AuditLog {
+  id          String   @id @db.Text
+  actor_id    String?  @db.Text
+  actor_type  String   @default("system") @db.Text
+  action      String   @db.Text
+  entity_type String   @db.Text
+  entity_id   String   @db.Text
+  before      Json?    @db.JsonB
+  after       Json?    @db.JsonB
+  ip          String?  @db.Inet
+  user_agent  String?  @db.Text
+  metadata    Json     @default(dbgenerated("'{}'::jsonb")) @db.JsonB
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([entity_type, entity_id, created_at])
+  @@index([actor_type, actor_id, created_at])
+  @@map("audit_log")
+  @@schema("ops")
+}

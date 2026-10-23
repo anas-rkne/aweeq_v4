@@ -1,0 +1,77 @@
+خطة تفصيلية لبناء ما ينقص وسد الفجوات لمتجر 3WEEQ
+بناءً على التحليل المفصّل، هذه خطة عملية وقابلة للتنفيذ خطوة بخطوة.
+
+١. نظرة سريعة على الوضع الحالي
+الخلفية (Medusa v2): جاهزة جدًا. يوجد كتالوج، سلة، شحن، دفع Stripe، ويب هوكس، نقاط، waitlist، وdrops. كل الـAPI المطلوبة موجودة تحت /store/threeweeq/* و/store/*.
+الواجهة (Next.js 16 App Router): صفحة تسويقية واحدة فقط app/page.tsx. لا توجد صفحات للمتجر، لا يوجد عميل Medusa، لا توجد حالة للسلة، وروابط وأزرار كثيرة غير فعالة.
+٢. الأهداف
+بناء صفحات المتجر الأساسية وربطها بـMedusa Backend الجاهز.
+تفعيل السلة، الدفع، وعرض المنتجات.
+ربط أزرار الواجهة الحالية (الهيدر، القائمة، النشرة البريدية) بالوظائف المناسبة.
+سد الفجوات دون المساس بالتصميم التسويقي الحالي ما أمكن.
+٣. خطة التنفيذ المفصّلة
+المرحلة ٠: إعداد الأساس (Foundation) - أولوية عالية جداً
+المهمة	التفاصيل	ملاحظات
+إضافة عميل Medusa	إضافة @medusajs/js-sdk للـfrontend، أو إنشاء helpers باستخدام fetch.	الأفضل إضافة SDK لتوحيد الطلبات والتعامل مع publishable key.
+متغيرات البيئة	إنشاء .env.local بـNEXT_PUBLIC_MEDUSA_BACKEND_URL وNEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY.	يجب أخذ publishable key من إعدادات المبيعات في Medusa أو من sales_channel وpublishable_key اللي تم seed.
+إنشاء مكتبة API	إنشاء app/lib/medusa.ts لتهيئة الـclient، app/lib/config.ts للـenv، وapp/types/ للـtypes.	فصل واضح بين التسويقي والمتجر.
+إدارة الجلسة/السلة	إنشاء Context أو Zustand لـCart + Region/Currency/Locale.	Backend يستخدم sar وGCC وar/en حسب ما موجود في الكود.
+المرحلة ١: بناء صفحات الكتالوج (Catalog) - أولوية عالية
+المهمة	التفاصيل	ملفات مقترحة
+صفحة المنتجات	إنشاء /products/page.tsx لعرض كل المنتجات مع فلاتر حسب civilization، collection، product_type.	app/(store)/products/page.tsx أو app/products/page.tsx
+بطاقات المنتجات	مكون ProductCard يعرض الصورة، الاسم، السعر، وحالة "متاح" / "حصري".	app/components/store/product-card.tsx
+تفاصيل المنتج	إنشاء /products/[handle]/page.tsx. عرض صور، وصف، بايراميد عطري، معلومات، خيارات المتغيرات (50ml / 100ml / Discovery Set).	app/(store)/products/[handle]/page.tsx
+محدد المتغيرات	مكون لاختيار Variant وربط السعر بالمتغير المختار.	app/components/store/variant-selector.tsx
+ربط بالـAPI	ربط بـGET /store/threeweeq/products وGET /store/threeweeq/products/[id] (أو حسب handle).	عبر helpers في app/lib/medusa.ts
+المرحلة ٢: السلة (Cart) - أولوية عالية
+المهمة	التفاصيل	ملفات مقترحة
+سلة جانبية (Drawer)	إنشاء CartDrawer يفتح من الهيدر عند الضغط على أيقونة السلة.	app/components/store/cart-drawer.tsx
+صفحة السلة	إنشاء /cart/page.tsx كنسخة كاملة للسلة (مفيد للـcheckout).	app/(store)/cart/page.tsx
+إضافة للسلة	ربط زر "أضف للسلة" في صفحة المنتج بـPOST /store/threeweeq/cart/items.	تحديث ProductDetail
+تحديث الكمية/حذف	ربط بأزرار + و - وحذف بـPOST/PATCH/DELETE /store/threeweeq/cart/items/*.	عبر CartContext
+تحديث عداد الهيدر	جعل أيقونة السلة في site-header.tsx تعرض عدد العناصر الحقيقي من API بدل الرقم الثابت 2.	تعديل app/components/site-header.tsx
+إنشاء سلة تلقائياً	عند أول إضافة أو زيارة، إنشاء سلة عبر POST /store/threeweeq/cart وحفظ cart_id في cookie/localStorage.	في CartProvider
+المرحلة ٣: الدفع والشحن (Checkout) - أولوية عالية
+المهمة	التفاصيل	ملفات مقترحة
+صفحة الدفع	إنشاء /checkout/page.tsx. خطوات بسيطة: معلومات الشحن، خيارات الشحن، الدفع.	app/(store)/checkout/page.tsx
+خيارات الشحن	جلب من GET /store/threeweeq/shipping-options بعد إدخال/تأكيد عنوان الشحن.	app/components/checkout/shipping-form.tsx
+تهيئة الدفع	استدعاء POST /store/threeweeq/checkout للحصول على client_secret لـStripe.	app/components/checkout/payment-form.tsx
+Stripe Elements	إضافة @stripe/stripe-js و@stripe/react-stripe-js. عرض عناصر الدفع وتأكيد الدفع عبر Stripe.	تثبيت الحزم + المكون
+إتمام الطلب	بعد تأكيد Stripe بنجاح، استدعاء POST /store/checkout/complete لإتمام العملية.	في payment flow
+صفحة نجاح/فشل	إنشاء /checkout/success/page.tsx و/checkout/cancel/page.tsx لعرض حالة الطلب.	app/(store)/checkout/success/page.tsx
+المرحلة ٤: ربط باقي الواجهة وتسريع الوصول (UX Polish) - أولوية متوسطة
+المهمة	التفاصيل	ملفات مقترحة
+سداد الروابط الميتة	تحويل #rafid لـ/products أو لصفحة منتج RAFID المحدد، #collections لـ/products?collection=... أو صفحة المجموعات، #babylon لربط صحيح.	تعديل hero.tsx, first-chapter.tsx, site-header.tsx
+القائمة الرئيسية	تحديث NAV_LINKS في الهيدر لربطها بصفحات حقيقية أو أقسام موجودة فعلاً.	app/components/site-header.tsx
+نموذج النشرة البريدية	ربط بـPOST /store/waitlist الموجود بالفعل في الباك إند.	تعديل newsletter-section.tsx
+البحث	تفعيل أيقونة البحث بصفحة منتجات مع بحث أو مودال بحث سريع.	جديد app/components/store/search-modal.tsx
+اللغات	تفعيل زر AR/EN (حالياً مجرد شكل) — إما ربط بـnext-intl الموجود أو query param locale.	حسب ما يناسب البنية الحالية
+Drops/Waitlist	صفحة /drops لعرض GET /store/drops/current وربط Waitlist.	app/(store)/drops/page.tsx
+المرحلة ٥: تحسينات وتجهيز للعرض (Polish & Testing) - أولوية منخفضة نسبياً لكن مهمة
+المهمة	التفاصيل	ملاحظات
+حماية المسارات	التأكد من عدم كسر الصفحة التسويقية الحالية. استخدام Route Group (store) لفصل صفحات المتجر عن التسويق.	يحافظ على تصميم الصفحة الرئيسية كما هو
+SEO	إضافة metadata لصفحات المنتجات/التفاصيل.	Next.js Metadata API
+معالجة الأخطاء	رسائل خطأ واضحة، حالات التحميل, وحالات عدم وجود منتجات.	تحسين تجربة المستخدم
+فحص الروابط	التأكد من كل الروابط تعمل، وإزالة الروابط الميتة نهائياً.	جرد نهائي
+اختبار تدفق كامل	إضافة للسلة ← دفع ← إتمام عبر Stripe test mode.	يحتاج Stripe test keys وMedusa شغال
+٤. أولويات التنفيذ المقترحة
+الترتيب	المرحلة	السبب
+١	المرحلة ٠ + ١	بناء الأساس + عرض المنتجات هو الأهم لعرض المتجر فعليًا
+٢	المرحلة ٢	تفعيل السلة ضروري قبل الدفع
+٣	المرحلة ٣	إكمال تدفق الشراء كاملاً
+٤	المرحلة ٤	ربط الواجهة الحالية وتحسين الوصول
+٥	المرحلة ٥	تحسينات نهائية
+٥. ملاحظات مهمة
+الباك إند جاهز: ما يحتاج تعديل كبير، كل API موجود ومُسجّل. فقط نربط الواجهة.
+التصميم: حاول تحافظ على هوية 3WEEQ (ألوان ذهبية، خلفية داكنة، خط عربي) في صفحات المتجر، ما تخرب الصفحة الرئيسية أبداً.
+RAFID: عند بناء صفحة المنتج، راعي إن فيه ٣ متغيرات وserials مطلوب، والـbackend جاهز له.
+الدفع: يستخدم Stripe مع manual capture حسب ما في الكود، ما يحتاج تغيير.
+أول تشغيل: يحتاج تشغيل Medusa (npm run medusa:dev) وNext.js معاً، وأيضاً Stripe test keys لو تبغا تختبر الدفع فعليًا.
+٦. اقتراح للبدء الفوري
+أنصح نبدأ من المرحلة ٠ فورًا:
+
+إضافة @medusajs/js-sdk للـfrontend
+إنشاء app/lib/medusa.ts و.env.local
+إنشاء CartProvider
+بناء /products أول صفحة متجر
+وش رايك؟ أقدر أبدأ مباشرة بالمرحلة ٠ وأكتب الكود خطوة بخطوة، أو تبغا تعدل شي في الخطة قبل ما نبدأ؟
