@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { useEffect, useRef } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
@@ -169,8 +170,8 @@ export function FirstChapter() {
               </p>
 
               {/* the way in — the same gold door as the hero */}
-              <a
-                href="#babylon"
+              <Link
+                href="/products"
                 className="group relative mt-12 inline-flex h-9 items-center overflow-hidden whitespace-nowrap bg-gold px-4 font-primary text-[13px] text-royal-navy transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] md:h-[40px] md:px-5 md:text-[14px]"
               >
                 <span aria-hidden="true" className="cta-sheen" />
@@ -187,7 +188,7 @@ export function FirstChapter() {
                   <path d="M19 12H5" />
                   <path d="M11 6l-6 6 6 6" />
                 </svg>
-              </a>
+              </Link>
             </div>
           </div>
         </div>

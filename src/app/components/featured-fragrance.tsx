@@ -11,15 +11,43 @@ interface FeaturedFragranceProps {
 }
 
 export function FeaturedFragrance({
-  frameCount = 152,
+  frameCount = 101,
 }: FeaturedFragranceProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
   const [images, setImages] = useState<HTMLImageElement[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [shouldLoad, setShouldLoad] = useState(false)
+
+  /* the film is 5.8 MB; it waits until its own section is near instead of
+     competing with the hero and the about for the first paint */
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+
+    if (typeof IntersectionObserver === "undefined") {
+      const timer = window.setTimeout(() => setShouldLoad(true), 0)
+      return () => window.clearTimeout(timer)
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldLoad(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: "150% 0px" }
+    )
+
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
+    if (!shouldLoad) return
+
     let cancelled = false
 
     const preload = async () => {
@@ -27,14 +55,30 @@ export function FeaturedFragrance({
 
       for (let i = 1; i <= frameCount; i++) {
         const img = new window.Image()
-        const num = i.toString().padStart(3, "0")
-        img.src = `/featured_frames/frame-${num}.jpg`
+        img.decoding = "async"
+        const num = i.toString().padStart(4, "0")
+        const seconds = ((i - 1) * 0.1).toFixed(2)
+        img.src = `/featured_frames/frame-${num}-${seconds}s.webp`
 
         promises.push(
           new Promise<HTMLImageElement | null>((resolve) => {
-            img.onload = () => resolve(img)
+            img.onload = () => {
+              const decoded = img.decode?.()
+              if (!decoded) {
+                resolve(img)
+                return
+              }
+              void decoded.catch(() => undefined).then(() => resolve(img))
+            }
             // a missing frame must not hold the whole film hostage
-            img.onerror = () => resolve(null)
+            img.onerror = () => {
+              const fallback = new window.Image()
+              fallback.src = `/featured_frames/frame-${i
+                .toString()
+                .padStart(3, "0")}.jpg`
+              fallback.onload = () => resolve(fallback)
+              fallback.onerror = () => resolve(null)
+            }
           })
         )
       }
@@ -59,7 +103,7 @@ export function FeaturedFragrance({
     return () => {
       cancelled = true
     }
-  }, [frameCount])
+  }, [frameCount, shouldLoad])
 
   useEffect(() => {
     if (!loaded || images.length === 0) return
@@ -175,6 +219,10 @@ export function FeaturedFragrance({
         0.88
       )
     }
+
+    // the film loads late, so its pin changes the page height after the first
+    // pass; re-measure so the sections below keep their true positions
+    ScrollTrigger.refresh()
 
     return () => {
       window.removeEventListener("resize", resize)

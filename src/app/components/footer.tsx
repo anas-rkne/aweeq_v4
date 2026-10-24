@@ -1,4 +1,5 @@
 import Image from "next/image"
+import Link from "next/link"
 import { Instagram, Youtube } from "lucide-react"
 
 const QUICK_LINKS = [
@@ -10,11 +11,11 @@ const QUICK_LINKS = [
 ] as const
 
 const HELP_LINKS = [
-  { label: "الأسئلة الشائعة", href: "#footer" },
-  { label: "الشحن", href: "#footer" },
-  { label: "الرجوع", href: "#footer" },
-  { label: "الشروط والأحكام", href: "#footer" },
-  { label: "سياسة الخصوصية", href: "#footer" },
+  { label: "الأسئلة الشائعة", href: "/policies/faq" },
+  { label: "الشحن", href: "/policies/shipping" },
+  { label: "الرجوع", href: "/policies/returns" },
+  { label: "الشروط والأحكام", href: "/policies/terms" },
+  { label: "سياسة الخصوصية", href: "/policies/privacy" },
 ] as const
 
 export function Footer() {
@@ -61,12 +62,12 @@ export function Footer() {
           <ul className="space-y-4">
             {HELP_LINKS.map((link) => (
               <li key={link.label}>
-                <a
+                <Link
                   href={link.href}
                   className="font-primary text-sm text-sand transition-colors duration-300 hover:text-gold"
                 >
                   {link.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

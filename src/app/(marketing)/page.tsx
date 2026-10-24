@@ -21,7 +21,7 @@ export default function Home() {
       {/* a plain block wrapper: ScrollTrigger will not add pin spacing to a
           pinned element whose parent is a flex container */}
       <div className="relative">
-        <FeaturedFragrance frameCount={152} />
+        <FeaturedFragrance frameCount={101} />
       </div>
       <PackagingSection />
       {/* a plain block wrapper for the pinned canvas section, same reason as

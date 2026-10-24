@@ -1,12 +1,13 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import gsap from "gsap"
 import { DarkGradientBg } from "./dark-gradient-bg"
 
-const FRAME_COUNT = 16
-const FRAME_INTERVAL = 200
+const FRAME_COUNT = 30
+const FRAME_INTERVAL = 100
 
 export function Hero() {
   const heroRef = useRef<HTMLElement>(null)
@@ -15,7 +16,7 @@ export function Hero() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imagesRef = useRef<HTMLImageElement[]>([])
   const rafRef = useRef<number | null>(null)
-  const frameIndexRef = useRef(0)
+  const framePositionRef = useRef(0)
   const [framesReady, setFramesReady] = useState(false)
 
   /* the parallax: the picture leans away from the cursor, the words follow
@@ -70,12 +71,25 @@ export function Hero() {
   const preloadFrames = async (): Promise<HTMLImageElement[]> => {
     const promises = Array.from({ length: FRAME_COUNT }, (_, i) => {
       const frameNum = (i + 1).toString().padStart(4, "0")
-      const timestamp = (i * 0.2).toFixed(2)
+      const timestamp = (i * 0.1).toFixed(2)
       return new Promise<HTMLImageElement>((resolve, reject) => {
-        const img = new (globalThis as unknown as { Image: new () => HTMLImageElement }).Image()
+        const img = new (
+          globalThis as unknown as { Image: new () => HTMLImageElement }
+        ).Image()
+        img.decoding = "async"
         img.src = `/hero_frames/frame-${frameNum}-${timestamp}s.webp`
-        img.onload = () => resolve(img)
-        img.onerror = () => reject(new Error(`Failed to load frame ${frameNum}`))
+        img.onload = () => {
+          // decode while the loader is quiet, so the animation never stutters
+          // on a decode in the middle of playback
+          const decoded = img.decode?.()
+          if (!decoded) {
+            resolve(img)
+            return
+          }
+          void decoded.catch(() => undefined).then(() => resolve(img))
+        }
+        img.onerror = () =>
+          reject(new Error(`Failed to load frame ${frameNum}`))
       })
     })
     return Promise.all(promises)
@@ -84,18 +98,69 @@ export function Hero() {
   const resizeCanvas = () => {
     const canvas = canvasRef.current
     if (!canvas) return
-    canvas.width = canvas.offsetWidth || window.innerWidth
-    canvas.height = canvas.offsetHeight || window.innerHeight
-    drawFrame(frameIndexRef.current)
+
+    // the image layer is displayed at 1.08×. Render the backing store at that
+    // size and at the device pixel ratio, so the browser never has to upscale
+    // the frames.
+    const displayScale = 1.08
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    const cssWidth = canvas.offsetWidth || window.innerWidth
+    const cssHeight = canvas.offsetHeight || window.innerHeight
+
+    canvas.width = Math.round(cssWidth * displayScale * dpr)
+    canvas.height = Math.round(cssHeight * displayScale * dpr)
+    drawFrameAt(framePositionRef.current)
   }
 
-  const drawFrame = (index: number) => {
+  const drawFrameAt = (position: number) => {
     const canvas = canvasRef.current
-    const img = imagesRef.current[index]
-    if (!canvas || !img) return
+    const images = imagesRef.current
+    if (!canvas) return
+
+    const lower = Math.floor(position)
+    const upper = Math.min(FRAME_COUNT - 1, lower + 1)
+    const mix = position - lower
+
+    const current = images[lower]
+    if (!current) return
+
     const ctx = canvas.getContext("2d")
     if (!ctx) return
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+    const width = canvas.width
+    const height = canvas.height
+
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = "high"
+
+    const drawCover = (img: HTMLImageElement, alpha: number) => {
+      const scale = Math.max(width / img.width, height / img.height)
+      const drawWidth = img.width * scale
+      const drawHeight = img.height * scale
+      ctx.globalAlpha = alpha
+      ctx.drawImage(
+        img,
+        (width - drawWidth) / 2,
+        (height - drawHeight) / 2,
+        drawWidth,
+        drawHeight
+      )
+    }
+
+    ctx.clearRect(0, 0, width, height)
+    drawCover(current, 1)
+
+    // keep the frame crisp for most of its 100 ms, then dissolve into the next
+    // one in the last quarter — smooth, without the permanent softness of a
+    // full-length cross-fade
+    const next = images[upper]
+    const blendStart = 0.75
+    if (next && mix > blendStart) {
+      const t = (mix - blendStart) / (1 - blendStart)
+      drawCover(next, t * t * (3 - 2 * t))
+    }
+
+    ctx.globalAlpha = 1
   }
 
   const startAnimation = () => {
@@ -103,29 +168,23 @@ export function Hero() {
     if (!canvas) return
     resizeCanvas()
 
-    let lastTimestamp = performance.now()
-    let accumulated = 0
+    const duration = (FRAME_COUNT - 1) * FRAME_INTERVAL
+    const startedAt = performance.now()
 
     const loop = (timestamp: number) => {
-      const delta = timestamp - lastTimestamp
-      lastTimestamp = timestamp
-      accumulated += delta
+      const t = Math.min(1, (timestamp - startedAt) / duration)
+      const position = t * (FRAME_COUNT - 1)
 
-      while (
-        accumulated >= FRAME_INTERVAL &&
-        frameIndexRef.current < FRAME_COUNT - 1
-      ) {
-        accumulated -= FRAME_INTERVAL
-        frameIndexRef.current++
-        drawFrame(frameIndexRef.current)
-      }
+      framePositionRef.current = position
+      drawFrameAt(position)
 
-      if (frameIndexRef.current < FRAME_COUNT - 1) {
+      if (t < 1) {
         rafRef.current = requestAnimationFrame(loop)
+      } else {
+        rafRef.current = null
       }
     }
 
-    drawFrame(0)
     rafRef.current = requestAnimationFrame(loop)
   }
 
@@ -135,13 +194,15 @@ export function Hero() {
     ).matches
 
     if (reducedMotion) {
-      const img = new (globalThis as unknown as { Image: new () => HTMLImageElement }).Image()
-      img.src = `/hero_frames/frame-0016-3.00s.webp`
+      const img = new (
+        globalThis as unknown as { Image: new () => HTMLImageElement }
+      ).Image()
+      img.src = `/hero_frames/frame-0030-2.90s.webp`
       img.onload = () => {
         const frames: HTMLImageElement[] = []
         frames[FRAME_COUNT - 1] = img
         imagesRef.current = frames
-        frameIndexRef.current = FRAME_COUNT - 1
+        framePositionRef.current = FRAME_COUNT - 1
         resizeCanvas()
         setFramesReady(true)
       }
@@ -151,7 +212,8 @@ export function Hero() {
     const timer = setTimeout(async () => {
       try {
         imagesRef.current = await preloadFrames()
-        drawFrame(0)
+        framePositionRef.current = 0
+        drawFrameAt(0)
         setFramesReady(true)
         startAnimation()
       } catch (err) {
@@ -185,7 +247,16 @@ export function Hero() {
             data-parallax-text
             className="relative z-30 flex min-h-svh items-center px-5 pb-16 pt-28 will-change-transform sm:px-8 sm:pt-32 md:px-16 md:pt-36"
           >
-            <div className="flex w-full flex-col justify-center text-right md:ml-auto md:w-1/2 md:max-w-[38rem]">
+            <div className="relative flex w-full flex-col justify-center text-right md:ml-auto md:w-1/2 md:max-w-[38rem]">
+              {/* a very light pool behind the words — just enough to read */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -inset-x-6 -inset-y-10 -z-10"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at center, rgba(10,22,40,0.5) 0%, rgba(10,22,40,0.22) 45%, rgba(10,22,40,0) 78%)",
+                }}
+              />
               <h1 className="hero-part-2 font-primary text-[clamp(2.5rem,4.8vw,4.25rem)] leading-[1.1] text-sand">
                 حضارات
                 <br />
@@ -199,8 +270,8 @@ export function Hero() {
 
               <div className="mt-6 flex flex-wrap items-center justify-start gap-4 md:gap-6">
                 <span className="hero-part-4 inline-flex">
-                  <a
-                    href="#rafid"
+                  <Link
+                    href="/products"
                     className="group relative inline-flex h-9 items-center overflow-hidden whitespace-nowrap bg-gold px-4 font-primary text-[13px] text-royal-navy transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] md:h-[40px] md:px-5 md:text-[14px]"
                   >
                     <span aria-hidden="true" className="cta-sheen" />
@@ -217,7 +288,7 @@ export function Hero() {
                       <path d="M19 12H5" />
                       <path d="M11 6l-6 6 6 6" />
                     </svg>
-                  </a>
+                  </Link>
                 </span>
 
                 <span className="hero-part-5 inline-flex">
@@ -283,34 +354,30 @@ export function Hero() {
               </>
             )}
 
-            {/* the night keeps the words readable */}
+            {/* a narrow, very light strip on the text side — the frame stays
+              clear */}
             <div
               aria-hidden="true"
-              className="absolute inset-0 z-10"
+              className="pointer-events-none absolute inset-y-0 right-0 z-10 w-[10%]"
               style={{
                 background:
-                  "linear-gradient(to bottom, rgba(10,22,40,0.72) 0%, rgba(10,22,40,0.18) 45%, rgba(10,22,40,0.55) 100%)",
-              }}
-            />
-
-            {/* Cinematic Gradient Fade */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute bottom-0 left-0 z-20 h-64 w-full"
-              style={{
-                backgroundImage:
-                  "linear-gradient(to top, #0a1628 0%, transparent 100%)",
+                  "linear-gradient(to left, rgba(10,22,40,0.45) 0%, rgba(10,22,40,0) 100%)",
               }}
             />
           </div>
 
-          {/* the navy scrim under the words, so the right half stays legible */}
+          {/* the cinematic vignette: the top and bottom shadows carry the
+              header and the words, while the radial keeps the centre bright
+              and lets the corners fall into the brand navy */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 z-10"
             style={{
-              background:
-                "linear-gradient(to left, #0a1628 0%, transparent 100%)",
+              backgroundImage: [
+                "linear-gradient(to bottom, rgba(10, 22, 40, 0.8) 0%, transparent 25%)",
+                "linear-gradient(to top, rgba(10, 22, 40, 0.8) 0%, transparent 30%)",
+                "radial-gradient(circle at center, transparent 40%, rgba(10, 22, 40, 0.6) 100%)",
+              ].join(", "),
             }}
           />
         </div>

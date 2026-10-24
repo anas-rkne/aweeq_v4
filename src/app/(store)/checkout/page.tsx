@@ -7,7 +7,10 @@ export const metadata = {
 
 export default function CheckoutPage() {
   return (
-    <main className="min-h-screen bg-[#0a1628] px-5 py-12 md:px-10 lg:px-16" dir="rtl">
+    <main
+      className="min-h-screen bg-[#0a1628] px-5 py-12 md:px-10 lg:px-16"
+      dir="rtl"
+    >
       <div className="mx-auto max-w-3xl">
         <nav
           aria-label="مسار التنقل"
@@ -20,7 +23,9 @@ export default function CheckoutPage() {
           <span className="text-sand/65">إتمام الطلب</span>
         </nav>
 
-        <h1 className="font-primary text-3xl text-gold md:text-4xl">إتمام الطلب</h1>
+        <h1 className="font-primary text-3xl text-gold md:text-4xl">
+          إتمام الطلب
+        </h1>
         <p className="mt-3 font-primary text-sm text-sand/60">
           نظام إتمام الطلب الآمن مدعوم بـ Stripe — قريباً.
         </p>

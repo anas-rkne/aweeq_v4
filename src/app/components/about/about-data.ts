@@ -12,7 +12,7 @@ export const CIVILIZATION_SCENES: CivilizationScene[] = [
   {
     id: "gulf",
     folder: "0_frame",
-    frameCount: 33,
+    frameCount: 41,
     label: "THE GULF · الخليج",
     title: "The Golden Coast",
     body: "من شواطئ الخليج العربي، حيث يلتقي عبق اللبان والبخور بسحر اللآلئ، تبدأ حكاية 3WEEQ في استنطاق أصالة التراث بروح عصرية فاخرة.",

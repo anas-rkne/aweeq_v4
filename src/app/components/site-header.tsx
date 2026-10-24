@@ -1,10 +1,12 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import gsap from "gsap"
 import { useCart } from "./store/cart-provider"
+import { SearchModal } from "./search-modal"
 
 const STORE_PREFIXES = ["/products", "/collections", "/cart", "/checkout"]
 
@@ -203,8 +205,9 @@ function MobileNav({
 export function SiteHeader() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { itemCount, openCart } = useCart()
+  const { itemCount } = useCart()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -243,7 +246,9 @@ export function SiteHeader() {
 
             <button
               type="button"
-              aria-label="تبديل اللغة"
+              aria-label="تبديل اللغة — قريباً"
+              aria-disabled="true"
+              title="النسخة الإنجليزية قريباً"
               className="whitespace-nowrap font-secondary text-[11px] tracking-[0.12em] text-sand/80 transition-colors duration-200 ease-out hover:text-gold sm:text-[12px] sm:tracking-[0.2em]"
             >
               AR<span className="mx-0.5 text-sand/30 sm:mx-1">/</span>
@@ -252,15 +257,16 @@ export function SiteHeader() {
 
             <button
               type="button"
+              onClick={() => setIsSearchOpen(true)}
               aria-label="بحث"
+              aria-haspopup="dialog"
               className="shrink-0 p-1 text-sand/70 transition-colors duration-200 ease-out hover:text-gold"
             >
               <SearchIcon />
             </button>
 
-            <button
-              type="button"
-              onClick={openCart}
+            <Link
+              href="/cart"
               aria-label={itemCount > 0 ? `السلة، ${itemCount} قطعة` : "السلة"}
               className="relative shrink-0 p-1 text-sand/70 transition-colors duration-200 ease-out hover:text-gold"
             >
@@ -270,7 +276,7 @@ export function SiteHeader() {
                   {itemCount > 99 ? "99+" : itemCount}
                 </span>
               )}
-            </button>
+            </Link>
           </div>
 
           {/* the five rooms, in the middle of the bar */}
@@ -323,6 +329,10 @@ export function SiteHeader() {
       </header>
 
       <MobileNav isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
     </>
   )
 }

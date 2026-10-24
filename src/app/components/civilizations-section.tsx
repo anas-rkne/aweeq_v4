@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
+import Link from "next/link"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
@@ -87,13 +88,41 @@ export function CivilizationsSection() {
   const [images, setImages] = useState<HTMLImageElement[]>([])
   const [loaded, setLoaded] = useState(false)
   const [active, setActive] = useState(-1)
+  const [shouldLoad, setShouldLoad] = useState(false)
   const reducedMotion = useSyncExternalStore(
     subscribeToReducedMotion,
     getReducedMotionSnapshot,
     () => false
   )
 
+  /* the film waits for its own section to come near instead of competing with
+     the hero for the first paint */
   useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+
+    if (typeof IntersectionObserver === "undefined") {
+      const timer = window.setTimeout(() => setShouldLoad(true), 0)
+      return () => window.clearTimeout(timer)
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldLoad(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: "150% 0px" }
+    )
+
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!shouldLoad) return
+
     let cancelled = false
 
     const loadFrame = (index: number) =>
@@ -168,7 +197,7 @@ export function CivilizationsSection() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [shouldLoad])
 
   useEffect(() => {
     if (!loaded || images.length === 0) return
@@ -330,6 +359,10 @@ export function CivilizationsSection() {
       applyProgress(tl.scrollTrigger.progress)
     }
 
+    // the film loads late, so its pin changes the page height after the first
+    // pass; re-measure so the sections below keep their true positions
+    ScrollTrigger.refresh()
+
     return () => {
       window.removeEventListener("resize", resize)
       tl.scrollTrigger?.kill()
@@ -413,8 +446,8 @@ export function CivilizationsSection() {
                 {civilization.body}
               </p>
 
-              <a
-                href="#civilizations"
+              <Link
+                href="/products"
                 tabIndex={interactive ? 0 : -1}
                 aria-label={`${civilization.ctaAr} — ${civilization.ctaEn}`}
                 className={`group relative mt-9 inline-flex h-11 items-center justify-center overflow-hidden whitespace-nowrap bg-brand-gold px-7 font-primary text-[14px] leading-none text-royal-navy transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] sm:h-[46px] sm:px-9 ${
@@ -426,7 +459,7 @@ export function CivilizationsSection() {
                 <span className="relative ms-2 hidden text-[10px] tracking-[0.06em] opacity-70 sm:inline">
                   {civilization.ctaEn}
                 </span>
-              </a>
+              </Link>
             </div>
           )
         })}

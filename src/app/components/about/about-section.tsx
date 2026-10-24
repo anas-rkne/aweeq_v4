@@ -4,15 +4,17 @@ import React, { useEffect, useRef, useState } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { CIVILIZATION_SCENES } from "./about-data"
-import { AboutCanvas } from "./about-canvas"
+import { AboutCanvas, type AboutCanvasHandle } from "./about-canvas"
 import { AboutSceneOverlay } from "./about-scene-overlay"
 
 export function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const roomRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<AboutCanvasHandle>(null)
+  const textRef = useRef<HTMLDivElement>(null)
+  const sceneIndexRef = useRef(0)
 
   const [currentSceneIndex, setCurrentSceneIndex] = useState(0)
-  const [sceneProgress, setSceneProgress] = useState(0)
 
   useEffect(() => {
     const section = sectionRef.current
@@ -29,44 +31,74 @@ export function AboutSection() {
 
     room.style.height = `${totalRunway}px`
 
-    const st = ScrollTrigger.create({
-      trigger: section,
-      start: "top top",
-      end: `+=${totalRunway}`,
-      pin: true,
-      pinSpacing: false,
-      scrub: 1,
-      anticipatePin: 1,
-      onUpdate: (self) => {
-        const progress = self.progress
-        const targetFrameFloat = progress * (totalFrames - 1)
+    let st: ScrollTrigger | undefined
 
-        let accumulatedFrames = 0
-        let sceneIndex = 0
-        let localFrameIndex = 0
+    const ctx = gsap.context(() => {
+      st = ScrollTrigger.create({
+        trigger: section,
+        start: "top top",
+        end: `+=${totalRunway}`,
+        pin: true,
+        pinSpacing: false,
+        scrub: 1,
+        anticipatePin: 1,
+        onUpdate: (self) => {
+          const progress = self.progress
 
-        for (let i = 0; i < CIVILIZATION_SCENES.length; i++) {
-          const count = CIVILIZATION_SCENES[i].frameCount
-          if (targetFrameFloat <= accumulatedFrames + count) {
+          // the canvas is driven directly — no React render per scroll frame
+          canvasRef.current?.draw(progress)
+
+          const targetFrame = Math.min(
+            totalFrames - 0.0001,
+            progress * totalFrames
+          )
+
+          let accumulatedFrames = 0
+          let sceneIndex = 0
+          let localFrame = 0
+
+          for (let i = 0; i < CIVILIZATION_SCENES.length; i++) {
+            const count = CIVILIZATION_SCENES[i].frameCount
+            if (targetFrame < accumulatedFrames + count) {
+              sceneIndex = i
+              localFrame = targetFrame - accumulatedFrames
+              break
+            }
+            accumulatedFrames += count
             sceneIndex = i
-            localFrameIndex = targetFrameFloat - accumulatedFrames
-            break
+            localFrame = count
           }
-          accumulatedFrames += count
-          sceneIndex = i
-          localFrameIndex = count - 1
-        }
 
-        const currentScene = CIVILIZATION_SCENES[sceneIndex]
-        const sceneProg = Math.max(
-          0,
-          Math.min(1, localFrameIndex / (currentScene.frameCount - 1))
-        )
+          const scene = CIVILIZATION_SCENES[sceneIndex]
+          const local = Math.min(1, localFrame / scene.frameCount)
 
-        setCurrentSceneIndex(sceneIndex)
-        setSceneProgress(sceneProg)
-      },
-    })
+          if (sceneIndex !== sceneIndexRef.current) {
+            sceneIndexRef.current = sceneIndex
+            setCurrentSceneIndex(sceneIndex)
+          }
+
+          // the words leave just before the dissolve and return with the new
+          // scene, also without a React render
+          const text = textRef.current
+          if (text) {
+            let opacity = 1
+            let translateY = 0
+
+            if (sceneIndex > 0 && local < 0.12) {
+              opacity = local / 0.12
+              translateY = 20 * (1 - opacity)
+            }
+            if (local > 0.88) {
+              opacity = (1 - local) / 0.12
+              translateY = -20 * (1 - opacity)
+            }
+
+            text.style.opacity = String(Math.max(0, Math.min(1, opacity)))
+            text.style.transform = `translateY(${translateY}px)`
+          }
+        },
+      })
+    }, section)
 
     const refresh = () => ScrollTrigger.refresh()
     void document.fonts?.ready.then(refresh)
@@ -74,7 +106,8 @@ export function AboutSection() {
 
     return () => {
       window.removeEventListener("load", refresh)
-      st.kill()
+      ctx.revert()
+      st?.kill()
       if (room) room.style.height = ""
     }
   }, [])
@@ -86,27 +119,37 @@ export function AboutSection() {
         ref={sectionRef}
         className="relative z-10 h-screen w-screen overflow-hidden bg-[#0a1628]"
       >
-        <AboutCanvas
-          currentSceneIndex={currentSceneIndex}
-          sceneProgress={sceneProgress}
-        />
+        <AboutCanvas ref={canvasRef} />
 
+        {/* a light scrim on the text side only — the scene stays clear, the
+            words on the right keep their contrast */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/35 to-[#0a1628]/60 pointer-events-none"
+          className="pointer-events-none absolute inset-0 z-10"
+          style={{
+            backgroundImage:
+              "linear-gradient(to left, rgba(10, 22, 40, 0.7) 0%, rgba(10, 22, 40, 0.35) 34%, rgba(10, 22, 40, 0) 70%)",
+          }}
+        />
+
+        {/* the divider shared by the rest of the page: the top of the section
+            melts into the midnight of the hero above */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 top-0 z-[11] h-32 w-full md:h-64"
+          style={{
+            background:
+              "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
+          }}
         />
 
         <AboutSceneOverlay
+          ref={textRef}
           currentSceneIndex={currentSceneIndex}
-          sceneProgress={sceneProgress}
         />
       </section>
 
-      <div
-        id="about-room"
-        ref={roomRef}
-        aria-hidden="true"
-      />
+      <div id="about-room" ref={roomRef} aria-hidden="true" />
     </>
   )
 }

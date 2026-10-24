@@ -3,13 +3,14 @@
 import Image from "next/image"
 import { useState, type FormEvent } from "react"
 
-type FormStatus = "idle" | "success" | "error"
+type FormStatus = "idle" | "submitting" | "success" | "error"
 
 export function NewsletterSection() {
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<FormStatus>("idle")
+  const [message, setMessage] = useState("")
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const value = email.trim()
@@ -17,12 +18,44 @@ export function NewsletterSection() {
 
     if (!valid) {
       setStatus("error")
+      setMessage("يرجى إدخال بريد إلكتروني صحيح.")
       return
     }
 
-    setStatus("success")
-    setEmail("")
+    setStatus("submitting")
+    setMessage("")
+
+    try {
+      const response = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: value }),
+      })
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as {
+          error?: string
+        } | null
+
+        setStatus("error")
+        setMessage(
+          data?.error === "invalid_email"
+            ? "يرجى إدخال بريد إلكتروني صحيح."
+            : "تعذر إتمام الاشتراك. حاول مرة أخرى."
+        )
+        return
+      }
+
+      setStatus("success")
+      setMessage("شكراً لك، أصبحت جزءاً من الرحلة.")
+      setEmail("")
+    } catch {
+      setStatus("error")
+      setMessage("تعذر الاتصال بالخادم. تحقق من الشبكة وحاول مرة أخرى.")
+    }
   }
+
+  const isSubmitting = status === "submitting"
 
   return (
     <section
@@ -81,19 +114,26 @@ export function NewsletterSection() {
             value={email}
             onChange={(event) => {
               setEmail(event.target.value)
-              if (status !== "idle") setStatus("idle")
+              if (status !== "idle") {
+                setStatus("idle")
+                setMessage("")
+              }
             }}
+            disabled={isSubmitting}
             aria-invalid={status === "error"}
             aria-describedby="newsletter-message"
-            className="min-w-0 flex-1 border border-sand/30 bg-[#0a1628]/60 px-6 py-4 font-primary text-sand placeholder:text-sand/40 backdrop-blur-sm transition-colors focus:border-gold focus:bg-[#0a1628]/75 focus:text-sand focus:outline-none focus:ring-0 focus-visible:outline-none! focus-visible:ring-0! border-e-0"
+            className="min-w-0 flex-1 border border-sand/30 border-e-0 bg-[#0a1628]/60 px-6 py-4 font-primary text-sand placeholder:text-sand/40 backdrop-blur-sm transition-colors focus:border-gold focus:bg-[#0a1628]/75 focus:text-sand focus:outline-none focus:ring-0 focus-visible:outline-none! focus-visible:ring-0! disabled:opacity-60"
           />
 
           <button
             type="submit"
-            className="shrink-0 cursor-pointer bg-gold px-6 py-4 font-primary text-lg font-bold text-royal-navy transition-colors hover:bg-sand sm:px-8"
+            disabled={isSubmitting}
+            className="shrink-0 cursor-pointer bg-gold px-6 py-4 font-primary text-lg font-bold text-royal-navy transition-colors hover:bg-sand disabled:cursor-not-allowed disabled:opacity-60 sm:px-8"
           >
-            <span className="sr-only">اشترك في النشرة البريدية</span>
-            <span aria-hidden="true">←</span>
+            <span className="sr-only">
+              {isSubmitting ? "جارٍ الاشتراك" : "اشترك في النشرة البريدية"}
+            </span>
+            <span aria-hidden="true">{isSubmitting ? "…" : "←"}</span>
           </button>
         </form>
 
@@ -104,8 +144,7 @@ export function NewsletterSection() {
             status === "error" ? "text-gold" : "text-sand/80"
           }`}
         >
-          {status === "error" && "يرجى إدخال بريد إلكتروني صحيح."}
-          {status === "success" && "شكراً لك، أصبحت جزءاً من الرحلة."}
+          {message}
         </p>
       </div>
 

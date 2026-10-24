@@ -1,6 +1,5 @@
 import "server-only"
 import { medusaFetch, MedusaApiError } from "@/shared/lib/medusa"
-import { DEFAULT_LOCALE } from "@/shared/lib/config"
 import type { CivilizationsResponse, CivilizationProfile } from "@/types"
 import type { Result } from "@/entities/product/api/product.repository"
 

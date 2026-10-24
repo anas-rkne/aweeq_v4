@@ -1,11 +1,7 @@
 import "server-only"
 import { medusaFetch, MedusaApiError } from "@/shared/lib/medusa"
 import { DEFAULT_CURRENCY, DEFAULT_LOCALE } from "@/shared/lib/config"
-import type {
-  Product,
-  ProductListResponse,
-  ProductResponse,
-} from "@/types"
+import type { Product, ProductListResponse, ProductResponse } from "@/types"
 
 export type StoreLocale = "ar" | "en"
 

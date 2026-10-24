@@ -335,11 +335,7 @@ export function useCart() {
       pendingItemId: null,
       itemCount: 0,
       currencyCode: "sar",
-      openCart: () => {
-        if (typeof window !== "undefined") {
-          window.location.href = "/cart"
-        }
-      },
+      openCart: () => {},
       closeCart: () => {},
       clearActionError: () => {},
       refreshCart: async () => {},

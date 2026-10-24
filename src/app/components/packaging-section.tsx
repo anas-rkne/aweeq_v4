@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { useEffect, useRef } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
@@ -153,8 +154,8 @@ export function PackagingSection() {
           </p>
 
           <div className="mt-10">
-            <a
-              href="#packaging-experience"
+            <Link
+              href="/products"
               className="group relative inline-flex h-10 items-center overflow-hidden whitespace-nowrap bg-gold px-6 font-primary text-[13px] text-royal-navy transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] md:h-[44px] md:px-7 md:text-[14px]"
             >
               <span aria-hidden="true" className="cta-sheen" />
@@ -174,7 +175,7 @@ export function PackagingSection() {
                 <path d="M19 12H5" />
                 <path d="M11 6l-6 6 6 6" />
               </svg>
-            </a>
+            </Link>
           </div>
         </div>
       </div>

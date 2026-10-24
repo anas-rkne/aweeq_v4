@@ -6,7 +6,12 @@ import {
 import { fetchCollectionsRepository } from "@/entities/collection/api/collection.repository"
 import { fetchCivilizationsRepository } from "@/entities/civilization/api/civilization.repository"
 import { DEFAULT_CURRENCY, DEFAULT_LOCALE } from "@/shared/lib/config"
-import type { Product, CollectionProfile, CivilizationProfile, ProductListResponse } from "@/types"
+import type {
+  Product,
+  CollectionProfile,
+  CivilizationProfile,
+  ProductListResponse,
+} from "@/types"
 
 export type { StoreLocale }
 
@@ -47,7 +52,9 @@ export async function getProductByHandle(
   return null
 }
 
-export async function getCollections(locale: StoreLocale = "ar"): Promise<CollectionProfile[]> {
+export async function getCollections(
+  locale: StoreLocale = "ar"
+): Promise<CollectionProfile[]> {
   const result = await fetchCollectionsRepository(locale)
   if (result.ok) {
     return result.data
@@ -55,7 +62,9 @@ export async function getCollections(locale: StoreLocale = "ar"): Promise<Collec
   return []
 }
 
-export async function getCivilizations(locale: StoreLocale = "ar"): Promise<CivilizationProfile[]> {
+export async function getCivilizations(
+  locale: StoreLocale = "ar"
+): Promise<CivilizationProfile[]> {
   const result = await fetchCivilizationsRepository(locale)
   if (result.ok) {
     return result.data
@@ -74,7 +83,5 @@ export async function getRelatedProducts(
       : {}
 
   const data = await getProducts({ ...filters, limit: limit + 1 })
-  return data.products
-    .filter((item) => item.id !== product.id)
-    .slice(0, limit)
+  return data.products.filter((item) => item.id !== product.id).slice(0, limit)
 }

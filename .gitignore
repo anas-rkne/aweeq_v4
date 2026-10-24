@@ -66,6 +66,9 @@ next-env.d.ts
 # local logs
 *.log
 
+# local runtime data (newsletter queue, dev caches)
+/.data/
+
 # local asset backups (originals kept outside the app)
 /.asset-backup/
 

@@ -1,33 +1,11 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { useEffect, useRef } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-
-const POSTS = [
-  {
-    id: "babylon",
-    image: "/images/journal/toWEBP (1)/journal-1.webp",
-    titleEn: "The Legacy of Babylon",
-    titleAr: "إرث بابل",
-    alt: "نقوش بابل — إرث الحضارة",
-  },
-  {
-    id: "symbols",
-    image: "/images/journal/toWEBP (1)/journal-2.webp",
-    titleEn: "Symbols Through Time",
-    titleAr: "رموز عبر الزمن",
-    alt: "رموز الحضارات عبر الزمن",
-  },
-  {
-    id: "scent",
-    image: "/images/journal/toWEBP (1)/journal-3.webp",
-    titleEn: "The Art of Scent",
-    titleAr: "فن العطر",
-    alt: "فن صناعة العطر",
-  },
-] as const
+import { JOURNAL_POSTS } from "./journal-posts"
 
 export function JournalSection() {
   const sectionRef = useRef<HTMLElement>(null)
@@ -131,8 +109,8 @@ export function JournalSection() {
             </p>
           </div>
 
-          <a
-            href="#journal"
+          <Link
+            href="/journal"
             className="group inline-flex shrink-0 items-center gap-3 self-start font-secondary text-[11px] tracking-[0.28em] text-sand/70 transition-colors duration-300 hover:text-gold md:self-auto"
           >
             VIEW ALL
@@ -142,14 +120,14 @@ export function JournalSection() {
             >
               →
             </span>
-          </a>
+          </Link>
         </div>
 
         {/* ===== the gallery ===== */}
         <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
-          {POSTS.map((post, index) => (
+          {JOURNAL_POSTS.map((post, index) => (
             <article
-              key={post.id}
+              key={post.slug}
               ref={(element) => {
                 cardsRef.current[index] = element
               }}
@@ -186,8 +164,8 @@ export function JournalSection() {
                   </p>
                 </div>
 
-                <a
-                  href="#journal"
+                <Link
+                  href={`/journal/${post.slug}`}
                   aria-label={`اقرأ: ${post.titleAr}`}
                   className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold text-gold transition-colors duration-300 hover:bg-gold hover:text-royal-navy"
                 >
@@ -204,7 +182,7 @@ export function JournalSection() {
                     <path d="M7 17 17 7" />
                     <path d="M9 7h8v8" />
                   </svg>
-                </a>
+                </Link>
               </div>
             </article>
           ))}
