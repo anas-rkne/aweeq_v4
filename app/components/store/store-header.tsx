@@ -1,5 +1,8 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
+import { useCart } from "./cart-provider"
 
 const NAV_LINKS = [
   { href: "/", label: "الرئيسية" },
@@ -9,8 +12,10 @@ const NAV_LINKS = [
 ] as const
 
 export function StoreHeader() {
+  const { itemCount, openCart } = useCart()
+
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-sand/10 bg-[#020A14]/90 backdrop-blur-md">
+    <header className="fixed inset-x-0 top-0 z-40 border-b border-sand/10 bg-[#0a1628]/90 backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-5 md:h-24 md:px-10">
         <Link
           href="/"
@@ -20,8 +25,10 @@ export function StoreHeader() {
           <Image
             src="/images/logo-mark.png"
             alt="3WEEQ"
-            width={160}
-            height={48}
+            width={2785}
+            height={841}
+            quality={90}
+            sizes="(min-width: 64rem) 7rem, 5rem"
             priority
             className="h-6 w-auto md:h-8"
           />
@@ -64,10 +71,11 @@ export function StoreHeader() {
 
           <button
             type="button"
-            disabled
-            aria-label="السلة — قريباً"
-            title="السلة قريباً"
-            className="relative cursor-not-allowed p-1 text-sand/40"
+            onClick={openCart}
+            aria-label={
+              itemCount > 0 ? `السلة، ${itemCount} قطعة` : "السلة"
+            }
+            className="relative p-1 text-sand/70 transition-colors duration-300 hover:text-gold"
           >
             <svg
               viewBox="0 0 24 24"
@@ -82,6 +90,11 @@ export function StoreHeader() {
               <path d="M6 7h12l-1 13H7L6 7Z" />
               <path d="M9 7a3 3 0 0 1 6 0" />
             </svg>
+            {itemCount > 0 && (
+              <span className="absolute -end-1.5 -top-1 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-gold px-1 font-secondary text-[9px] leading-none text-royal-navy">
+                {itemCount > 99 ? "99+" : itemCount}
+              </span>
+            )}
           </button>
         </div>
       </div>

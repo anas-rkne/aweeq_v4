@@ -1,10 +1,10 @@
 export const STORE_PRODUCT_TYPES = [
-  { code: "fragrance", label: "العطور" },
-  { code: "incense", label: "الدخون" },
-  { code: "jewelry", label: "المجوهرات" },
-  { code: "textile", label: "الأقمشة" },
-  { code: "leather", label: "الجلديات" },
-  { code: "artifact", label: "المختارات" },
+  { code: "fragrance", label: "عطور" },
+  { code: "incense", label: "بخور" },
+  { code: "jewelry", label: "مجوهرات" },
+  { code: "textile", label: "أقمشة" },
+  { code: "leather", label: "منتجات جلدية" },
+  { code: "artifact", label: "تحف" },
 ] as const
 
 export const STORE_PAGE_SIZE = 12

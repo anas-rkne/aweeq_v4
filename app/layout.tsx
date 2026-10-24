@@ -4,6 +4,8 @@ import "lenis/dist/lenis.css";
 import "./globals.css";
 import { SiteHeader } from "./components/site-header";
 import { SmoothScroll } from "./components/smooth-scroll";
+import { CartProvider } from "./components/store/cart-provider";
+import { CartDrawer } from "./components/store/cart-drawer";
 
 export const metadata: Metadata = {
   title: "3WWEQ",
@@ -13,7 +15,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#020a14",
+  themeColor: "#0a1628",
   viewportFit: "cover",
 };
 
@@ -40,8 +42,11 @@ export default function RootLayout({
         </noscript>
       </head>
       <body className="min-h-full flex flex-col">
-        <SiteHeader />
-        <SmoothScroll>{children}</SmoothScroll>
+        <CartProvider>
+          <SiteHeader />
+          <SmoothScroll>{children}</SmoothScroll>
+          <CartDrawer />
+        </CartProvider>
       </body>
     </html>
   );

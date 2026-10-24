@@ -1,6 +1,6 @@
 export default function ProductsLoading() {
   return (
-    <div className="min-h-screen bg-[#020A14] px-5 py-10 md:px-10 md:py-14 lg:px-16">
+    <div className="min-h-screen bg-[#0a1628] px-5 py-10 md:px-10 md:py-14 lg:px-16">
       <div className="mx-auto max-w-7xl animate-pulse" dir="rtl">
         <div className="h-3 w-40 bg-sand/10" />
         <div className="mt-8 h-12 w-52 bg-sand/10" />

@@ -95,7 +95,7 @@ export function FeaturedFragrance({ frameCount = 152 }: FeaturedFragranceProps) 
       const cw = canvas.width;
       const ch = canvas.height;
       ctx.clearRect(0, 0, cw, ch);
-      ctx.fillStyle = "#020a14";
+      ctx.fillStyle = "#0a1628";
       ctx.fillRect(0, 0, cw, ch);
 
       // the master is portrait, so the picture itself is kept whole and the
@@ -185,7 +185,7 @@ export function FeaturedFragrance({ frameCount = 152 }: FeaturedFragranceProps) 
     <section
       ref={sectionRef}
       id="featured-fragrance"
-      className="featured-fragrance-section relative h-screen overflow-hidden bg-[#020a14]"
+      className="featured-fragrance-section relative h-screen overflow-hidden bg-[#0a1628]"
     >
       <canvas
         ref={canvasRef}
@@ -200,7 +200,7 @@ export function FeaturedFragrance({ frameCount = 152 }: FeaturedFragranceProps) 
         className="pointer-events-none absolute inset-0 z-[15] md:hidden"
         style={{
           backgroundImage:
-            "linear-gradient(to top, #020A14 0%, rgba(2, 10, 20, 0.85) 34%, rgba(2, 10, 20, 0) 68%)",
+            "linear-gradient(to top, #0a1628 0%, rgba(10, 22, 40, 0.85) 34%, rgba(10, 22, 40, 0) 68%)",
         }}
       />
       <div
@@ -208,7 +208,7 @@ export function FeaturedFragrance({ frameCount = 152 }: FeaturedFragranceProps) 
         className="pointer-events-none absolute inset-y-0 right-0 z-[15] hidden w-1/2 md:block"
         style={{
           backgroundImage:
-            "linear-gradient(to left, #020A14 0%, rgba(2, 10, 20, 0.9) 38%, rgba(2, 10, 20, 0.55) 68%, rgba(2, 10, 20, 0) 100%)",
+            "linear-gradient(to left, #0a1628 0%, rgba(10, 22, 40, 0.9) 38%, rgba(10, 22, 40, 0.55) 68%, rgba(10, 22, 40, 0) 100%)",
         }}
       />
 
@@ -218,7 +218,7 @@ export function FeaturedFragrance({ frameCount = 152 }: FeaturedFragranceProps) 
         aria-hidden="true"
         className="pointer-events-none absolute bottom-0 left-0 z-10 h-32 w-full md:h-64"
         style={{
-          background: "linear-gradient(to bottom, transparent 0%, #020A14 100%)",
+          background: "linear-gradient(to bottom, transparent 0%, #0a1628 100%)",
         }}
       />
 

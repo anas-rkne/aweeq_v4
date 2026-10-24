@@ -90,7 +90,7 @@ export function JournalSection() {
     <section
       ref={sectionRef}
       id="journal"
-      className="relative isolate min-h-screen overflow-hidden bg-[#020A14]"
+      className="relative isolate min-h-screen overflow-hidden bg-[#0a1628]"
     >
       <Image
         src="/images/journal/journal_bg.jpg"
@@ -101,14 +101,14 @@ export function JournalSection() {
         className="z-0 object-cover object-center"
       />
 
-      <div aria-hidden="true" className="absolute inset-0 z-0 bg-[#020A14]/80" />
+      <div aria-hidden="true" className="absolute inset-0 z-0 bg-[#0a1628]/80" />
 
       {/* receives the midnight of Beyond without a seam */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-0 top-0 z-10 h-32 w-full md:h-64"
         style={{
-          background: "linear-gradient(to bottom, #020A14 0%, transparent 100%)",
+          background: "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
         }}
       />
 
@@ -151,7 +151,7 @@ export function JournalSection() {
               }}
               className="group"
             >
-              <div className="relative aspect-[4/5] overflow-hidden border border-sand/10 transition-all duration-500 hover:border-gold/50 hover:shadow-[0_0_45px_-12px_rgba(181,142,75,0.55)]">
+              <div className="relative aspect-[4/5] overflow-hidden border border-sand/10 transition-all duration-500 hover:border-gold/50 hover:shadow-[0_0_45px_-12px_rgba(205,158,97,0.55)]">
                 <Image
                   src={post.image}
                   alt={post.alt}
@@ -163,7 +163,7 @@ export function JournalSection() {
 
                 <div
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#020A14]/75 via-transparent to-transparent"
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0a1628]/75 via-transparent to-transparent"
                 />
 
                 <span
@@ -185,7 +185,7 @@ export function JournalSection() {
                 <a
                   href="#journal"
                   aria-label={`اقرأ: ${post.titleAr}`}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold text-gold transition-colors duration-300 hover:bg-gold hover:text-[#020A14]"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold text-gold transition-colors duration-300 hover:bg-gold hover:text-royal-navy"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -212,7 +212,7 @@ export function JournalSection() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-32 md:h-64"
         style={{
-          background: "linear-gradient(to top, #020A14 0%, transparent 100%)",
+          background: "linear-gradient(to top, #0a1628 0%, transparent 100%)",
         }}
       />
     </section>

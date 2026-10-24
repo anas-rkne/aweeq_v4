@@ -345,7 +345,7 @@ export function CivilizationsSection() {
     <section
       ref={sectionRef}
       id="civilizations"
-      className="relative h-screen overflow-hidden bg-[#020a14] motion-reduce:h-auto motion-reduce:min-h-screen"
+      className="relative h-screen overflow-hidden bg-[#0a1628] motion-reduce:h-auto motion-reduce:min-h-screen"
     >
         <canvas
           ref={canvasRef}
@@ -360,7 +360,7 @@ export function CivilizationsSection() {
           className="pointer-events-none absolute inset-0 z-[5] motion-reduce:hidden"
           style={{
             backgroundImage:
-              "radial-gradient(ellipse 88% 78% at 50% 50%, rgba(2, 10, 20, 0.8) 0%, rgba(2, 10, 20, 0.52) 46%, rgba(2, 10, 20, 0.92) 100%)",
+              "radial-gradient(ellipse 88% 78% at 50% 50%, rgba(10, 22, 40, 0.8) 0%, rgba(10, 22, 40, 0.52) 46%, rgba(10, 22, 40, 0.92) 100%)",
           }}
         />
 
@@ -371,7 +371,7 @@ export function CivilizationsSection() {
           className="pointer-events-none absolute left-0 top-0 z-[6] h-32 w-full motion-reduce:hidden md:h-64"
           style={{
             background:
-              "linear-gradient(to bottom, #020A14 0%, transparent 100%)",
+              "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
           }}
         />
 
@@ -382,7 +382,7 @@ export function CivilizationsSection() {
           className="pointer-events-none absolute bottom-0 left-0 z-[6] h-32 w-full motion-reduce:hidden md:h-64"
           style={{
             background:
-              "linear-gradient(to top, #020A14 0%, transparent 100%)",
+              "linear-gradient(to top, #0a1628 0%, transparent 100%)",
           }}
         />
 
@@ -425,7 +425,7 @@ export function CivilizationsSection() {
                   href="#civilizations"
                   tabIndex={interactive ? 0 : -1}
                   aria-label={`${civilization.ctaAr} — ${civilization.ctaEn}`}
-                  className={`group relative mt-9 inline-flex h-11 items-center justify-center overflow-hidden whitespace-nowrap bg-[#B58E4B] px-7 font-primary text-[14px] leading-none text-[#020A14] transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] sm:h-[46px] sm:px-9 ${
+                  className={`group relative mt-9 inline-flex h-11 items-center justify-center overflow-hidden whitespace-nowrap bg-brand-gold px-7 font-primary text-[14px] leading-none text-royal-navy transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] sm:h-[46px] sm:px-9 ${
                     interactive ? "pointer-events-auto" : "pointer-events-none"
                   }`}
                 >

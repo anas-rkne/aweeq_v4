@@ -19,7 +19,7 @@ const HELP_LINKS = [
 
 export function Footer() {
   return (
-    <footer id="footer" className="bg-[#020A14] pb-12 pt-12">
+    <footer id="footer" className="bg-[#0a1628] pb-12 pt-12">
       <div className="mx-auto grid w-full max-w-7xl grid-cols-2 items-center gap-8 px-6 md:flex md:flex-row md:items-center md:justify-between md:gap-12 md:px-12">
         {/* far right: the mark */}
         <div className="col-start-1 row-start-1 flex justify-start">
@@ -84,7 +84,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
-              className="inline-flex rounded-full border border-gold p-2 text-gold transition-colors duration-300 hover:bg-gold hover:text-[#020A14]"
+              className="inline-flex rounded-full border border-gold p-2 text-gold transition-colors duration-300 hover:bg-gold hover:text-royal-navy"
             >
               <Instagram className="h-4 w-4" strokeWidth={1.4} />
             </a>
@@ -94,7 +94,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Youtube"
-              className="inline-flex rounded-full border border-gold p-2 text-gold transition-colors duration-300 hover:bg-gold hover:text-[#020A14]"
+              className="inline-flex rounded-full border border-gold p-2 text-gold transition-colors duration-300 hover:bg-gold hover:text-royal-navy"
             >
               <Youtube className="h-4 w-4" strokeWidth={1.4} />
             </a>

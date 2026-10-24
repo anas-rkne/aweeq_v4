@@ -56,7 +56,7 @@ export function PackagingSection() {
     <section
       ref={sectionRef}
       id="packaging-experience"
-      className="relative flex min-h-screen flex-col overflow-hidden bg-[#020a14] md:block md:h-screen"
+      className="relative flex min-h-screen flex-col overflow-hidden bg-[#0a1628] md:block md:h-screen"
     >
       <div
         ref={bgRef}
@@ -85,7 +85,7 @@ export function PackagingSection() {
         className="pointer-events-none absolute inset-0 z-10 hidden md:block"
         style={{
           backgroundImage:
-            "linear-gradient(to left, #020A14 0%, rgba(2, 10, 20, 0.94) 38%, rgba(2, 10, 20, 0.62) 66%, rgba(2, 10, 20, 0) 100%)",
+            "linear-gradient(to left, #0a1628 0%, rgba(10, 22, 40, 0.94) 38%, rgba(10, 22, 40, 0.62) 66%, rgba(10, 22, 40, 0) 100%)",
         }}
       />
 
@@ -95,7 +95,7 @@ export function PackagingSection() {
         aria-hidden="true"
         className="pointer-events-none absolute left-0 top-0 z-10 h-32 w-full md:h-64"
         style={{
-          background: "linear-gradient(to bottom, #020A14 0%, transparent 100%)",
+          background: "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
         }}
       />
 
@@ -105,7 +105,7 @@ export function PackagingSection() {
         aria-hidden="true"
         className="pointer-events-none relative z-10 -mt-32 h-32 w-full md:hidden"
         style={{
-          background: "linear-gradient(to bottom, transparent 0%, #020A14 100%)",
+          background: "linear-gradient(to bottom, transparent 0%, #0a1628 100%)",
         }}
       />
 
@@ -115,7 +115,7 @@ export function PackagingSection() {
         aria-hidden="true"
         className="pointer-events-none absolute bottom-0 left-0 z-10 hidden h-32 w-full md:block md:h-64"
         style={{
-          background: "linear-gradient(to bottom, transparent 0%, #020A14 100%)",
+          background: "linear-gradient(to bottom, transparent 0%, #0a1628 100%)",
         }}
       />
 

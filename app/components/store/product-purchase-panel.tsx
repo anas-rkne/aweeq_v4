@@ -7,6 +7,7 @@ import {
   formatPrice,
   stockLabel,
 } from "@/lib/format"
+import { useCart } from "./cart-provider"
 
 interface ProductPurchasePanelProps {
   product: Product
@@ -26,6 +27,9 @@ export function ProductPurchasePanel({
   const [selectedVariantId, setSelectedVariantId] = useState(
     initialVariant?.id ?? ""
   )
+  const [quantity, setQuantity] = useState(1)
+  const [addError, setAddError] = useState<string | null>(null)
+  const { addItem, isAdding } = useCart()
 
   const selectedVariant = useMemo(
     () =>
@@ -38,6 +42,37 @@ export function ProductPurchasePanel({
   const isSerialized = Boolean(
     selectedVariant?.is_serialized ?? product.is_serialized
   )
+
+  const purchaseLimit = useMemo(() => {
+    const limits = [
+      product.max_per_customer,
+      selectedVariant?.available_serial_units,
+    ].filter(
+      (value): value is number =>
+        typeof value === "number" && Number.isFinite(value)
+    )
+
+    return limits.length > 0 ? Math.max(1, Math.min(...limits)) : 10
+  }, [product.max_per_customer, selectedVariant?.available_serial_units])
+
+  async function handleAddToCart() {
+    if (!selectedVariant || !selectedVariant.in_stock || isAdding) {
+      return
+    }
+
+    setAddError(null)
+
+    try {
+      await addItem(selectedVariant.id, quantity)
+      setQuantity(1)
+    } catch (error) {
+      setAddError(
+        error instanceof Error
+          ? error.message
+          : "تعذر إضافة القطعة إلى السلة. حاول مرة أخرى."
+      )
+    }
+  }
 
   return (
     <div className="space-y-7">
@@ -76,7 +111,11 @@ export function ProductPurchasePanel({
                 variant={variant}
                 selected={variant.id === selectedVariant?.id}
                 locale={locale}
-                onSelect={() => setSelectedVariantId(variant.id)}
+                onSelect={() => {
+                  setSelectedVariantId(variant.id)
+                  setQuantity(1)
+                  setAddError(null)
+                }}
               />
             ))}
           </div>
@@ -127,15 +166,66 @@ export function ProductPurchasePanel({
       )}
 
       <div className="space-y-3">
-        <button
-          type="button"
-          disabled
-          className="w-full cursor-not-allowed border border-gold/35 bg-gold/10 px-10 py-4 font-primary text-lg font-bold text-gold/70"
-        >
-          أضف للسلة — قريباً
-        </button>
-        <p className="text-center font-primary text-xs text-sand/40">
-          الشراء المباشر قيد التجهيز. يمكنك استكشاف القطعة وتفاصيلها الآن.
+        <div className="flex items-stretch gap-3">
+          <div className="inline-flex shrink-0 items-center border border-sand/20">
+            <button
+              type="button"
+              onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+              disabled={quantity <= 1 || isAdding}
+              aria-label="تقليل الكمية"
+              className="grid h-full w-11 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              −
+            </button>
+            <span className="grid h-full min-w-10 place-items-center border-x border-sand/20 font-secondary text-sm text-sand">
+              {quantity}
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setQuantity((value) =>
+                  Math.min(purchaseLimit, value + 1)
+                )
+              }
+              disabled={quantity >= purchaseLimit || isAdding}
+              aria-label="زيادة الكمية"
+              className="grid h-full w-11 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              +
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void handleAddToCart()}
+            disabled={
+              !selectedVariant ||
+              !selectedVariant.in_stock ||
+              isAdding
+            }
+            className="flex-1 border border-gold bg-gold px-6 py-4 font-primary text-base font-bold text-royal-navy transition-colors duration-300 hover:bg-gold/85 disabled:cursor-not-allowed disabled:border-gold/35 disabled:bg-gold/10 disabled:text-gold/60 sm:text-lg"
+          >
+            {!selectedVariant || !selectedVariant.in_stock
+              ? "غير متوفر"
+              : isAdding
+                ? "جارٍ الإضافة..."
+                : "أضف إلى السلة"}
+          </button>
+        </div>
+
+        {addError && (
+          <p
+            role="alert"
+            className="border border-red-400/25 bg-red-950/25 px-3 py-2 text-center font-primary text-xs leading-6 text-red-200/85"
+          >
+            {addError}
+          </p>
+        )}
+
+        <p className="text-center font-primary text-xs leading-6 text-sand/40">
+          {product.max_per_customer != null
+            ? `يمكن شراء ${product.max_per_customer} قطع كحد أقصى لكل عميل.`
+            : "الشحن والضرائب تُحسب عند إتمام الطلب."}
         </p>
       </div>
     </div>

@@ -130,10 +130,10 @@ export function PortalTransition() {
       {/* the burning edge of the door */}
       <div
         ref={ringRef}
-        className="absolute rounded-full border-2 border-[#B58E4B]/90 opacity-0 will-change-transform"
+        className="absolute rounded-full border-2 border-brand-gold/90 opacity-0 will-change-transform"
         style={{
           boxShadow:
-            "0 0 70px 18px rgba(181,142,75,0.45), inset 0 0 70px 18px rgba(181,142,75,0.28)",
+            "0 0 70px 18px rgba(205,158,97,0.45), inset 0 0 70px 18px rgba(205,158,97,0.28)",
         }}
       />
     </div>

@@ -61,7 +61,7 @@ const civilizations = [
     code: "BABYLON",
     status: "live",
     sort_order: 1,
-    accent_color: "#B58E4B",
+    accent_color: "#cd9e61",
     launch_at: null,
   },
   {
@@ -69,7 +69,7 @@ const civilizations = [
     code: "EGYPT",
     status: "announced",
     sort_order: 2,
-    accent_color: "#B58E4B",
+    accent_color: "#cd9e61",
     launch_at: null,
   },
   {
@@ -77,7 +77,7 @@ const civilizations = [
     code: "CHINA",
     status: "announced",
     sort_order: 3,
-    accent_color: "#B58E4B",
+    accent_color: "#cd9e61",
     launch_at: null,
   },
   {
@@ -85,7 +85,7 @@ const civilizations = [
     code: "GREECE",
     status: "announced",
     sort_order: 4,
-    accent_color: "#B58E4B",
+    accent_color: "#cd9e61",
     launch_at: null,
   },
   {
@@ -93,7 +93,7 @@ const civilizations = [
     code: "GULF",
     status: "announced",
     sort_order: 5,
-    accent_color: "#B58E4B",
+    accent_color: "#cd9e61",
     launch_at: null,
   },
 ]
@@ -102,15 +102,15 @@ const civilizationTranslations = [
   {
     civilization_id: "babylon",
     locale: "ar",
-    name: "بابل",
-    subtitle: "الفصل الأول",
+    name: "ط¨ط§ط¨ظ„",
+    subtitle: "ط§ظ„ظپطµظ„ ط§ظ„ط£ظˆظ„",
     description:
-      "من بين النهرين، حيث وُلدت الكتابة الأولى، يبدأ عطر رافد رحلته عبر الحضارات.",
+      "ظ…ظ† ط¨ظٹظ† ط§ظ„ظ†ظ‡ط±ظٹظ†طŒ ط­ظٹط« ظˆظڈظ„ط¯طھ ط§ظ„ظƒطھط§ط¨ط© ط§ظ„ط£ظˆظ„ظ‰طŒ ظٹط¨ط¯ط£ ط¹ط·ط± ط±ط§ظپط¯ ط±ط­ظ„طھظ‡ ط¹ط¨ط± ط§ظ„ط­ط¶ط§ط±ط§طھ.",
     story:
-      "بابل ليست مكاناً فحسب، بل بوابة. من طينها وخطها المسماري وزرقتها العميقة، استُلهم رافد ليكون أول فصول 3weeq.",
-    seo_title: "بابل — الفصل الأول من 3weeq",
+      "ط¨ط§ط¨ظ„ ظ„ظٹط³طھ ظ…ظƒط§ظ†ط§ظ‹ ظپط­ط³ط¨طŒ ط¨ظ„ ط¨ظˆط§ط¨ط©. ظ…ظ† ط·ظٹظ†ظ‡ط§ ظˆط®ط·ظ‡ط§ ط§ظ„ظ…ط³ظ…ط§ط±ظٹ ظˆط²ط±ظ‚طھظ‡ط§ ط§ظ„ط¹ظ…ظٹظ‚ط©طŒ ط§ط³طھظڈظ„ظ‡ظ… ط±ط§ظپط¯ ظ„ظٹظƒظˆظ† ط£ظˆظ„ ظپطµظˆظ„ 3weeq.",
+    seo_title: "ط¨ط§ط¨ظ„ â€” ط§ظ„ظپطµظ„ ط§ظ„ط£ظˆظ„ ظ…ظ† 3weeq",
     seo_description:
-      "اكتشف عطر رافد المستوحى من حضارة بابل، أول فصول بوابة 3weeq عبر الحضارات.",
+      "ط§ظƒطھط´ظپ ط¹ط·ط± ط±ط§ظپط¯ ط§ظ„ظ…ط³طھظˆط­ظ‰ ظ…ظ† ط­ط¶ط§ط±ط© ط¨ط§ط¨ظ„طŒ ط£ظˆظ„ ظپطµظˆظ„ ط¨ظˆط§ط¨ط© 3weeq ط¹ط¨ط± ط§ظ„ط­ط¶ط§ط±ط§طھ.",
   },
   {
     civilization_id: "babylon",
@@ -121,22 +121,22 @@ const civilizationTranslations = [
       "From Mesopotamia, where the first writing was born, RAFID begins its journey across civilizations.",
     story:
       "Babylon is not merely a place; it is a gateway. From its clay, cuneiform, and deep blue, RAFID was imagined as the first chapter of 3weeq.",
-    seo_title: "Babylon — The First Chapter of 3weeq",
+    seo_title: "Babylon â€” The First Chapter of 3weeq",
     seo_description:
       "Discover RAFID, inspired by the civilization of Babylon, the first chapter of the 3weeq gateway.",
   },
   {
     civilization_id: "egypt",
     locale: "ar",
-    name: "مصر",
-    subtitle: "الفصل القادم",
+    name: "ظ…طµط±",
+    subtitle: "ط§ظ„ظپطµظ„ ط§ظ„ظ‚ط§ط¯ظ…",
     description:
-      "حضارة النيل، حيث تحوّل البخور إلى لغة مقدسة بين المعابد والملوك.",
+      "ط­ط¶ط§ط±ط© ط§ظ„ظ†ظٹظ„طŒ ط­ظٹط« طھط­ظˆظ‘ظ„ ط§ظ„ط¨ط®ظˆط± ط¥ظ„ظ‰ ظ„ط؛ط© ظ…ظ‚ط¯ط³ط© ط¨ظٹظ† ط§ظ„ظ…ط¹ط§ط¨ط¯ ظˆط§ظ„ظ…ظ„ظˆظƒ.",
     story:
-      "من وادي النيل، نستلهم طقوس البخور والزرقة الملكية والذهب، لتصبح مصر الفصل التالي في رحلتنا.",
-    seo_title: "مصر — فصل قادم من 3weeq",
+      "ظ…ظ† ظˆط§ط¯ظٹ ط§ظ„ظ†ظٹظ„طŒ ظ†ط³طھظ„ظ‡ظ… ط·ظ‚ظˆط³ ط§ظ„ط¨ط®ظˆط± ظˆط§ظ„ط²ط±ظ‚ط© ط§ظ„ظ…ظ„ظƒظٹط© ظˆط§ظ„ط°ظ‡ط¨طŒ ظ„طھطµط¨ط­ ظ…طµط± ط§ظ„ظپطµظ„ ط§ظ„طھط§ظ„ظٹ ظپظٹ ط±ط­ظ„طھظ†ط§.",
+    seo_title: "ظ…طµط± â€” ظپطµظ„ ظ‚ط§ط¯ظ… ظ…ظ† 3weeq",
     seo_description:
-      "انضم إلى قائمة انتظار فصل مصر، حيث يلتقي البخور المقدس بفخامة النيل.",
+      "ط§ظ†ط¶ظ… ط¥ظ„ظ‰ ظ‚ط§ط¦ظ…ط© ط§ظ†طھط¸ط§ط± ظپطµظ„ ظ…طµط±طŒ ط­ظٹط« ظٹظ„طھظ‚ظٹ ط§ظ„ط¨ط®ظˆط± ط§ظ„ظ…ظ‚ط¯ط³ ط¨ظپط®ط§ظ…ط© ط§ظ„ظ†ظٹظ„.",
   },
   {
     civilization_id: "egypt",
@@ -147,22 +147,22 @@ const civilizationTranslations = [
       "The civilization of the Nile, where incense became a sacred language between temples and kings.",
     story:
       "From the Nile valley, we draw on incense rituals, royal blue, and gold, making Egypt the next chapter of our journey.",
-    seo_title: "Egypt — An Upcoming Chapter of 3weeq",
+    seo_title: "Egypt â€” An Upcoming Chapter of 3weeq",
     seo_description:
       "Join the waitlist for the Egypt chapter, where sacred incense meets the luxury of the Nile.",
   },
   {
     civilization_id: "china",
     locale: "ar",
-    name: "الصين",
-    subtitle: "الفصل القادم",
+    name: "ط§ظ„طµظٹظ†",
+    subtitle: "ط§ظ„ظپطµظ„ ط§ظ„ظ‚ط§ط¯ظ…",
     description:
-      "من حرير الصين وورقها وأخشابها العطرية، تتشكّل حساسية مختلفة للفخامة.",
+      "ظ…ظ† ط­ط±ظٹط± ط§ظ„طµظٹظ† ظˆظˆط±ظ‚ظ‡ط§ ظˆط£ط®ط´ط§ط¨ظ‡ط§ ط§ظ„ط¹ط·ط±ظٹط©طŒ طھطھط´ظƒظ‘ظ„ ط­ط³ط§ط³ظٹط© ظ…ط®طھظ„ظپط© ظ„ظ„ظپط®ط§ظ…ط©.",
     story:
-      "الصين في 3weeq ليست زخرفة، بل مادة وحكاية: الحرير، الشاي، الأخشاب العطرية، والمساحات الهادئة.",
-    seo_title: "الصين — فصل قادم من 3weeq",
+      "ط§ظ„طµظٹظ† ظپظٹ 3weeq ظ„ظٹط³طھ ط²ط®ط±ظپط©طŒ ط¨ظ„ ظ…ط§ط¯ط© ظˆط­ظƒط§ظٹط©: ط§ظ„ط­ط±ظٹط±طŒ ط§ظ„ط´ط§ظٹطŒ ط§ظ„ط£ط®ط´ط§ط¨ ط§ظ„ط¹ط·ط±ظٹط©طŒ ظˆط§ظ„ظ…ط³ط§ط­ط§طھ ط§ظ„ظ‡ط§ط¯ط¦ط©.",
+    seo_title: "ط§ظ„طµظٹظ† â€” ظپطµظ„ ظ‚ط§ط¯ظ… ظ…ظ† 3weeq",
     seo_description:
-      "انضم إلى قائمة انتظار فصل الصين، حيث يتحوّل الحرير والأخشاب العطرية إلى تجربة حسية.",
+      "ط§ظ†ط¶ظ… ط¥ظ„ظ‰ ظ‚ط§ط¦ظ…ط© ط§ظ†طھط¸ط§ط± ظپطµظ„ ط§ظ„طµظٹظ†طŒ ط­ظٹط« ظٹطھط­ظˆظ‘ظ„ ط§ظ„ط­ط±ظٹط± ظˆط§ظ„ط£ط®ط´ط§ط¨ ط§ظ„ط¹ط·ط±ظٹط© ط¥ظ„ظ‰ طھط¬ط±ط¨ط© ط­ط³ظٹط©.",
   },
   {
     civilization_id: "china",
@@ -173,22 +173,22 @@ const civilizationTranslations = [
       "From Chinese silk, paper, and aromatic woods, a different sensibility of luxury takes shape.",
     story:
       "China in 3weeq is not ornament but material and narrative: silk, tea, aromatic woods, and quiet space.",
-    seo_title: "China — An Upcoming Chapter of 3weeq",
+    seo_title: "China â€” An Upcoming Chapter of 3weeq",
     seo_description:
       "Join the waitlist for the China chapter, where silk and aromatic woods become a sensory experience.",
   },
   {
     civilization_id: "greece",
     locale: "ar",
-    name: "اليونان",
-    subtitle: "الفصل القادم",
+    name: "ط§ظ„ظٹظˆظ†ط§ظ†",
+    subtitle: "ط§ظ„ظپطµظ„ ط§ظ„ظ‚ط§ط¯ظ…",
     description:
-      "من الرخام والزيتون والبحر الإيجي، تولد فخامة تقيس الجمال بالتناسب والضوء.",
+      "ظ…ظ† ط§ظ„ط±ط®ط§ظ… ظˆط§ظ„ط²ظٹطھظˆظ† ظˆط§ظ„ط¨ط­ط± ط§ظ„ط¥ظٹط¬ظٹطŒ طھظˆظ„ط¯ ظپط®ط§ظ…ط© طھظ‚ظٹط³ ط§ظ„ط¬ظ…ط§ظ„ ط¨ط§ظ„طھظ†ط§ط³ط¨ ظˆط§ظ„ط¶ظˆط،.",
     story:
-      "اليونان تعلّمنا أن الفخامة ليست كثرة، بل تناسب. من الأعمدة والرخام والزيتون، نبني فصلاً عن الصفاء.",
-    seo_title: "اليونان — فصل قادم من 3weeq",
+      "ط§ظ„ظٹظˆظ†ط§ظ† طھط¹ظ„ظ‘ظ…ظ†ط§ ط£ظ† ط§ظ„ظپط®ط§ظ…ط© ظ„ظٹط³طھ ظƒط«ط±ط©طŒ ط¨ظ„ طھظ†ط§ط³ط¨. ظ…ظ† ط§ظ„ط£ط¹ظ…ط¯ط© ظˆط§ظ„ط±ط®ط§ظ… ظˆط§ظ„ط²ظٹطھظˆظ†طŒ ظ†ط¨ظ†ظٹ ظپطµظ„ط§ظ‹ ط¹ظ† ط§ظ„طµظپط§ط،.",
+    seo_title: "ط§ظ„ظٹظˆظ†ط§ظ† â€” ظپطµظ„ ظ‚ط§ط¯ظ… ظ…ظ† 3weeq",
     seo_description:
-      "انضم إلى قائمة انتظار فصل اليونان، حيث يلتقي الرخام والزيتون وضوء البحر.",
+      "ط§ظ†ط¶ظ… ط¥ظ„ظ‰ ظ‚ط§ط¦ظ…ط© ط§ظ†طھط¸ط§ط± ظپطµظ„ ط§ظ„ظٹظˆظ†ط§ظ†طŒ ط­ظٹط« ظٹظ„طھظ‚ظٹ ط§ظ„ط±ط®ط§ظ… ظˆط§ظ„ط²ظٹطھظˆظ† ظˆط¶ظˆط، ط§ظ„ط¨ط­ط±.",
   },
   {
     civilization_id: "greece",
@@ -199,22 +199,22 @@ const civilizationTranslations = [
       "From marble, olive, and the Aegean, a luxury is born that measures beauty in proportion and light.",
     story:
       "Greece teaches us that luxury is not abundance but proportion. From columns, marble, and olive, we build a chapter about clarity.",
-    seo_title: "Greece — An Upcoming Chapter of 3weeq",
+    seo_title: "Greece â€” An Upcoming Chapter of 3weeq",
     seo_description:
       "Join the waitlist for the Greece chapter, where marble, olive, and Aegean light meet.",
   },
   {
     civilization_id: "gulf",
     locale: "ar",
-    name: "الخليج",
-    subtitle: "الفصل القادم",
+    name: "ط§ظ„ط®ظ„ظٹط¬",
+    subtitle: "ط§ظ„ظپطµظ„ ط§ظ„ظ‚ط§ط¯ظ…",
     description:
-      "من العود والصحراء والبحر، تُروى حكاية فخامة تعرف قيمتها في الأثر لا في الضجيج.",
+      "ظ…ظ† ط§ظ„ط¹ظˆط¯ ظˆط§ظ„طµط­ط±ط§ط، ظˆط§ظ„ط¨ط­ط±طŒ طھظڈط±ظˆظ‰ ط­ظƒط§ظٹط© ظپط®ط§ظ…ط© طھط¹ط±ظپ ظ‚ظٹظ…طھظ‡ط§ ظپظٹ ط§ظ„ط£ط«ط± ظ„ط§ ظپظٹ ط§ظ„ط¶ط¬ظٹط¬.",
     story:
-      "الخليج حاضر في 3weeq بوصفه ذاكرة عطرية: العود، العنبر، النخيل، والصمت الواسع بين الكثبان والبحر.",
-    seo_title: "الخليج — فصل قادم من 3weeq",
+      "ط§ظ„ط®ظ„ظٹط¬ ط­ط§ط¶ط± ظپظٹ 3weeq ط¨ظˆطµظپظ‡ ط°ط§ظƒط±ط© ط¹ط·ط±ظٹط©: ط§ظ„ط¹ظˆط¯طŒ ط§ظ„ط¹ظ†ط¨ط±طŒ ط§ظ„ظ†ط®ظٹظ„طŒ ظˆط§ظ„طµظ…طھ ط§ظ„ظˆط§ط³ط¹ ط¨ظٹظ† ط§ظ„ظƒط«ط¨ط§ظ† ظˆط§ظ„ط¨ط­ط±.",
+    seo_title: "ط§ظ„ط®ظ„ظٹط¬ â€” ظپطµظ„ ظ‚ط§ط¯ظ… ظ…ظ† 3weeq",
     seo_description:
-      "انضم إلى قائمة انتظار فصل الخليج، حيث يلتقي العود والعنبر والصحراء.",
+      "ط§ظ†ط¶ظ… ط¥ظ„ظ‰ ظ‚ط§ط¦ظ…ط© ط§ظ†طھط¸ط§ط± ظپطµظ„ ط§ظ„ط®ظ„ظٹط¬طŒ ط­ظٹط« ظٹظ„طھظ‚ظٹ ط§ظ„ط¹ظˆط¯ ظˆط§ظ„ط¹ظ†ط¨ط± ظˆط§ظ„طµط­ط±ط§ط،.",
   },
   {
     civilization_id: "gulf",
@@ -225,7 +225,7 @@ const civilizationTranslations = [
       "From oud, desert, and sea, a story of luxury is told that values impact over noise.",
     story:
       "The Gulf is present in 3weeq as olfactory memory: oud, amber, palm, and the vast silence between dunes and sea.",
-    seo_title: "The Gulf — An Upcoming Chapter of 3weeq",
+    seo_title: "The Gulf â€” An Upcoming Chapter of 3weeq",
     seo_description:
       "Join the waitlist for the Gulf chapter, where oud, amber, and the desert meet.",
   },
@@ -235,9 +235,9 @@ const productTypes = [
   {
     id: "fragrance",
     code: "FRAGRANCE",
-    name_ar: "عطور",
+    name_ar: "ط¹ط·ظˆط±",
     name_en: "Fragrances",
-    description_ar: "عطور مستوحاة من الحضارات، بتركيز عالٍ وندرة حقيقية.",
+    description_ar: "ط¹ط·ظˆط± ظ…ط³طھظˆط­ط§ط© ظ…ظ† ط§ظ„ط­ط¶ط§ط±ط§طھطŒ ط¨طھط±ظƒظٹط² ط¹ط§ظ„ظچ ظˆظ†ط¯ط±ط© ط­ظ‚ظٹظ‚ظٹط©.",
     description_en:
       "Civilization-inspired fragrances with high concentration and true rarity.",
     sort_order: 1,
@@ -246,9 +246,9 @@ const productTypes = [
   {
     id: "incense",
     code: "INCENSE",
-    name_ar: "بخور",
+    name_ar: "ط¨ط®ظˆط±",
     name_en: "Incense",
-    description_ar: "بخور وراتنجات تحمل ذاكرة المعابد والطرق القديمة.",
+    description_ar: "ط¨ط®ظˆط± ظˆط±ط§طھظ†ط¬ط§طھ طھط­ظ…ظ„ ط°ط§ظƒط±ط© ط§ظ„ظ…ط¹ط§ط¨ط¯ ظˆط§ظ„ط·ط±ظ‚ ط§ظ„ظ‚ط¯ظٹظ…ط©.",
     description_en:
       "Incense and resins carrying the memory of temples and ancient routes.",
     sort_order: 2,
@@ -257,9 +257,9 @@ const productTypes = [
   {
     id: "jewelry",
     code: "JEWELRY",
-    name_ar: "مجوهرات",
+    name_ar: "ظ…ط¬ظˆظ‡ط±ط§طھ",
     name_en: "Jewelry",
-    description_ar: "قطع صغيرة منحوتة بروح الحضارات ورموزها.",
+    description_ar: "ظ‚ط·ط¹ طµط؛ظٹط±ط© ظ…ظ†ط­ظˆطھط© ط¨ط±ظˆط­ ط§ظ„ط­ط¶ط§ط±ط§طھ ظˆط±ظ…ظˆط²ظ‡ط§.",
     description_en:
       "Small pieces carved with the spirit and symbols of civilizations.",
     sort_order: 3,
@@ -268,9 +268,9 @@ const productTypes = [
   {
     id: "textile",
     code: "TEXTILE",
-    name_ar: "أقمشة",
+    name_ar: "ط£ظ‚ظ…ط´ط©",
     name_en: "Textiles",
-    description_ar: "أقمشة فاخرة بنقوش وألوان مستخلصة من الأرشيفات التاريخية.",
+    description_ar: "ط£ظ‚ظ…ط´ط© ظپط§ط®ط±ط© ط¨ظ†ظ‚ظˆط´ ظˆط£ظ„ظˆط§ظ† ظ…ط³طھط®ظ„طµط© ظ…ظ† ط§ظ„ط£ط±ط´ظٹظپط§طھ ط§ظ„طھط§ط±ظٹط®ظٹط©.",
     description_en:
       "Luxury textiles with patterns and colors drawn from historical archives.",
     sort_order: 4,
@@ -279,9 +279,9 @@ const productTypes = [
   {
     id: "leather",
     code: "LEATHER",
-    name_ar: "منتجات جلدية",
+    name_ar: "ظ…ظ†طھط¬ط§طھ ط¬ظ„ط¯ظٹط©",
     name_en: "Leather Goods",
-    description_ar: "جلود مدبوغة بعناية، بتفاصيل تشير إلى الحرفة القديمة.",
+    description_ar: "ط¬ظ„ظˆط¯ ظ…ط¯ط¨ظˆط؛ط© ط¨ط¹ظ†ط§ظٹط©طŒ ط¨طھظپط§طµظٹظ„ طھط´ظٹط± ط¥ظ„ظ‰ ط§ظ„ط­ط±ظپط© ط§ظ„ظ‚ط¯ظٹظ…ط©.",
     description_en:
       "Carefully tanned leathers with details that echo ancient craft.",
     sort_order: 5,
@@ -290,9 +290,9 @@ const productTypes = [
   {
     id: "artifact",
     code: "ARTIFACT",
-    name_ar: "تحف",
+    name_ar: "طھط­ظپ",
     name_en: "Artifacts",
-    description_ar: "قطع محدودة تُعيد قراءة رمز حضاري في سياق معاصر.",
+    description_ar: "ظ‚ط·ط¹ ظ…ط­ط¯ظˆط¯ط© طھظڈط¹ظٹط¯ ظ‚ط±ط§ط،ط© ط±ظ…ط² ط­ط¶ط§ط±ظٹ ظپظٹ ط³ظٹط§ظ‚ ظ…ط¹ط§طµط±.",
     description_en:
       "Limited pieces that reinterpret a civilizational symbol in a contemporary context.",
     sort_order: 6,
@@ -360,26 +360,26 @@ const rafidCollectionTranslations = [
   {
     collection_id: "rafid-collection",
     locale: "ar",
-    title: "رافد",
-    subtitle: "الفصل الأول — بابل",
+    title: "ط±ط§ظپط¯",
+    subtitle: "ط§ظ„ظپطµظ„ ط§ظ„ط£ظˆظ„ â€” ط¨ط§ط¨ظ„",
     description:
-      "مجموعة رافد الافتتاحية: عطر واحد، إصدار محدود، وذاكرة حضارة كاملة.",
+      "ظ…ط¬ظ…ظˆط¹ط© ط±ط§ظپط¯ ط§ظ„ط§ظپطھطھط§ط­ظٹط©: ط¹ط·ط± ظˆط§ط­ط¯طŒ ط¥طµط¯ط§ط± ظ…ط­ط¯ظˆط¯طŒ ظˆط°ط§ظƒط±ط© ط­ط¶ط§ط±ط© ظƒط§ظ…ظ„ط©.",
     story:
-      "رافد هو البداية. من بابل، حيث وُلدت الكتابة، يفتح 3weeq بوابته الأولى بعطر يحمل الطين والزرقة والراتنجات.",
-    seo_title: "رافد — مجموعة بابل من 3weeq",
+      "ط±ط§ظپط¯ ظ‡ظˆ ط§ظ„ط¨ط¯ط§ظٹط©. ظ…ظ† ط¨ط§ط¨ظ„طŒ ط­ظٹط« ظˆظڈظ„ط¯طھ ط§ظ„ظƒطھط§ط¨ط©طŒ ظٹظپطھط­ 3weeq ط¨ظˆط§ط¨طھظ‡ ط§ظ„ط£ظˆظ„ظ‰ ط¨ط¹ط·ط± ظٹط­ظ…ظ„ ط§ظ„ط·ظٹظ† ظˆط§ظ„ط²ط±ظ‚ط© ظˆط§ظ„ط±ط§طھظ†ط¬ط§طھ.",
+    seo_title: "ط±ط§ظپط¯ â€” ظ…ط¬ظ…ظˆط¹ط© ط¨ط§ط¨ظ„ ظ…ظ† 3weeq",
     seo_description:
-      "اكتشف مجموعة رافد الافتتاحية من 3weeq، مستوحاة من حضارة بابل.",
+      "ط§ظƒطھط´ظپ ظ…ط¬ظ…ظˆط¹ط© ط±ط§ظپط¯ ط§ظ„ط§ظپطھطھط§ط­ظٹط© ظ…ظ† 3weeqطŒ ظ…ط³طھظˆط­ط§ط© ظ…ظ† ط­ط¶ط§ط±ط© ط¨ط§ط¨ظ„.",
   },
   {
     collection_id: "rafid-collection",
     locale: "en",
     title: "RAFID",
-    subtitle: "The First Chapter — Babylon",
+    subtitle: "The First Chapter â€” Babylon",
     description:
       "The opening RAFID collection: one fragrance, a limited edition, and the memory of an entire civilization.",
     story:
       "RAFID is the beginning. From Babylon, where writing was born, 3weeq opens its first gateway with a fragrance carrying clay, blue, and resins.",
-    seo_title: "RAFID — The Babylon Collection by 3weeq",
+    seo_title: "RAFID â€” The Babylon Collection by 3weeq",
     seo_description:
       "Discover RAFID, the opening collection by 3weeq inspired by the civilization of Babylon.",
   },
@@ -388,14 +388,14 @@ const rafidCollectionTranslations = [
 const rafidMedia = [
   {
     id: "media_rafid_hero",
-    storage_key: "rafid/hero.png",
-    url: `${storefrontUrl}/images/first_chapter/main_first_chapter.png`,
+    storage_key: "rafid/hero.webp",
+    url: `${storefrontUrl}/images/first_chapter/main_first_chapter.webp`,
     mime_type: "image/png",
     width: null,
     height: null,
     bytes: null,
-    alt_ar: "رافد — الفصل الأول من 3weeq",
-    alt_en: "RAFID — The First Chapter of 3weeq",
+    alt_ar: "ط±ط§ظپط¯ â€” ط§ظ„ظپطµظ„ ط§ظ„ط£ظˆظ„ ظ…ظ† 3weeq",
+    alt_en: "RAFID â€” The First Chapter of 3weeq",
     blurhash: null,
     focal_x: 0.5,
     focal_y: 0.5,
@@ -403,14 +403,14 @@ const rafidMedia = [
   },
   {
     id: "media_rafid_gallery",
-    storage_key: "rafid/gallery.png",
-    url: `${storefrontUrl}/images/hero/hero_img.png`,
+    storage_key: "rafid/gallery.webp",
+    url: `${storefrontUrl}/images/hero/hero_img.webp`,
     mime_type: "image/png",
     width: null,
     height: null,
     bytes: null,
-    alt_ar: "رافد — تفاصيل العطر",
-    alt_en: "RAFID — fragrance details",
+    alt_ar: "ط±ط§ظپط¯ â€” طھظپط§طµظٹظ„ ط§ظ„ط¹ط·ط±",
+    alt_en: "RAFID â€” fragrance details",
     blurhash: null,
     focal_x: 0.5,
     focal_y: 0.5,
@@ -418,14 +418,14 @@ const rafidMedia = [
   },
   {
     id: "media_rafid_packaging",
-    storage_key: "rafid/packaging-main.jpg",
-    url: `${storefrontUrl}/images/packaging_images/main_bg_packaing.jpg`,
+    storage_key: "rafid/packaging-main.webp",
+    url: `${storefrontUrl}/images/packaging_images/main_bg_packaing.webp`,
     mime_type: "image/jpeg",
     width: null,
     height: null,
     bytes: null,
-    alt_ar: "رافد — العلبة والتغليف",
-    alt_en: "RAFID — packaging",
+    alt_ar: "ط±ط§ظپط¯ â€” ط§ظ„ط¹ظ„ط¨ط© ظˆط§ظ„طھط؛ظ„ظٹظپ",
+    alt_en: "RAFID â€” packaging",
     blurhash: null,
     focal_x: 0.5,
     focal_y: 0.5,
@@ -433,14 +433,14 @@ const rafidMedia = [
   },
   {
     id: "media_rafid_packaging_detail",
-    storage_key: "rafid/packaging-detail.png",
-    url: `${storefrontUrl}/images/packaging_images/1.png`,
+    storage_key: "rafid/packaging-detail.webp",
+    url: `${storefrontUrl}/images/packaging_images/1.webp`,
     mime_type: "image/png",
     width: null,
     height: null,
     bytes: null,
-    alt_ar: "رافد — تفصيل التغليف",
-    alt_en: "RAFID — packaging detail",
+    alt_ar: "ط±ط§ظپط¯ â€” طھظپطµظٹظ„ ط§ظ„طھط؛ظ„ظٹظپ",
+    alt_en: "RAFID â€” packaging detail",
     blurhash: null,
     focal_x: 0.5,
     focal_y: 0.5,
@@ -452,27 +452,27 @@ const rafidProductTranslations = [
   {
     product_id: "pending",
     locale: "ar",
-    title: "رافد",
-    subtitle: "الفصل الأول — بابل",
+    title: "ط±ط§ظپط¯",
+    subtitle: "ط§ظ„ظپطµظ„ ط§ظ„ط£ظˆظ„ â€” ط¨ط§ط¨ظ„",
     short_description:
-      "عطر شرقي عميق من بابل، حيث يلتقي الطين والزرقة بالأخشاب والراتنجات.",
+      "ط¹ط·ط± ط´ط±ظ‚ظٹ ط¹ظ…ظٹظ‚ ظ…ظ† ط¨ط§ط¨ظ„طŒ ط­ظٹط« ظٹظ„طھظ‚ظٹ ط§ظ„ط·ظٹظ† ظˆط§ظ„ط²ط±ظ‚ط© ط¨ط§ظ„ط£ط®ط´ط§ط¨ ظˆط§ظ„ط±ط§طھظ†ط¬ط§طھ.",
     description:
-      "رافد عطر يحمل ذاكرة بابل: زرقة الطين المحروق، دفء الراتنجات، وعمق الأخشاب. تركيبة عالية التركيز صُممت لتُلبس كحكاية لا كعطر فقط.\n\nكل قطعة من الإصدار الأول مرقّمة يدوياً، وتأتي بتغليف يحمل رموز الفصل الأول.",
+      "ط±ط§ظپط¯ ط¹ط·ط± ظٹط­ظ…ظ„ ط°ط§ظƒط±ط© ط¨ط§ط¨ظ„: ط²ط±ظ‚ط© ط§ظ„ط·ظٹظ† ط§ظ„ظ…ط­ط±ظˆظ‚طŒ ط¯ظپط، ط§ظ„ط±ط§طھظ†ط¬ط§طھطŒ ظˆط¹ظ…ظ‚ ط§ظ„ط£ط®ط´ط§ط¨. طھط±ظƒظٹط¨ط© ط¹ط§ظ„ظٹط© ط§ظ„طھط±ظƒظٹط² طµظڈظ…ظ…طھ ظ„طھظڈظ„ط¨ط³ ظƒط­ظƒط§ظٹط© ظ„ط§ ظƒط¹ط·ط± ظپظ‚ط·.\n\nظƒظ„ ظ‚ط·ط¹ط© ظ…ظ† ط§ظ„ط¥طµط¯ط§ط± ط§ظ„ط£ظˆظ„ ظ…ط±ظ‚ظ‘ظ…ط© ظٹط¯ظˆظٹط§ظ‹طŒ ظˆطھط£طھظٹ ط¨طھط؛ظ„ظٹظپ ظٹط­ظ…ظ„ ط±ظ…ظˆط² ط§ظ„ظپطµظ„ ط§ظ„ط£ظˆظ„.",
     story:
-      "من بين النهرين، حيث وُلدت الكتابة الأولى، يبدأ رافد رحلته. من طين بابل وخطها المسماري وزرقتها العميقة، استُلهم العطر ليكون بوابة 3weeq الأولى.",
+      "ظ…ظ† ط¨ظٹظ† ط§ظ„ظ†ظ‡ط±ظٹظ†طŒ ط­ظٹط« ظˆظڈظ„ط¯طھ ط§ظ„ظƒطھط§ط¨ط© ط§ظ„ط£ظˆظ„ظ‰طŒ ظٹط¨ط¯ط£ ط±ط§ظپط¯ ط±ط­ظ„طھظ‡. ظ…ظ† ط·ظٹظ† ط¨ط§ط¨ظ„ ظˆط®ط·ظ‡ط§ ط§ظ„ظ…ط³ظ…ط§ط±ظٹ ظˆط²ط±ظ‚طھظ‡ط§ ط§ظ„ط¹ظ…ظٹظ‚ط©طŒ ط§ط³طھظڈظ„ظ‡ظ… ط§ظ„ط¹ط·ط± ظ„ظٹظƒظˆظ† ط¨ظˆط§ط¨ط© 3weeq ط§ظ„ط£ظˆظ„ظ‰.",
     ingredients:
-      "عود، عنبر، بخور، زعفران، ورد، خشب الصندل، مسك، وبلسم.",
+      "ط¹ظˆط¯طŒ ط¹ظ†ط¨ط±طŒ ط¨ط®ظˆط±طŒ ط²ط¹ظپط±ط§ظ†طŒ ظˆط±ط¯طŒ ط®ط´ط¨ ط§ظ„طµظ†ط¯ظ„طŒ ظ…ط³ظƒطŒ ظˆط¨ظ„ط³ظ….",
     ritual:
-      "رشّة واحدة على المعصم، وواحدة على جانبي الرقبة. اترك العطر يستقر قبل الخروج.",
-    seo_title: "رافد — عطر بابل من 3weeq",
+      "ط±ط´ظ‘ط© ظˆط§ط­ط¯ط© ط¹ظ„ظ‰ ط§ظ„ظ…ط¹طµظ…طŒ ظˆظˆط§ط­ط¯ط© ط¹ظ„ظ‰ ط¬ط§ظ†ط¨ظٹ ط§ظ„ط±ظ‚ط¨ط©. ط§طھط±ظƒ ط§ظ„ط¹ط·ط± ظٹط³طھظ‚ط± ظ‚ط¨ظ„ ط§ظ„ط®ط±ظˆط¬.",
+    seo_title: "ط±ط§ظپط¯ â€” ط¹ط·ط± ط¨ط§ط¨ظ„ ظ…ظ† 3weeq",
     seo_description:
-      "رافد عطر محدود من 3weeq مستوحى من حضارة بابل، بتركيز عالٍ وتغليف مرقّم.",
+      "ط±ط§ظپط¯ ط¹ط·ط± ظ…ط­ط¯ظˆط¯ ظ…ظ† 3weeq ظ…ط³طھظˆط­ظ‰ ظ…ظ† ط­ط¶ط§ط±ط© ط¨ط§ط¨ظ„طŒ ط¨طھط±ظƒظٹط² ط¹ط§ظ„ظچ ظˆطھط؛ظ„ظٹظپ ظ…ط±ظ‚ظ‘ظ….",
   },
   {
     product_id: "pending",
     locale: "en",
     title: "RAFID",
-    subtitle: "The First Chapter — Babylon",
+    subtitle: "The First Chapter â€” Babylon",
     short_description:
       "A deep oriental fragrance from Babylon, where clay and blue meet woods and resins.",
     description:
@@ -483,7 +483,7 @@ const rafidProductTranslations = [
       "Oud, amber, incense, saffron, rose, sandalwood, musk, and balsam.",
     ritual:
       "One spray on the wrist and one on each side of the neck. Let the fragrance settle before leaving.",
-    seo_title: "RAFID — The Babylon Fragrance by 3weeq",
+    seo_title: "RAFID â€” The Babylon Fragrance by 3weeq",
     seo_description:
       "RAFID is a limited fragrance by 3weeq inspired by Babylon, with high concentration and numbered packaging.",
   },
@@ -858,7 +858,7 @@ export default async function seed({ container }: ExecArgs) {
               "A deep oriental fragrance from Babylon, where clay and blue meet woods and resins.",
             status: "published",
             shipping_profile_id: shippingProfile.id,
-            thumbnail: `${storefrontUrl}/images/first_chapter/main_first_chapter.png`,
+            thumbnail: `${storefrontUrl}/images/first_chapter/main_first_chapter.webp`,
             metadata: { chapter: 1, civilization: "babylon" },
             options: [
               {
@@ -1130,8 +1130,8 @@ export default async function seed({ container }: ExecArgs) {
           slug: "rafid-first-chapter",
           civilization_id: "babylon",
           product_id: productId,
-          title_ar: "رافد — الفصل الأول",
-          title_en: "RAFID — The First Chapter",
+          title_ar: "ط±ط§ظپط¯ â€” ط§ظ„ظپطµظ„ ط§ظ„ط£ظˆظ„",
+          title_en: "RAFID â€” The First Chapter",
           status: "live",
           opens_at: "2026-01-01T00:00:00.000Z",
           closes_at: null,
@@ -1196,7 +1196,7 @@ export default async function seed({ container }: ExecArgs) {
 
   if (stockLocation?.id && serviceZone?.id) {
     logger.info(
-      `Shipping ready: ${stockLocation.id} → ${serviceZone.id} (Standard Shipping)`
+      `Shipping ready: ${stockLocation.id} â†’ ${serviceZone.id} (Standard Shipping)`
     )
   }
 }

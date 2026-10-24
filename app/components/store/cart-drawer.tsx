@@ -1,0 +1,410 @@
+"use client"
+
+import Image from "next/image"
+import Link from "next/link"
+import { useEffect, useRef } from "react"
+import { formatPrice, normalizeImageUrl } from "@/lib/format"
+import { cartItemLimit } from "@/lib/cart"
+import type { CartItem } from "@/types"
+import { useCart } from "./cart-provider"
+
+function CloseIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.2}
+      strokeLinecap="square"
+      aria-hidden="true"
+      className="h-5 w-5"
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  )
+}
+
+function BagIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.1}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="h-10 w-10"
+    >
+      <path d="M6 7h12l-1 13H7L6 7Z" />
+      <path d="M9 7a3 3 0 0 1 6 0" />
+    </svg>
+  )
+}
+
+export function CartDrawer() {
+  const {
+    cart,
+    status,
+    error,
+    actionError,
+    isOpen,
+    closeCart,
+    clearActionError,
+    refreshCart,
+    updateItem,
+    removeItem,
+    pendingItemId,
+    itemCount,
+    currencyCode,
+  } = useCart()
+  const panelRef = useRef<HTMLElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    const previousFocus =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    const focusTimer = window.setTimeout(
+      () => closeButtonRef.current?.focus(),
+      60
+    )
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        closeCart()
+        return
+      }
+
+      if (event.key !== "Tab" || !panelRef.current) {
+        return
+      }
+
+      const focusable = Array.from(
+        panelRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => element.offsetParent !== null)
+
+      if (focusable.length === 0) {
+        event.preventDefault()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown)
+
+    return () => {
+      window.clearTimeout(focusTimer)
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener("keydown", onKeyDown)
+      previousFocus?.focus()
+    }
+  }, [closeCart, isOpen])
+
+  const items = cart?.items ?? []
+  const subtotal = cart?.subtotal ?? 0
+
+  async function changeQuantity(item: CartItem, quantity: number) {
+    try {
+      await updateItem(item.id, quantity)
+    } catch {}
+  }
+
+  async function handleRemove(itemId: string) {
+    try {
+      await removeItem(itemId)
+    } catch {}
+  }
+
+  return (
+    <div
+      className={`fixed inset-0 z-[110] transition-[pointer-events] ${
+        isOpen ? "" : "pointer-events-none"
+      }`}
+    >
+      <button
+        type="button"
+        aria-label="إغلاق السلة"
+        aria-hidden={!isOpen}
+        tabIndex={isOpen ? 0 : -1}
+        onClick={closeCart}
+        className={`absolute inset-0 bg-[#0a1628]/75 backdrop-blur-sm transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-0"
+        }`}
+      />
+
+      <aside
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cart-drawer-title"
+        aria-hidden={!isOpen}
+        inert={!isOpen}
+        className={`absolute inset-y-0 end-0 flex h-full w-full max-w-md flex-col border-s border-sand/15 bg-[#050d18] shadow-[-24px_0_80px_rgba(0,0,0,0.45)] transition-transform duration-300 ease-out ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between border-b border-sand/10 px-5 py-5 sm:px-7">
+          <div>
+            <h2
+              id="cart-drawer-title"
+              className="font-primary text-xl text-sand"
+            >
+              سلة التسوق
+            </h2>
+            <p
+              className="mt-1 font-secondary text-[11px] tracking-[0.14em] text-sand/45"
+              aria-live="polite"
+            >
+              {itemCount > 0 ? `${itemCount} قطعة` : "السلة فارغة"}
+            </p>
+          </div>
+
+          <button
+            ref={closeButtonRef}
+            type="button"
+            onClick={closeCart}
+            aria-label="إغلاق السلة"
+            className="p-2 text-sand/55 transition-colors duration-200 hover:text-gold"
+          >
+            <CloseIcon />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-7">
+          {actionError && (
+            <div
+              role="alert"
+              className="mb-4 flex items-start justify-between gap-3 border border-red-400/25 bg-red-950/25 px-3 py-2.5 font-primary text-xs leading-6 text-red-200/85"
+            >
+              <span>{actionError}</span>
+              <button
+                type="button"
+                onClick={clearActionError}
+                aria-label="إخفاء التنبيه"
+                className="shrink-0 text-red-200/60 transition-colors hover:text-red-100"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+          )}
+
+          {status === "loading" && (
+            <div className="space-y-4" aria-label="جارٍ تحميل السلة">
+              {[0, 1, 2].map((row) => (
+                <div key={row} className="flex animate-pulse gap-4">
+                  <div className="h-24 w-20 shrink-0 bg-sand/5" />
+                  <div className="flex-1 space-y-3 py-1">
+                    <div className="h-3 w-2/3 bg-sand/10" />
+                    <div className="h-3 w-1/3 bg-sand/5" />
+                    <div className="h-8 w-28 bg-sand/5" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {status === "error" && !actionError && (
+            <div className="border border-sand/10 px-5 py-10 text-center">
+              <p className="font-primary text-sm leading-7 text-sand/65">
+                {error}
+              </p>
+              <button
+                type="button"
+                onClick={() => void refreshCart()}
+                className="mt-5 border border-gold/40 px-5 py-2.5 font-primary text-sm text-gold transition-colors hover:bg-gold hover:text-royal-navy"
+              >
+                إعادة المحاولة
+              </button>
+            </div>
+          )}
+
+          {status === "ready" && items.length === 0 && (
+            <div className="flex min-h-72 flex-col items-center justify-center text-center">
+              <span className="text-gold/45">
+                <BagIcon />
+              </span>
+              <h3 className="mt-5 font-primary text-lg text-sand">
+                سلتك فارغة
+              </h3>
+              <p className="mt-2 max-w-xs font-primary text-sm leading-7 text-sand/45">
+                اكتشف إصداراتنا المحدودة وأضف قطعتك الأولى.
+              </p>
+              <Link
+                href="/products"
+                onClick={closeCart}
+                className="mt-6 border border-gold/40 px-6 py-3 font-primary text-sm text-gold transition-colors duration-300 hover:bg-gold hover:text-royal-navy"
+              >
+                تصفح المتجر
+              </Link>
+            </div>
+          )}
+
+          {items.length > 0 && (
+            <ul className="divide-y divide-sand/10">
+              {items.map((item) => {
+                const image = normalizeImageUrl(item.thumbnail)
+                const limit = cartItemLimit(item)
+                const pending = pendingItemId === item.id
+                const productHref = item.product_handle
+                  ? `/products/${item.product_handle}`
+                  : null
+                const variantLabel =
+                  item.variant_title ||
+                  (item.variant_profile?.size_ml != null
+                    ? `${item.variant_profile.size_ml} ml`
+                    : null)
+
+                return (
+                  <li key={item.id} className="flex gap-4 py-5 first:pt-0">
+                    <div className="relative h-24 w-20 shrink-0 overflow-hidden border border-sand/10 bg-sand/[0.03]">
+                      {image ? (
+                        <Image
+                          src={image}
+                          alt={item.product_title || item.title || ""}
+                          fill
+                          sizes="80px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span className="absolute inset-0 grid place-items-center font-secondary text-xs tracking-[0.2em] text-gold/30">
+                          3W
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          {productHref ? (
+                            <Link
+                              href={productHref}
+                              onClick={closeCart}
+                              className="block truncate font-primary text-sm text-sand transition-colors hover:text-gold"
+                            >
+                              {item.product_title || item.title}
+                            </Link>
+                          ) : (
+                            <p className="truncate font-primary text-sm text-sand">
+                              {item.product_title || item.title}
+                            </p>
+                          )}
+                          {variantLabel && (
+                            <p className="mt-1 font-primary text-xs text-sand/45">
+                              {variantLabel}
+                            </p>
+                          )}
+                        </div>
+
+                        <p className="shrink-0 font-secondary text-sm text-gold">
+                          {formatPrice(
+                            item.total ??
+                              (item.unit_price ?? 0) * item.quantity,
+                            currencyCode
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-between gap-3">
+                        <div className="inline-flex items-center border border-sand/15">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void changeQuantity(item, item.quantity - 1)
+                            }
+                            disabled={pending || item.quantity <= 1}
+                            aria-label="تقليل الكمية"
+                            className="grid h-8 w-8 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
+                          >
+                            −
+                          </button>
+                          <span className="grid h-8 min-w-8 place-items-center border-x border-sand/15 font-secondary text-xs text-sand">
+                            {item.quantity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void changeQuantity(item, item.quantity + 1)
+                            }
+                            disabled={pending || item.quantity >= limit}
+                            aria-label="زيادة الكمية"
+                            className="grid h-8 w-8 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => void handleRemove(item.id)}
+                          disabled={pending}
+                          className="font-primary text-[11px] text-sand/35 underline-offset-4 transition-colors hover:text-red-300 hover:underline disabled:opacity-40"
+                        >
+                          إزالة
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+
+        {items.length > 0 && (
+          <div className="border-t border-sand/10 bg-[#030a13] px-5 py-5 sm:px-7">
+            <div className="flex items-baseline justify-between">
+              <span className="font-primary text-sm text-sand/55">
+                المجموع الفرعي
+              </span>
+              <span className="font-secondary text-lg text-gold">
+                {formatPrice(subtotal, currencyCode)}
+              </span>
+            </div>
+            <p className="mt-2 font-primary text-[11px] leading-5 text-sand/35">
+              الشحن والضرائب تُحسب عند إتمام الطلب.
+            </p>
+
+            <div className="mt-4 grid gap-2">
+              <Link
+                href="/cart"
+                onClick={closeCart}
+                className="block w-full border border-gold bg-gold px-6 py-3.5 text-center font-primary text-sm font-bold text-royal-navy transition-colors duration-300 hover:bg-gold/85"
+              >
+                عرض السلة
+              </Link>
+              <button
+                type="button"
+                disabled
+                className="w-full cursor-not-allowed border border-sand/10 px-6 py-3 font-primary text-sm text-sand/35"
+              >
+                إتمام الشراء — قريباً
+              </button>
+            </div>
+          </div>
+        )}
+      </aside>
+    </div>
+  )
+}
+

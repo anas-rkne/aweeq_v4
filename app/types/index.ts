@@ -175,6 +175,73 @@ export interface CollectionsResponse {
   locale: string
 }
 
+export interface CartVariantProfile {
+  variant_id: string
+  product_id: string
+  size_ml: number | null
+  concentration: string | null
+  packaging: string | null
+  is_serialized: boolean
+  edition_size: number | null
+  metadata: Record<string, unknown> | null
+}
+
+export interface CartProductProfile {
+  product_id: string
+  civilization_id: string | null
+  is_limited: boolean
+  is_serialized: boolean
+  edition_size: number | null
+  max_per_customer: number | null
+}
+
+export interface CartItem {
+  id: string
+  title: string | null
+  variant_id: string | null
+  product_id: string | null
+  product_title?: string | null
+  product_handle?: string | null
+  variant_title?: string | null
+  thumbnail?: string | null
+  quantity: number
+  unit_price: number | null
+  total: number | null
+  subtotal?: number | null
+  metadata?: Record<string, unknown> | null
+  is_serialized: boolean
+  available_serial_units: number | null
+  in_stock: boolean
+  max_per_customer: number | null
+  variant_profile: CartVariantProfile | null
+  product_profile: CartProductProfile | null
+}
+
+export interface Cart {
+  id: string
+  email?: string | null
+  customer_id?: string | null
+  region_id?: string | null
+  currency_code: string
+  completed_at?: string | null
+  created_at?: string
+  updated_at?: string
+  subtotal: number
+  discount_total: number
+  shipping_total: number
+  tax_total: number
+  total: number
+  items: CartItem[]
+  item_count: number
+  warnings: Array<Record<string, unknown>>
+  locale: string
+}
+
+export interface CartResponse {
+  cart: Cart | null
+  locale: string
+}
+
 export interface CivilizationsResponse {
   civilizations: CivilizationProfile[]
   count: number

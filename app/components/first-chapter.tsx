@@ -89,7 +89,7 @@ export function FirstChapter() {
       <section
         ref={sectionRef}
         id="first-chapter"
-        className="fixed inset-0 z-[5] overflow-hidden bg-[#020a14]"
+        className="fixed inset-0 z-[5] overflow-hidden bg-[#0a1628]"
         style={{ clipPath: "circle(0% at 50% 50%)" }}
       >
         {/* everything inside the door, and it grows a little as the door opens */}
@@ -123,7 +123,7 @@ export function FirstChapter() {
             {/* the night laid over the stone, to take the glare out of it */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 z-[5] bg-[#020A14]/40"
+              className="pointer-events-none absolute inset-0 z-[5] bg-[#0a1628]/40"
               style={{ mixBlendMode: "multiply" }}
             />
           </div>
@@ -134,7 +134,7 @@ export function FirstChapter() {
             className="pointer-events-none absolute inset-0 z-10 md:hidden"
             style={{
               backgroundImage:
-                "linear-gradient(to top, #020A14 0%, rgba(2, 10, 20, 0.9) 32%, rgba(2, 10, 20, 0.55) 58%, rgba(2, 10, 20, 0.18) 78%, transparent 100%)",
+                "linear-gradient(to top, #0a1628 0%, rgba(10, 22, 40, 0.9) 32%, rgba(10, 22, 40, 0.55) 58%, rgba(10, 22, 40, 0.18) 78%, transparent 100%)",
             }}
           />
           <div
@@ -142,7 +142,7 @@ export function FirstChapter() {
             className="pointer-events-none absolute inset-0 z-10 hidden md:block"
             style={{
               backgroundImage:
-                "linear-gradient(to left, #020A14 0%, rgba(2, 10, 20, 0.9) 26%, rgba(2, 10, 20, 0.52) 50%, rgba(2, 10, 20, 0.18) 72%, transparent 92%)",
+                "linear-gradient(to left, #0a1628 0%, rgba(10, 22, 40, 0.9) 26%, rgba(10, 22, 40, 0.52) 50%, rgba(10, 22, 40, 0.18) 72%, transparent 92%)",
             }}
           />
 

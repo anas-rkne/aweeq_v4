@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { cache } from "react"
 import { ProductCard } from "@/components/store/product-card"
 import { ProductGallery } from "@/components/store/product-gallery"
 import { ProductPurchasePanel } from "@/components/store/product-purchase-panel"
@@ -11,18 +12,18 @@ import {
 } from "@/lib/format"
 import type { OlfactoryPyramid, ProductSpecifications } from "@/types"
 
+const getProduct = cache(getProductByHandle)
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ handle: string }>
 }) {
   const { handle } = await params
-  const product = await getProductByHandle(handle)
+  const product = await getProduct(handle)
 
   if (!product) {
-    return {
-      title: "القطعة غير موجودة | 3WEEQ",
-    }
+    notFound()
   }
 
   const image = normalizeImageUrl(product.thumbnail)
@@ -65,7 +66,7 @@ export default async function ProductDetailPage({
   params: Promise<{ handle: string }>
 }) {
   const { handle } = await params
-  const product = await getProductByHandle(handle)
+  const product = await getProduct(handle)
 
   if (!product) {
     notFound()
@@ -127,7 +128,7 @@ export default async function ProductDetailPage({
   }
 
   return (
-    <main className="min-h-screen bg-[#020A14]">
+    <main className="min-h-screen bg-[#0a1628]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

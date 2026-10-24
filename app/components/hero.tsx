@@ -163,7 +163,7 @@ export function Hero() {
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to bottom, rgba(2,10,20,0.72) 0%, rgba(2,10,20,0.18) 45%, rgba(2,10,20,0.55) 100%)",
+                  "linear-gradient(to bottom, rgba(10,22,40,0.72) 0%, rgba(10,22,40,0.18) 45%, rgba(10,22,40,0.55) 100%)",
               }}
             />
 
@@ -172,7 +172,7 @@ export function Hero() {
               aria-hidden="true"
               className="pointer-events-none absolute bottom-0 left-0 h-64 w-full"
               style={{
-                backgroundImage: "linear-gradient(to top, #020A14 0%, transparent 100%)",
+                backgroundImage: "linear-gradient(to top, #0a1628 0%, transparent 100%)",
               }}
             />
           </div>
@@ -183,7 +183,7 @@ export function Hero() {
             className="pointer-events-none absolute inset-0 z-10"
             style={{
               background:
-                "linear-gradient(to left, #020A14 0%, transparent 100%)",
+                "linear-gradient(to left, #0a1628 0%, transparent 100%)",
             }}
           />
         </div>

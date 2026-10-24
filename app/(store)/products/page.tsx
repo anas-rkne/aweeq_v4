@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { ProductCard } from "@/components/store/product-card"
 import {
   asPositiveInt,
@@ -69,6 +70,16 @@ export default async function ProductsPage({
     return query ? `/products?${query}` : "/products"
   }
 
+  if (offset > 0 && (count === 0 || offset >= count)) {
+    const lastOffset =
+      count > 0
+        ? Math.floor((count - 1) / STORE_PAGE_SIZE) * STORE_PAGE_SIZE
+        : 0
+    redirect(
+      buildHref({ offset: lastOffset > 0 ? String(lastOffset) : "" })
+    )
+  }
+
   const selectedCivilization = civilizations.find(
     (item) => item.id === civilization
   )
@@ -91,7 +102,7 @@ export default async function ProductsPage({
   )
 
   return (
-    <main className="min-h-screen bg-[#020A14]">
+    <main className="min-h-screen bg-[#0a1628]">
       <section className="px-5 py-10 md:px-10 md:py-14 lg:px-16">
         <div className="mx-auto max-w-7xl" dir="rtl">
           <nav
@@ -146,7 +157,7 @@ export default async function ProductsPage({
               />
               <button
                 type="submit"
-                className="shrink-0 bg-gold px-5 font-primary text-sm font-bold text-[#020A14] transition-colors hover:bg-sand"
+                className="shrink-0 bg-gold px-5 font-primary text-sm font-bold text-royal-navy transition-colors hover:bg-sand"
               >
                 بحث
               </button>

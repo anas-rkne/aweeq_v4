@@ -148,14 +148,14 @@ export function BeyondSection() {
   return (
     <section
       id="beyond"
-      className="relative isolate min-h-screen overflow-hidden bg-[#020A14] md:h-screen"
+      className="relative isolate min-h-screen overflow-hidden bg-[#0a1628] md:h-screen"
     >
       {/* receives the midnight of Civilizations without a seam */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-0 top-0 z-20 h-32 w-full md:h-64"
         style={{
-          background: "linear-gradient(to bottom, #020A14 0%, transparent 100%)",
+          background: "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
         }}
       />
 
@@ -169,7 +169,7 @@ export function BeyondSection() {
       />
 
       {/* the dark room over the photograph, so the words keep their edge */}
-      <div aria-hidden="true" className="absolute inset-0 bg-[#020A14]/60" />
+      <div aria-hidden="true" className="absolute inset-0 bg-[#0a1628]/60" />
 
       {/* hands the room to the Journal without a seam */}
       <div
@@ -177,7 +177,7 @@ export function BeyondSection() {
         className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-32 md:h-64"
         style={{
           background:
-            "linear-gradient(to top, #020A14 0%, transparent 100%)",
+            "linear-gradient(to top, #0a1628 0%, transparent 100%)",
         }}
       />
 

@@ -1,8 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
+import { useCart } from "./store/cart-provider";
+
+const STORE_PREFIXES = ["/products", "/collections", "/cart", "/checkout"];
 
 const NAV_LINKS = [
   { href: "#hero", label: "الرئيسية", current: true },
@@ -123,7 +127,7 @@ function MobileNav({
       role="dialog"
       aria-modal="true"
       aria-label="قائمة التنقل"
-      className="fixed inset-0 z-[100] overflow-y-auto bg-[#020a14]"
+      className="fixed inset-0 z-[100] overflow-y-auto bg-[#0a1628]"
     >
       <div ref={pictureRef} className="absolute inset-0" aria-hidden="true">
         <Image
@@ -136,14 +140,14 @@ function MobileNav({
         />
       </div>
 
-      <div className="absolute inset-0 bg-[#020a14]/45" aria-hidden="true" />
+      <div className="absolute inset-0 bg-[#0a1628]/45" aria-hidden="true" />
 
       <div
         className="absolute inset-0"
         aria-hidden="true"
         style={{
           background:
-            "radial-gradient(58% 44% at 50% 50%, rgba(2, 10, 20, 0.88) 0%, rgba(2, 10, 20, 0) 100%)",
+            "radial-gradient(58% 44% at 50% 50%, rgba(10, 22, 40, 0.88) 0%, rgba(10, 22, 40, 0) 100%)",
         }}
       />
 
@@ -181,8 +185,8 @@ function MobileNav({
                   aria-current={link.current ? "page" : undefined}
                   className={`inline-block font-primary text-4xl transition-colors duration-300 ease-out sm:text-5xl ${
                     link.current
-                      ? "text-gold drop-shadow-[0_0_15px_rgba(181,142,75,0.5)]"
-                      : "text-sand/50 hover:text-gold hover:drop-shadow-[0_0_15px_rgba(181,142,75,0.5)]"
+                      ? "text-gold drop-shadow-[0_0_15px_rgba(205,158,97,0.5)]"
+                      : "text-sand/50 hover:text-gold hover:drop-shadow-[0_0_15px_rgba(205,158,97,0.5)]"
                   }`}
                 >
                   {link.label}
@@ -197,8 +201,10 @@ function MobileNav({
 }
 
 export function SiteHeader() {
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { itemCount, openCart } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -207,12 +213,20 @@ export function SiteHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const isStoreRoute = STORE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+
+  if (isStoreRoute) {
+    return null;
+  }
+
   return (
     <>
       <header
         className={`fixed inset-x-0 top-0 z-50 px-4 pb-4 pt-5 transition-colors duration-300 sm:px-5 sm:pt-6 md:px-10 md:pb-5 md:pt-8 ${
           scrolled
-            ? "bg-[#020A14]/80 backdrop-blur-md"
+            ? "bg-[#0a1628]/80 backdrop-blur-md"
             : "bg-transparent"
         }`}
       >
@@ -248,13 +262,18 @@ export function SiteHeader() {
 
             <button
               type="button"
-              aria-label="السلة، عنصران"
+              onClick={openCart}
+              aria-label={
+                itemCount > 0 ? `السلة، ${itemCount} قطعة` : "السلة"
+              }
               className="relative shrink-0 p-1 text-sand/70 transition-colors duration-200 ease-out hover:text-gold"
             >
               <CartIcon />
-              <span className="absolute -end-1.5 -top-0.5 grid h-[15px] min-w-[15px] place-items-center rounded-full bg-gold px-1 font-secondary text-[9px] leading-none text-royal-navy sm:-end-2 sm:-top-1.5">
-                2
-              </span>
+              {itemCount > 0 && (
+                <span className="absolute -end-1.5 -top-0.5 grid h-[15px] min-w-[15px] place-items-center rounded-full bg-gold px-1 font-secondary text-[9px] leading-none text-royal-navy sm:-end-2 sm:-top-1.5">
+                  {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              )}
             </button>
           </div>
 
@@ -297,8 +316,10 @@ export function SiteHeader() {
               <Image
                 src="/images/logo-mark.png"
                 alt="3WEEQ"
-                width={160}
-                height={48}
+                width={2785}
+                height={841}
+                quality={90}
+                sizes="(min-width: 64rem) 7rem, 5rem"
                 priority
                 className="h-[20px] w-auto sm:h-[22px] md:h-8"
               />

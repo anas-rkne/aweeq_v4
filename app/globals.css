@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@config "../tailwind.config.js";
 
 /* ==========================================================================
    Self-hosted brand fonts (local WOFF2 in /public/fonts — zero external
@@ -34,17 +35,33 @@
   --font-primary: "Lyon Arabic Display", "Ador Hairline", "Segoe UI", Tahoma, Arial, sans-serif;
   --font-secondary: "Ador Hairline", "Lyon Arabic Display", "Segoe UI", Tahoma, Arial, sans-serif;
 
-  /* Brand palette — four colours only: midnight navy depth, deep navy for
-     secondary surfaces, gold accent, sand text.
-     Contrast measured against midnight navy (#020A14):
-       sand 100% 15.21 | sand 80% 10.15 | sand 70% 8.06  → all sizes OK
-       gold 100% 6.82 | gold 90% 5.76                    → all sizes OK
-       gold 80% 4.87 | gold 70% 4.08                    → large type only
-     Running text sits at sand 80% (10.15:1) so the page never reads thin. */
-  --color-royal-navy: #020a14;
-  --color-deep-navy: #061b30;
-  --color-gold: #b58e4b;
-  --color-sand: #e8dcc8;
+  /* Official brand palette.
+     Five brand colours, plus the semantic aliases the site's markup already
+     uses. Blue Slate is a glow/surface colour only — never a solid page
+     background (2.14:1 against the base, too bright for a full field).
+
+     Contrast measured against the site's dark base (#0a1628):
+       sand 100% 14.86 | sand 80% 9.73 | sand 70% 7.72 | sand 60% 5.97  → all sizes OK
+       gold 100%  7.48 | gold 90% 6.24 | gold 80% 5.18 | gold 70% 4.23  → all sizes OK
+       olive 100% 8.16 | sky 100% 5.66                                  → all sizes OK
+     Running text sits at sand 80% (9.73:1) so the page never reads thin. */
+  /* Five official brand colours. Mirrored in tailwind.config.js for tools
+     that read the JS config; these CSS tokens remain the runtime source. */
+  --color-brand-slate: #2f4e78;
+  --color-brand-gold: #cd9e61;
+  --color-brand-sand: #f6e6d6;
+  --color-brand-olive: #b8a9be;
+  --color-brand-sky: #3b96da;
+
+  /* Back-compatible semantic aliases: every existing `text-gold`,
+     `border-sand`, `bg-royal-navy` utility resolves to the official palette
+     without touching markup. */
+  --color-royal-navy: #0a1628;
+  --color-deep-navy: var(--color-brand-slate);
+  --color-gold: var(--color-brand-gold);
+  --color-sand: var(--color-brand-sand);
+  --color-olive: var(--color-brand-olive);
+  --color-sky: var(--color-brand-sky);
 
   /* Type scale — one ladder used by every section. */
   --text-display: clamp(2.5rem, 6vw, 5rem);
@@ -66,8 +83,8 @@
 }
 
 :root {
-  --background: #020a14;
-  --foreground: #e8dcc8;
+  --background: #0a1628;
+  --foreground: #f6e6d6;
 }
 
 html {
@@ -79,17 +96,17 @@ body {
   overflow-x: clip;
 }
 
-/* The room behind the page: one fixed pool of deep navy at the centre that
-   falls away to midnight navy at the edges. Fixed, so the glow stays put
-   while the content moves over it. */
+/* The room behind the page: the official Blue Slate glows from the centre of
+   the field and falls away to the dark base at the edges. Fixed, so the glow
+   stays put while the content moves over it. */
 body {
   color: var(--foreground);
   font-family: var(--font-secondary);
   background-color: var(--background);
   background-image: radial-gradient(
-    ellipse 90% 70% at 50% 40%,
-    #061b30 0%,
-    #020a14 78%
+    circle at 50% 50%,
+    #2f4e78 0%,
+    #0a1628 80%
   );
   background-repeat: no-repeat;
   background-attachment: fixed;
@@ -99,12 +116,12 @@ body {
 }
 
 ::selection {
-  background: #b58e4b;
-  color: #061b30;
+  background: #cd9e61;
+  color: #0a1628;
 }
 
 :focus-visible {
-  outline: 1px solid rgba(232, 220, 200, 0.7);
+  outline: 1px solid rgba(246, 230, 214, 0.7);
   outline-offset: 3px;
 }
 
@@ -200,15 +217,15 @@ textarea {
   background-image:
     linear-gradient(
       to left,
-      rgba(6, 27, 48, 0.9) 0%,
-      rgba(6, 27, 48, 0) 40%
+      rgba(10, 22, 40, 0.9) 0%,
+      rgba(10, 22, 40, 0) 40%
     ),
     radial-gradient(
       circle at 40% 50%,
-      rgba(6, 27, 48, 0) 0%,
-      rgba(6, 27, 48, 0) 25%,
-      rgba(6, 27, 48, 0.5) 60%,
-      rgba(6, 27, 48, 0.95) 100%
+      rgba(10, 22, 40, 0) 0%,
+      rgba(10, 22, 40, 0) 25%,
+      rgba(10, 22, 40, 0.5) 60%,
+      rgba(10, 22, 40, 0.95) 100%
     );
 }
 

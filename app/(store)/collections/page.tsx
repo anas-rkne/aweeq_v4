@@ -13,7 +13,7 @@ export default async function CollectionsPage() {
   const collections = await getCollections()
 
   return (
-    <main className="min-h-screen bg-[#020A14]">
+    <main className="min-h-screen bg-[#0a1628]">
       <section className="px-5 py-10 md:px-10 md:py-14 lg:px-16">
         <div className="mx-auto max-w-7xl" dir="rtl">
           <nav
@@ -85,7 +85,7 @@ export default async function CollectionsPage() {
                       </div>
                     )}
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#020A14] via-[#020A14]/45 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/45 to-transparent" />
 
                     <div className="absolute inset-x-0 bottom-0 p-6 md:p-8" dir="rtl">
                       {collection.civilization_name && (

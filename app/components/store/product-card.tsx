@@ -16,7 +16,6 @@ export function ProductCard({ product, locale = "ar" }: ProductCardProps) {
     locale
   )
   const hasStock = product.variants.some((variant) => variant.in_stock)
-  const defaultVariantPrice = product.default_variant?.price?.amount
 
   return (
     <Link
@@ -38,16 +37,16 @@ export function ProductCard({ product, locale = "ar" }: ProductCardProps) {
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-[#020A14]/75 via-transparent to-transparent opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628]/75 via-transparent to-transparent opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
 
         <div className="absolute inset-x-0 top-0 flex flex-wrap justify-end gap-1.5 p-3">
           {product.is_limited && (
-            <span className="border border-gold/40 bg-[#020A14]/75 px-2 py-1 font-primary text-[10px] text-gold backdrop-blur-sm">
+            <span className="border border-gold/40 bg-[#0a1628]/75 px-2 py-1 font-primary text-[10px] text-gold backdrop-blur-sm">
               إصدار محدود
             </span>
           )}
           {product.is_serialized && (
-            <span className="border border-sand/20 bg-[#020A14]/75 px-2 py-1 font-primary text-[10px] text-sand/80 backdrop-blur-sm">
+            <span className="border border-sand/20 bg-[#0a1628]/75 px-2 py-1 font-primary text-[10px] text-sand/80 backdrop-blur-sm">
               مرقّم يدوياً
             </span>
           )}
@@ -91,7 +90,7 @@ export function ProductCard({ product, locale = "ar" }: ProductCardProps) {
               نفدت الكمية
             </span>
           )}
-          {hasStock && defaultVariantPrice == null && (
+          {hasStock && !price && (
             <span className="font-primary text-[11px] text-sand/40">
               السعر عند الطلب
             </span>

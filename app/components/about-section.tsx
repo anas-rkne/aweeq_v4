@@ -201,11 +201,11 @@ export function AboutSection() {
       <section
         id="story"
         ref={sectionRef}
-        className="relative z-10 min-h-screen bg-[#020a14]"
+        className="relative z-10 min-h-screen bg-[#0a1628]"
       >
         <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
           {/* the pictures — on the left of the page */}
-          <div className="relative order-first h-[46vh] w-full overflow-hidden bg-[#020a14] md:order-2 md:h-screen">
+          <div className="relative order-first h-[46vh] w-full overflow-hidden bg-[#0a1628] md:order-2 md:h-screen">
             {CIVILIZATIONS.map((c, i) => (
               <div
                 key={c.id}
@@ -232,7 +232,7 @@ export function AboutSection() {
             {/* the stone dissolves into the night */}
             <div
               aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-b from-[#020a14]/55 via-transparent to-[#020a14]/75"
+              className="absolute inset-0 bg-gradient-to-b from-[#0a1628]/55 via-transparent to-[#0a1628]/75"
             />
 
             {/* the picture dissolves into the night on the edge of the words */}
@@ -241,7 +241,7 @@ export function AboutSection() {
               className="pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-1/3 md:block md:w-1/2"
               style={{
                 background:
-                  "linear-gradient(to left, #020A14 0%, transparent 100%)",
+                  "linear-gradient(to left, #0a1628 0%, transparent 100%)",
               }}
             />
 
@@ -249,12 +249,12 @@ export function AboutSection() {
             <div
               ref={veilRef}
               aria-hidden="true"
-              className="about-veil pointer-events-none absolute inset-0 bg-[#020a14] opacity-0"
+              className="about-veil pointer-events-none absolute inset-0 bg-[#0a1628] opacity-0"
             />
           </div>
 
           {/* the words — on the right of the page */}
-          <div className="order-2 relative flex flex-col overflow-hidden bg-[#020a14] p-8 md:order-1 md:p-24">
+          <div className="order-2 relative flex flex-col overflow-hidden bg-[#0a1628] p-8 md:order-1 md:p-24">
             {/* the night behind the words — barely there */}
             <Image
               src="/images/about/ABOUT_HERO_BG.jpg"
@@ -271,7 +271,7 @@ export function AboutSection() {
               className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/3 md:block md:w-1/2"
               style={{
                 background:
-                  "linear-gradient(to right, #020A14 0%, transparent 100%)",
+                  "linear-gradient(to right, #0a1628 0%, transparent 100%)",
               }}
             />
 
@@ -322,7 +322,7 @@ export function AboutSection() {
                 href="#civilizations"
                 className="group mt-8 inline-flex w-fit items-center gap-5 md:mt-12"
               >
-                <span className="grid h-16 w-16 place-items-center rounded-full border border-gold/60 text-gold transition-colors duration-300 ease-out group-hover:bg-gold group-hover:text-[#020a14]">
+                <span className="grid h-16 w-16 place-items-center rounded-full border border-gold/60 text-gold transition-colors duration-300 ease-out group-hover:bg-gold group-hover:text-royal-navy">
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -349,7 +349,7 @@ export function AboutSection() {
             can leak through while the pictures cross-fade */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-1/2 z-20 hidden w-1 -translate-x-1/2 bg-[#020a14] md:block"
+          className="pointer-events-none absolute inset-y-0 left-1/2 z-20 hidden w-1 -translate-x-1/2 bg-[#0a1628] md:block"
         />
       </section>
 
