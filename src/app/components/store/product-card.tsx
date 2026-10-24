@@ -22,7 +22,7 @@ export function ProductCard({ product, locale = "ar" }: ProductCardProps) {
       href={`/products/${product.handle}`}
       className="group block focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold/70"
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-[#0a1420]">
+      <div className="relative aspect-[3/4] overflow-hidden bg-navy-800">
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -37,16 +37,16 @@ export function ProductCard({ product, locale = "ar" }: ProductCardProps) {
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628]/75 via-transparent to-transparent opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className="absolute inset-0 bg-gradient-to-t from-royal-navy/75 via-transparent to-transparent opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
 
         <div className="absolute inset-x-0 top-0 flex flex-wrap justify-end gap-1.5 p-3">
           {product.is_limited && (
-            <span className="border border-gold/40 bg-[#0a1628]/75 px-2 py-1 font-primary text-[10px] text-gold backdrop-blur-sm">
+            <span className="border border-gold/40 bg-royal-navy/75 px-2 py-1 font-primary text-[10px] text-gold backdrop-blur-sm">
               إصدار محدود
             </span>
           )}
           {product.is_serialized && (
-            <span className="border border-sand/20 bg-[#0a1628]/75 px-2 py-1 font-primary text-[10px] text-sand/80 backdrop-blur-sm">
+            <span className="border border-sand/20 bg-royal-navy/75 px-2 py-1 font-primary text-[10px] text-sand/80 backdrop-blur-sm">
               مرقّم يدوياً
             </span>
           )}

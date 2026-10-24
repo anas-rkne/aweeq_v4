@@ -117,7 +117,7 @@ export function AboutSection() {
       <section
         id="story"
         ref={sectionRef}
-        className="relative z-10 h-screen w-screen overflow-hidden bg-[#0a1628]"
+        className="relative z-10 h-screen w-screen overflow-hidden bg-royal-navy"
       >
         <AboutCanvas ref={canvasRef} />
 
@@ -139,7 +139,7 @@ export function AboutSection() {
           className="pointer-events-none absolute left-0 top-0 z-[11] h-32 w-full md:h-64"
           style={{
             background:
-              "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
+              "linear-gradient(to bottom, var(--color-royal-navy) 0%, transparent 100%)",
           }}
         />
 

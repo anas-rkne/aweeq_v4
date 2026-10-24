@@ -98,7 +98,7 @@ export default async function ProductsPage({
   const hasAnyFilter = Boolean(q || civilization || collection || productType)
 
   return (
-    <main className="min-h-screen bg-[#0a1628]">
+    <main className="min-h-screen bg-royal-navy">
       <section className="px-5 py-10 md:px-10 md:py-14 lg:px-16">
         <div className="mx-auto max-w-7xl" dir="rtl">
           <nav
@@ -129,7 +129,7 @@ export default async function ProductsPage({
               action="/products"
               method="get"
               role="search"
-              className="flex w-full max-w-md items-stretch border border-sand/20 bg-[#07111c]"
+              className="flex w-full max-w-md items-stretch border border-sand/20 bg-navy-900"
             >
               {civilization && (
                 <input type="hidden" name="civilization" value={civilization} />
@@ -265,7 +265,7 @@ export default async function ProductsPage({
 
           {products.length === 0 ? (
             <div
-              className="flex min-h-72 flex-col items-center justify-center border border-sand/10 bg-[#07111c]/40 px-6 py-16 text-center"
+              className="flex min-h-72 flex-col items-center justify-center border border-sand/10 bg-navy-900/40 px-6 py-16 text-center"
               dir="rtl"
             >
               <span className="mb-5 font-primary text-3xl text-gold/25">

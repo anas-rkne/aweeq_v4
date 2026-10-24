@@ -148,7 +148,7 @@ export function CartDrawer() {
         aria-hidden={!isOpen}
         tabIndex={isOpen ? 0 : -1}
         onClick={closeCart}
-        className={`absolute inset-0 bg-[#0a1628]/75 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`absolute inset-0 bg-royal-navy/75 backdrop-blur-sm transition-opacity duration-300 ${
           isOpen ? "opacity-100" : "opacity-0"
         }`}
       />
@@ -160,7 +160,7 @@ export function CartDrawer() {
         aria-labelledby="cart-drawer-title"
         aria-hidden={!isOpen}
         inert={!isOpen}
-        className={`absolute inset-y-0 end-0 flex h-full w-full max-w-md flex-col border-s border-sand/15 bg-[#050d18] shadow-[-24px_0_80px_rgba(0,0,0,0.45)] transition-transform duration-300 ease-out ${
+        className={`absolute inset-y-0 end-0 flex h-full w-full max-w-md flex-col border-s border-sand/15 bg-navy-950 shadow-[-24px_0_80px_rgba(0,0,0,0.45)] transition-transform duration-300 ease-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -372,7 +372,7 @@ export function CartDrawer() {
         </div>
 
         {items.length > 0 && (
-          <div className="border-t border-sand/10 bg-[#030a13] px-5 py-5 sm:px-7">
+          <div className="border-t border-sand/10 bg-navy-975 px-5 py-5 sm:px-7">
             <div className="flex items-baseline justify-between">
               <span className="font-primary text-sm text-sand/55">
                 المجموع الفرعي

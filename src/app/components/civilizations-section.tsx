@@ -374,7 +374,7 @@ export function CivilizationsSection() {
     <section
       ref={sectionRef}
       id="civilizations"
-      className="relative h-screen overflow-hidden bg-[#0a1628] motion-reduce:h-auto motion-reduce:min-h-screen"
+      className="relative h-screen overflow-hidden bg-royal-navy motion-reduce:h-auto motion-reduce:min-h-screen"
     >
       <canvas
         ref={canvasRef}
@@ -400,7 +400,7 @@ export function CivilizationsSection() {
         className="pointer-events-none absolute left-0 top-0 z-[6] h-32 w-full motion-reduce:hidden md:h-64"
         style={{
           background:
-            "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
+            "linear-gradient(to bottom, var(--color-royal-navy) 0%, transparent 100%)",
         }}
       />
 
@@ -410,7 +410,8 @@ export function CivilizationsSection() {
         aria-hidden="true"
         className="pointer-events-none absolute bottom-0 left-0 z-[6] h-32 w-full motion-reduce:hidden md:h-64"
         style={{
-          background: "linear-gradient(to top, #0a1628 0%, transparent 100%)",
+          background:
+            "linear-gradient(to top, var(--color-royal-navy) 0%, transparent 100%)",
         }}
       />
 

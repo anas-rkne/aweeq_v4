@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function JournalIndexPage() {
   return (
-    <main className="min-h-svh bg-[#0a1628] px-5 pb-24 pt-32 sm:px-8 md:px-16 lg:px-24">
+    <main className="min-h-svh bg-royal-navy px-5 pb-24 pt-32 sm:px-8 md:px-16 lg:px-24">
       <div className="mx-auto max-w-[84rem]" dir="rtl">
         <nav
           aria-label="مسار التنقل"
@@ -52,7 +52,7 @@ export default function JournalIndexPage() {
                   />
                   <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0a1628]/75 via-transparent to-transparent"
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-t from-royal-navy/75 via-transparent to-transparent"
                   />
                 </div>
 

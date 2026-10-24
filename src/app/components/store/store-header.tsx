@@ -15,7 +15,7 @@ export function StoreHeader() {
   const { itemCount, openCart } = useCart()
 
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-sand/10 bg-[#0a1628]/90 backdrop-blur-md">
+    <header className="fixed inset-x-0 top-0 z-40 border-b border-sand/10 bg-royal-navy/90 backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-5 md:h-24 md:px-10">
         <Link
           href="/"

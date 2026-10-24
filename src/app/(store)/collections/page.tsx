@@ -13,7 +13,7 @@ export default async function CollectionsPage() {
   const collections = await getCollections()
 
   return (
-    <main className="min-h-screen bg-[#0a1628]">
+    <main className="min-h-screen bg-royal-navy">
       <section className="px-5 py-10 md:px-10 md:py-14 lg:px-16">
         <div className="mx-auto max-w-7xl" dir="rtl">
           <nav
@@ -43,7 +43,7 @@ export default async function CollectionsPage() {
         <div className="mx-auto max-w-7xl">
           {collections.length === 0 ? (
             <div
-              className="flex min-h-72 flex-col items-center justify-center border border-sand/10 bg-[#07111c]/40 px-6 py-16 text-center"
+              className="flex min-h-72 flex-col items-center justify-center border border-sand/10 bg-navy-900/40 px-6 py-16 text-center"
               dir="rtl"
             >
               <span className="mb-5 font-primary text-3xl text-gold/25">
@@ -67,7 +67,7 @@ export default async function CollectionsPage() {
                     href={`/products?collection=${encodeURIComponent(
                       collection.handle
                     )}`}
-                    className="group relative aspect-[16/10] overflow-hidden bg-[#0a1420]"
+                    className="group relative aspect-[16/10] overflow-hidden bg-navy-800"
                   >
                     {heroUrl ? (
                       <Image
@@ -85,7 +85,7 @@ export default async function CollectionsPage() {
                       </div>
                     )}
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/45 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-royal-navy via-royal-navy/45 to-transparent" />
 
                     <div
                       className="absolute inset-x-0 bottom-0 p-6 md:p-8"

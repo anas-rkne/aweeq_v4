@@ -1,13 +1,16 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Instagram, Youtube } from "lucide-react"
 
 const QUICK_LINKS = [
   { label: "الرئيسية", href: "#hero" },
-  { label: "قصتنا", href: "#story" },
-  { label: "المجموعات", href: "#beyond" },
+  { label: "قصتنا", href: "/story" },
+  { label: "ما بعد", href: "#beyond" },
   { label: "المجلة", href: "#journal" },
-  { label: "تواصل", href: "#newsletter" },
+  { label: "النشرة", href: "#newsletter" },
 ] as const
 
 const HELP_LINKS = [
@@ -19,12 +22,21 @@ const HELP_LINKS = [
 ] as const
 
 export function Footer() {
+  const pathname = usePathname()
+  const isHome = pathname === "/"
+  const sectionHref = (href: string) =>
+    href.startsWith("#") ? (isHome ? href : `/${href}`) : href
+
   return (
-    <footer id="footer" className="bg-[#0a1628] pb-12 pt-12">
+    <footer id="footer" className="bg-royal-navy pb-12 pt-12">
       <div className="mx-auto grid w-full max-w-7xl grid-cols-2 items-center gap-8 px-6 md:flex md:flex-row md:items-center md:justify-between md:gap-12 md:px-12">
         {/* far right: the mark */}
         <div className="col-start-1 row-start-1 flex justify-start">
-          <a href="#hero" aria-label="3WEEQ — الرئيسية" className="inline-flex">
+          <a
+            href={isHome ? "#hero" : "/"}
+            aria-label="3WEEQ — الرئيسية"
+            className="inline-flex"
+          >
             <Image
               src="/images/logo-mark.png"
               alt="3WEEQ"
@@ -45,7 +57,7 @@ export function Footer() {
             {QUICK_LINKS.map((link) => (
               <li key={link.label}>
                 <a
-                  href={link.href}
+                  href={sectionHref(link.href)}
                   className="font-primary text-sm text-sand transition-colors duration-300 hover:text-gold"
                 >
                   {link.label}
@@ -63,7 +75,7 @@ export function Footer() {
             {HELP_LINKS.map((link) => (
               <li key={link.label}>
                 <Link
-                  href={link.href}
+                  href={sectionHref(link.href)}
                   className="font-primary text-sm text-sand transition-colors duration-300 hover:text-gold"
                 >
                   {link.label}

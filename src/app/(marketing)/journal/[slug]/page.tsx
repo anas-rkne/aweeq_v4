@@ -44,7 +44,7 @@ export default async function JournalPostPage({
   }
 
   return (
-    <main className="min-h-svh bg-[#0a1628] pb-24 pt-28">
+    <main className="min-h-svh bg-royal-navy pb-24 pt-28">
       <div className="mx-auto w-full max-w-5xl px-5 sm:px-8 md:px-12" dir="rtl">
         <nav
           aria-label="مسار التنقل"

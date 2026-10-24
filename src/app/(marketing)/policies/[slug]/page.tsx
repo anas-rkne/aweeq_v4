@@ -168,7 +168,7 @@ export default async function PolicyPage({
   }
 
   return (
-    <main className="min-h-svh bg-[#0a1628] px-5 pb-24 pt-32 sm:px-8 md:px-16 lg:px-24">
+    <main className="min-h-svh bg-royal-navy px-5 pb-24 pt-32 sm:px-8 md:px-16 lg:px-24">
       <div className="mx-auto max-w-3xl" dir="rtl">
         <nav
           aria-label="مسار التنقل"

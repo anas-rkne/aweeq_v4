@@ -68,7 +68,7 @@ export function JournalSection() {
     <section
       ref={sectionRef}
       id="journal"
-      className="relative isolate min-h-screen overflow-hidden bg-[#0a1628]"
+      className="relative isolate min-h-screen overflow-hidden bg-royal-navy"
     >
       <Image
         src="/images/journal/journal_bg.jpg"
@@ -81,7 +81,7 @@ export function JournalSection() {
 
       <div
         aria-hidden="true"
-        className="absolute inset-0 z-0 bg-[#0a1628]/80"
+        className="absolute inset-0 z-0 bg-royal-navy/80"
       />
 
       {/* receives the midnight of Beyond without a seam */}
@@ -90,7 +90,7 @@ export function JournalSection() {
         className="pointer-events-none absolute left-0 top-0 z-10 h-32 w-full md:h-64"
         style={{
           background:
-            "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
+            "linear-gradient(to bottom, var(--color-royal-navy) 0%, transparent 100%)",
         }}
       />
 
@@ -145,7 +145,7 @@ export function JournalSection() {
 
                 <div
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0a1628]/75 via-transparent to-transparent"
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-royal-navy/75 via-transparent to-transparent"
                 />
 
                 <span
@@ -194,7 +194,8 @@ export function JournalSection() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-32 md:h-64"
         style={{
-          background: "linear-gradient(to top, #0a1628 0%, transparent 100%)",
+          background:
+            "linear-gradient(to top, var(--color-royal-navy) 0%, transparent 100%)",
         }}
       />
     </section>

@@ -96,7 +96,7 @@ export function SearchModal({
         type="button"
         aria-label="إغلاق البحث"
         onClick={onClose}
-        className="absolute inset-0 bg-[#0a1628]/80 backdrop-blur-sm"
+        className="absolute inset-0 bg-royal-navy/80 backdrop-blur-sm"
       />
 
       <div
@@ -104,7 +104,7 @@ export function SearchModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="search-modal-title"
-        className="absolute inset-x-0 top-0 mx-auto w-full max-w-2xl border-b border-sand/15 bg-[#050d18] px-5 py-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:px-8"
+        className="absolute inset-x-0 top-0 mx-auto w-full max-w-2xl border-b border-sand/15 bg-navy-950 px-5 py-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:px-8"
       >
         <div className="flex items-center justify-between">
           <h2
@@ -136,7 +136,7 @@ export function SearchModal({
 
         <form
           onSubmit={handleSubmit}
-          className="mt-5 flex items-stretch border border-sand/20 bg-[#07111c]"
+          className="mt-5 flex items-stretch border border-sand/20 bg-navy-900"
         >
           <label htmlFor="search-modal-input" className="sr-only">
             كلمة البحث

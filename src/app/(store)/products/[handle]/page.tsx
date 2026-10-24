@@ -124,7 +124,7 @@ export default async function ProductDetailPage({
   }
 
   return (
-    <main className="min-h-screen bg-[#0a1628]">
+    <main className="min-h-screen bg-royal-navy">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -228,7 +228,7 @@ export default async function ProductDetailPage({
       </section>
 
       {product.story && (
-        <section className="border-y border-sand/10 bg-[#050e18] px-5 py-16 md:px-10 md:py-24 lg:px-16">
+        <section className="border-y border-sand/10 bg-navy-850 px-5 py-16 md:px-10 md:py-24 lg:px-16">
           <div className="mx-auto max-w-4xl text-center" dir="rtl">
             <p className="mb-4 font-secondary text-xs tracking-[0.25em] text-gold/70">
               THE STORY
@@ -346,7 +346,7 @@ export default async function ProductDetailPage({
                 return (
                   <div
                     key={media.id}
-                    className="relative aspect-[4/5] overflow-hidden bg-[#0a1420]"
+                    className="relative aspect-[4/5] overflow-hidden bg-navy-800"
                   >
                     <Image
                       src={url}

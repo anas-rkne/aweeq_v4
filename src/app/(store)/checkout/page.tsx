@@ -8,7 +8,7 @@ export const metadata = {
 export default function CheckoutPage() {
   return (
     <main
-      className="min-h-screen bg-[#0a1628] px-5 py-12 md:px-10 lg:px-16"
+      className="min-h-screen bg-royal-navy px-5 py-12 md:px-10 lg:px-16"
       dir="rtl"
     >
       <div className="mx-auto max-w-3xl">
@@ -30,7 +30,7 @@ export default function CheckoutPage() {
           نظام إتمام الطلب الآمن مدعوم بـ Stripe — قريباً.
         </p>
 
-        <div className="mt-10 border border-sand/15 bg-[#050d18] p-8 text-center">
+        <div className="mt-10 border border-sand/15 bg-navy-950 p-8 text-center">
           <p className="font-primary text-base text-sand/80">
             بوابة الدفع والشحن قيد التفعيل النهائي.
           </p>

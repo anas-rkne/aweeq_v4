@@ -8,6 +8,7 @@ import React, {
   useRef,
 } from "react"
 import { CIVILIZATION_SCENES } from "./about-data"
+import { BRAND_COLORS } from "@/shared/config/brand"
 
 const TOTAL_FRAMES = CIVILIZATION_SCENES.reduce(
   (acc, scene) => acc + scene.frameCount,
@@ -179,7 +180,7 @@ export const AboutCanvas = forwardRef<AboutCanvasHandle>(
       ctx.imageSmoothingEnabled = true
       ctx.imageSmoothingQuality = "high"
       ctx.globalAlpha = 1
-      ctx.fillStyle = "#0a1628"
+      ctx.fillStyle = BRAND_COLORS.navy
       ctx.fillRect(0, 0, width, height)
 
       const drawCover = (img: HTMLImageElement, alpha: number) => {

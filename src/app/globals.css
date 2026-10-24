@@ -75,6 +75,15 @@
   --color-olive: var(--color-brand-olive);
   --color-sky: var(--color-brand-sky);
 
+  /* Depth shades derived from Royal Navy. Every dark surface in the UI uses
+     one of these tokens instead of a raw hex value, so the palette can be
+     retuned from a single place. */
+  --color-navy-975: #030a13;
+  --color-navy-950: #050d18;
+  --color-navy-900: #07111c;
+  --color-navy-850: #050e18;
+  --color-navy-800: #0a1420;
+
   /* Type scale — one ladder used by every section. */
   --text-display: clamp(2.5rem, 6vw, 5rem);
   --text-display--line-height: 1.12;
@@ -95,8 +104,8 @@
 }
 
 :root {
-  --background: #0a1628;
-  --foreground: #f6e6d6;
+  --background: var(--color-royal-navy);
+  --foreground: var(--color-brand-sand);
 }
 
 html {
@@ -115,7 +124,11 @@ body {
   color: var(--foreground);
   font-family: var(--font-secondary);
   background-color: var(--background);
-  background-image: radial-gradient(circle at 50% 50%, #2f4e78 0%, #0a1628 80%);
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    var(--color-brand-slate) 0%,
+    var(--color-royal-navy) 80%
+  );
   background-repeat: no-repeat;
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
@@ -124,8 +137,8 @@ body {
 }
 
 ::selection {
-  background: #cd9e61;
-  color: #0a1628;
+  background: var(--color-brand-gold);
+  color: var(--color-royal-navy);
 }
 
 :focus-visible {

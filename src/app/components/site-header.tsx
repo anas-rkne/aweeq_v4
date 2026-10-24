@@ -12,11 +12,22 @@ const STORE_PREFIXES = ["/products", "/collections", "/cart", "/checkout"]
 
 const NAV_LINKS = [
   { href: "#hero", label: "الرئيسية", current: true },
-  { href: "#story", label: "قصتنا", current: false },
-  { href: "#beyond", label: "المجموعات", current: false },
+  { href: "/story", label: "قصتنا", current: false },
+  { href: "#beyond", label: "ما بعد", current: false },
   { href: "#civilizations", label: "الحضارات", current: false },
   { href: "#journal", label: "المجلة", current: false },
 ] as const
+
+function navHref(href: string, pathname: string) {
+  const isHome = pathname === "/"
+  return href.startsWith("#") ? (isHome ? href : `/${href}`) : href
+}
+
+function isLinkCurrent(link: (typeof NAV_LINKS)[number], pathname: string) {
+  if (link.href === "#hero") return pathname === "/"
+  if (link.href === "/story") return pathname === "/story"
+  return link.current
+}
 
 function SearchIcon() {
   return (
@@ -77,6 +88,7 @@ function MobileNav({
   isOpen: boolean
   onClose: () => void
 }) {
+  const pathname = usePathname()
   const shellRef = useRef<HTMLDivElement>(null)
   const pictureRef = useRef<HTMLDivElement>(null)
   const linksRef = useRef<(HTMLAnchorElement | null)[]>([])
@@ -129,7 +141,7 @@ function MobileNav({
       role="dialog"
       aria-modal="true"
       aria-label="قائمة التنقل"
-      className="fixed inset-0 z-[100] overflow-y-auto bg-[#0a1628]"
+      className="fixed inset-0 z-[100] overflow-y-auto bg-royal-navy"
     >
       <div ref={pictureRef} className="absolute inset-0" aria-hidden="true">
         <Image
@@ -142,7 +154,7 @@ function MobileNav({
         />
       </div>
 
-      <div className="absolute inset-0 bg-[#0a1628]/45" aria-hidden="true" />
+      <div className="absolute inset-0 bg-royal-navy/45" aria-hidden="true" />
 
       <div
         className="absolute inset-0"
@@ -182,11 +194,13 @@ function MobileNav({
                   ref={(element) => {
                     linksRef.current[index] = element
                   }}
-                  href={link.href}
+                  href={navHref(link.href, pathname)}
                   onClick={onClose}
-                  aria-current={link.current ? "page" : undefined}
+                  aria-current={
+                    isLinkCurrent(link, pathname) ? "page" : undefined
+                  }
                   className={`inline-block font-primary text-4xl transition-colors duration-300 ease-out sm:text-5xl ${
-                    link.current
+                    isLinkCurrent(link, pathname)
                       ? "text-gold drop-shadow-[0_0_15px_rgba(205,158,97,0.5)]"
                       : "text-sand/50 hover:text-gold hover:drop-shadow-[0_0_15px_rgba(205,158,97,0.5)]"
                   }`}
@@ -206,19 +220,13 @@ export function SiteHeader() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
   const { itemCount } = useCart()
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
-    onScroll()
-    window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [])
 
   const isStoreRoute = STORE_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   )
+
+  const isHome = pathname === "/"
 
   if (isStoreRoute) {
     return null
@@ -226,11 +234,7 @@ export function SiteHeader() {
 
   return (
     <>
-      <header
-        className={`fixed inset-x-0 top-0 z-50 px-4 pb-4 pt-5 transition-colors duration-300 sm:px-5 sm:pt-6 md:px-10 md:pb-5 md:pt-8 ${
-          scrolled ? "bg-[#0a1628]/80 backdrop-blur-md" : "bg-transparent"
-        }`}
-      >
+      <header className="fixed inset-x-0 top-0 z-50 bg-transparent px-4 pb-4 pt-5 sm:px-5 sm:pt-6 md:px-10 md:pb-5 md:pt-8">
         <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-4 md:gap-6">
           {/* the tools, on the right side of the RTL bar */}
           <div className="flex shrink-0 items-center justify-start gap-2 sm:gap-3 md:gap-5">
@@ -287,17 +291,21 @@ export function SiteHeader() {
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
-                href={link.href}
-                aria-current={link.current ? "page" : undefined}
+                href={navHref(link.href, pathname)}
+                aria-current={
+                  isLinkCurrent(link, pathname) ? "page" : undefined
+                }
                 className={`group relative whitespace-nowrap font-primary text-[13px] transition-colors duration-300 ${
-                  link.current ? "text-gold" : "text-sand/75 hover:text-gold"
+                  isLinkCurrent(link, pathname)
+                    ? "text-gold"
+                    : "text-sand/75 hover:text-gold"
                 }`}
               >
                 {link.label}
                 <span
                   aria-hidden="true"
                   className={`absolute inset-x-0 -bottom-2 h-px origin-right bg-gold transition-transform duration-300 ${
-                    link.current
+                    isLinkCurrent(link, pathname)
                       ? "scale-x-100"
                       : "scale-x-0 group-hover:scale-x-100"
                   }`}
@@ -309,7 +317,7 @@ export function SiteHeader() {
           {/* the mark, on the left side */}
           <div className="flex shrink-0 justify-end">
             <a
-              href="#hero"
+              href={isHome ? "#hero" : "/"}
               aria-label="3WEEQ — الرئيسية"
               className="inline-flex w-fit items-center"
             >

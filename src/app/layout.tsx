@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next"
+import { BRAND_COLORS } from "@/shared/config/brand"
 import { fontPreloads } from "./fonts"
 import "./globals.css"
 
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0a1628",
+  themeColor: BRAND_COLORS.navy,
   viewportFit: "cover",
 }
 

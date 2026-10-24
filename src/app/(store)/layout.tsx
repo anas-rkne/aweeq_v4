@@ -11,7 +11,7 @@ export default function StoreLayout({
 }) {
   return (
     <CartProvider>
-      <div className="flex min-h-svh flex-col bg-[#0a1628] text-sand">
+      <div className="flex min-h-svh flex-col bg-royal-navy text-sand">
         <StoreHeader />
         <div className="flex-1 pt-32 md:pt-24">{children}</div>
       </div>

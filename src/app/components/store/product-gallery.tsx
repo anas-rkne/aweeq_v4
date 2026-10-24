@@ -41,7 +41,7 @@ export function ProductGallery({ product }: ProductGalleryProps) {
 
   if (!active) {
     return (
-      <div className="flex aspect-[3/4] w-full items-center justify-center bg-[#0a1420]">
+      <div className="flex aspect-[3/4] w-full items-center justify-center bg-navy-800">
         <span className="font-primary text-3xl text-gold/30">3WEEQ</span>
       </div>
     )
@@ -49,7 +49,7 @@ export function ProductGallery({ product }: ProductGalleryProps) {
 
   return (
     <div className="space-y-3">
-      <div className="relative aspect-[3/4] overflow-hidden bg-[#0a1420]">
+      <div className="relative aspect-[3/4] overflow-hidden bg-navy-800">
         <Image
           key={active.url}
           src={active.url}
@@ -70,7 +70,7 @@ export function ProductGallery({ product }: ProductGalleryProps) {
               onClick={() => setActiveIndex(index)}
               aria-label={`عرض الصورة ${index + 1}`}
               aria-pressed={index === activeIndex}
-              className={`relative aspect-square overflow-hidden bg-[#0a1420] transition-all duration-300 ${
+              className={`relative aspect-square overflow-hidden bg-navy-800 transition-all duration-300 ${
                 index === activeIndex
                   ? "ring-1 ring-gold"
                   : "opacity-55 hover:opacity-100"
