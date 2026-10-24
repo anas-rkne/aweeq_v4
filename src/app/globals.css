@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@config "../tailwind.config.js";
+@config "../../tailwind.config.js";
 
 /* ==========================================================================
    Self-hosted brand fonts (local WOFF2 in /public/fonts — zero external
