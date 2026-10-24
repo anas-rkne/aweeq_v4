@@ -1,29 +1,14 @@
-import { medusaFetch, MedusaApiError } from "@/lib/medusa"
-import { DEFAULT_CURRENCY, DEFAULT_LOCALE } from "@/lib/config"
-import type {
-  CollectionProfile,
-  CollectionsResponse,
-  CivilizationProfile,
-  CivilizationsResponse,
-  Product,
-  ProductListResponse,
-  ProductResponse,
-} from "@/types"
+import {
+  fetchProductsRepository,
+  fetchProductByHandleRepository,
+  type StoreLocale,
+} from "@/entities/product/api/product.repository"
+import { fetchCollectionsRepository } from "@/entities/collection/api/collection.repository"
+import { fetchCivilizationsRepository } from "@/entities/civilization/api/civilization.repository"
+import { DEFAULT_CURRENCY, DEFAULT_LOCALE } from "@/shared/lib/config"
+import type { Product, CollectionProfile, CivilizationProfile, ProductListResponse } from "@/types"
 
-export type StoreLocale = "ar" | "en"
-
-function buildQuery(params: Record<string, string | number | undefined>) {
-  const search = new URLSearchParams()
-
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null && value !== "") {
-      search.append(key, String(value))
-    }
-  }
-
-  const query = search.toString()
-  return query ? `?${query}` : ""
-}
+export type { StoreLocale }
 
 export async function getProducts(params?: {
   limit?: number
@@ -35,79 +20,47 @@ export async function getProducts(params?: {
   locale?: StoreLocale
   currency_code?: string
 }) {
-  const endpoint = `/store/threeweeq/products${buildQuery({
+  const result = await fetchProductsRepository(params)
+  if (result.ok) {
+    return result.data
+  }
+
+  return {
+    products: [],
+    count: 0,
     limit: params?.limit ?? 12,
     offset: params?.offset ?? 0,
-    civilization: params?.civilization,
-    collection: params?.collection,
-    product_type: params?.product_type,
-    q: params?.q,
     locale: params?.locale ?? DEFAULT_LOCALE,
     currency_code: params?.currency_code ?? DEFAULT_CURRENCY,
-  })}`
-
-  try {
-    return await medusaFetch<ProductListResponse>(endpoint)
-  } catch (error) {
-    console.error("Error fetching products:", error)
-    return {
-      products: [],
-      count: 0,
-      limit: params?.limit ?? 12,
-      offset: params?.offset ?? 0,
-      locale: params?.locale ?? DEFAULT_LOCALE,
-      currency_code: params?.currency_code ?? DEFAULT_CURRENCY,
-      error: "unavailable",
-    } satisfies ProductListResponse
-  }
+    error: "unavailable",
+  } satisfies ProductListResponse
 }
 
 export async function getProductByHandle(
   handle: string,
   options?: { locale?: StoreLocale; currency_code?: string }
 ): Promise<Product | null> {
-  const endpoint = `/store/threeweeq/products/${encodeURIComponent(
-    handle
-  )}${buildQuery({
-    locale: options?.locale ?? DEFAULT_LOCALE,
-    currency_code: options?.currency_code ?? DEFAULT_CURRENCY,
-  })}`
-
-  try {
-    const data = await medusaFetch<ProductResponse>(endpoint)
-    return data.product
-  } catch (error) {
-    if (error instanceof MedusaApiError && error.status === 404) {
-      return null
-    }
-
-    console.error("Error fetching product:", error)
-    return null
+  const result = await fetchProductByHandleRepository(handle, options)
+  if (result.ok) {
+    return result.data
   }
+  return null
 }
 
-export async function getCollections(locale: StoreLocale = "ar") {
-  try {
-    const data = await medusaFetch<CollectionsResponse>(
-      `/store/threeweeq/collections${buildQuery({ locale })}`
-    )
-    return data.collections
-  } catch (error) {
-    console.error("Error fetching collections:", error)
-    return [] as CollectionProfile[]
+export async function getCollections(locale: StoreLocale = "ar"): Promise<CollectionProfile[]> {
+  const result = await fetchCollectionsRepository(locale)
+  if (result.ok) {
+    return result.data
   }
+  return []
 }
 
-export async function getCivilizations(locale: StoreLocale = "ar") {
-  try {
-    const data = await medusaFetch<CivilizationsResponse>(
-      `/store/civilizations${buildQuery({ locale })}`
-    )
-    return data.civilizations
-  } catch (error) {
-    console.error("Error fetching civilizations:", error)
-    return [] as CivilizationProfile[]
+export async function getCivilizations(locale: StoreLocale = "ar"): Promise<CivilizationProfile[]> {
+  const result = await fetchCivilizationsRepository(locale)
+  if (result.ok) {
+    return result.data
   }
+  return []
 }
 
 export async function getRelatedProducts(
@@ -120,13 +73,8 @@ export async function getRelatedProducts(
       ? { civilization: product.civilization.id }
       : {}
 
-  try {
-    const data = await getProducts({ ...filters, limit: limit + 1 })
-    return data.products
-      .filter((item) => item.id !== product.id)
-      .slice(0, limit)
-  } catch (error) {
-    console.error("Error fetching related products:", error)
-    return []
-  }
+  const data = await getProducts({ ...filters, limit: limit + 1 })
+  return data.products
+    .filter((item) => item.id !== product.id)
+    .slice(0, limit)
 }

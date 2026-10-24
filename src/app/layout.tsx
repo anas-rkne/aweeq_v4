@@ -1,11 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { fontPreloads } from "./fonts"
-import "lenis/dist/lenis.css"
 import "./globals.css"
-import { SiteHeader } from "./components/site-header"
-import { SmoothScroll } from "./components/smooth-scroll"
-import { CartProvider } from "./components/store/cart-provider"
-import { CartDrawer } from "./components/store/cart-drawer"
 
 export const metadata: Metadata = {
   title: "3WWEQ",
@@ -41,13 +36,7 @@ export default function RootLayout({
           <style>{`[data-reveal]{opacity:1 !important;transform:none !important}`}</style>
         </noscript>
       </head>
-      <body className="min-h-full flex flex-col">
-        <CartProvider>
-          <SiteHeader />
-          <SmoothScroll>{children}</SmoothScroll>
-          <CartDrawer />
-        </CartProvider>
-      </body>
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   )
 }

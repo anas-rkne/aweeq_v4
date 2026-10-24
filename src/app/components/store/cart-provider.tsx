@@ -325,7 +325,28 @@ export function useCart() {
   const context = useContext(CartContext)
 
   if (!context) {
-    throw new Error("useCart must be used within CartProvider")
+    return {
+      cart: null,
+      status: "ready" as const,
+      error: null,
+      actionError: null,
+      isOpen: false,
+      isAdding: false,
+      pendingItemId: null,
+      itemCount: 0,
+      currencyCode: "sar",
+      openCart: () => {
+        if (typeof window !== "undefined") {
+          window.location.href = "/cart"
+        }
+      },
+      closeCart: () => {},
+      clearActionError: () => {},
+      refreshCart: async () => {},
+      addItem: async () => {},
+      updateItem: async () => {},
+      removeItem: async () => {},
+    }
   }
 
   return context
