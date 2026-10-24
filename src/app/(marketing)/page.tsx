@@ -1,4 +1,4 @@
-import { AboutSection } from "@/components/about-section"
+import { AboutSection } from "@/components/about/about-section"
 import { BeyondSection } from "@/components/beyond-section"
 import { CivilizationsSection } from "@/components/civilizations-section"
 import { FeaturedFragrance } from "@/components/featured-fragrance"

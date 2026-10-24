@@ -5,10 +5,19 @@ import { useEffect, useRef } from "react"
 import gsap from "gsap"
 import { DarkGradientBg } from "./dark-gradient-bg"
 
+const FRAME_COUNT = 16
+const FPS = 30
+const FRAME_INTERVAL = 1000 / FPS
+
 export function Hero() {
   const heroRef = useRef<HTMLElement>(null)
   const imageRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const imagesRef = useRef<HTMLImageElement[]>([])
+  const rafRef = useRef<number | null>(null)
+  const frameIndexRef = useRef(0)
+  const lastTimeRef = useRef(0)
 
   /* the parallax: the picture leans away from the cursor, the words follow
      it. quickTo keeps the movement smooth without a tween on every event. */
@@ -57,6 +66,110 @@ export function Hero() {
     }
   }, [])
 
+  /* ---------- Canvas autoplay background ---------- */
+
+  const preloadFrames = async (): Promise<HTMLImageElement[]> => {
+    const promises = Array.from({ length: FRAME_COUNT }, (_, i) => {
+      const frameNum = (i + 1).toString().padStart(4, "0")
+      const timestamp = (i * 0.2).toFixed(2)
+      return new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new (globalThis as unknown as { Image: new () => HTMLImageElement }).Image()
+        img.src = `/hero_frames/frame-${frameNum}-${timestamp}s.webp`
+        img.onload = () => resolve(img)
+        img.onerror = () => reject(new Error(`Failed to load frame ${frameNum}`))
+      })
+    })
+    return Promise.all(promises)
+  }
+
+  const resizeCanvas = () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    canvas.width = canvas.offsetWidth || window.innerWidth
+    canvas.height = canvas.offsetHeight || window.innerHeight
+  }
+
+  const drawFrame = (index: number) => {
+    const canvas = canvasRef.current
+    const img = imagesRef.current[index]
+    if (!canvas || !img) return
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+  }
+
+  const startAnimation = () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    resizeCanvas()
+
+    let lastTimestamp = performance.now()
+    let accumulated = 0
+
+    const loop = (timestamp: number) => {
+      const delta = timestamp - lastTimestamp
+      lastTimestamp = timestamp
+      accumulated += delta
+
+      while (
+        accumulated >= FRAME_INTERVAL &&
+        frameIndexRef.current < FRAME_COUNT - 1
+      ) {
+        accumulated -= FRAME_INTERVAL
+        frameIndexRef.current++
+        drawFrame(frameIndexRef.current)
+      }
+
+      if (frameIndexRef.current < FRAME_COUNT - 1) {
+        rafRef.current = requestAnimationFrame(loop)
+      }
+    }
+
+    drawFrame(0)
+    rafRef.current = requestAnimationFrame(loop)
+  }
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+
+    if (reducedMotion) {
+      const img = new (globalThis as unknown as { Image: new () => HTMLImageElement }).Image()
+      img.src = `/hero_frames/frame-0016-3.00s.webp`
+      img.onload = () => {
+        resizeCanvas()
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const ctx = canvas.getContext("2d")
+        if (!ctx) return
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      }
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        imagesRef.current = await preloadFrames()
+        drawFrame(0)
+        startAnimation()
+      } catch (err) {
+        console.error("Failed to preload hero frames", err)
+      }
+    }, 500)
+
+    window.addEventListener("resize", resizeCanvas)
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener("resize", resizeCanvas)
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
+    }
+  }, [])
+
   return (
     <section
       id="hero"
@@ -65,6 +178,13 @@ export function Hero() {
     >
       <DarkGradientBg className="min-h-svh">
         <div className="relative min-h-svh">
+          {/* Canvas background: plays once on load, freezes on last frame */}
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full z-0 object-cover"
+            aria-hidden="true"
+          />
+
           {/* ===== كتلة النص: تتمركز عمودياً فوق منطقة السماء، وتنتهي قبل خط الآثار ===== */}
           <div
             ref={textRef}
@@ -139,23 +259,28 @@ export function Hero() {
             data-parallax-image
             className="absolute inset-0 z-0 scale-[1.08] will-change-transform"
           >
-            <Image
-              src="/images/hero/hero_img.webp"
-              alt="الأهرامات وبابل واليونان والصين في مدينة واحدة"
-              fill
-              priority
-              quality={90}
-              sizes="100vw"
-              className="hidden object-cover md:block"
-            />
+            {/* Static images hidden once canvas frames are loaded */}
+            {imagesRef.current.length === 0 && (
+              <>
+                <Image
+                  src="/images/hero/hero_img.webp"
+                  alt="الأهرامات وبابل واليونان والصين في مدينة واحدة"
+                  fill
+                  priority
+                  quality={90}
+                  sizes="100vw"
+                  className="hidden object-cover md:block"
+                />
 
-            <img
-              src="/images/hero/hero_img_mobile.webp"
-              alt="الأهرامات وبابل واليونان والصين في مدينة واحدة"
-              className="block h-full w-full object-cover md:hidden"
-              loading="eager"
-              fetchPriority="high"
-            />
+                <img
+                  src="/images/hero/hero_img_mobile.webp"
+                  alt="الأهرامات وبابل واليونان والصين في مدينة واحدة"
+                  className="block h-full w-full object-cover md:hidden"
+                  loading="eager"
+                  fetchPriority="high"
+                />
+              </>
+            )}
 
             {/* the night keeps the words readable */}
             <div
