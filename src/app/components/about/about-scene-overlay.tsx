@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import Link from "next/link"
 import { CIVILIZATION_SCENES } from "./about-data"
 
 interface AboutSceneOverlayProps {
@@ -73,13 +74,13 @@ export function AboutSceneOverlay({
               </p>
 
               <div className="mt-6">
-                <link
+                <Link
                   href="/products"
                   className="inline-flex items-center gap-3 border border-gold/40 bg-gold/10 px-6 py-3 font-primary text-sm text-gold transition-colors duration-300 hover:bg-gold hover:text-royal-navy"
                 >
                   <span>استكشف عطور الحضارة</span>
                   <span aria-hidden="true">←</span>
-                </link>
+                </Link>
               </div>
             </div>
           )
