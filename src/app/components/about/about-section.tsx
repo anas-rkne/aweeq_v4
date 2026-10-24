@@ -22,26 +22,27 @@ export function AboutSection() {
     gsap.registerPlugin(ScrollTrigger)
 
     const totalScenes = CIVILIZATION_SCENES.length
-    const roomHeight = totalScenes * 2400 // 2400px scroll runway per scene
+    const runwayPerScene = 2400
+    const totalRunway = totalScenes * runwayPerScene
 
-    room.style.height = `${roomHeight}px`
+    room.style.height = `${totalRunway}px`
 
     const st = ScrollTrigger.create({
       trigger: section,
       start: "top top",
-      end: `+=${roomHeight}`,
+      end: `+=${totalRunway}`,
       pin: true,
       pinSpacing: false,
       scrub: 1,
       anticipatePin: 1,
       onUpdate: (self) => {
-        const progress = self.progress // 0 to 1 overall
-        const scaledProgress = progress * totalScenes
+        const progress = self.progress // 0 to 1
+        const scaled = progress * totalScenes
         const sceneIndex = Math.min(
           totalScenes - 1,
-          Math.floor(scaledProgress)
+          Math.floor(scaled)
         )
-        const localProgress = scaledProgress - sceneIndex
+        const localProgress = scaled - sceneIndex
 
         setCurrentSceneIndex(sceneIndex)
         setSceneProgress(localProgress)
@@ -66,26 +67,22 @@ export function AboutSection() {
         ref={sectionRef}
         className="relative z-10 h-screen w-screen overflow-hidden bg-[#0a1628]"
       >
-        {/* Canvas Background Layer */}
         <AboutCanvas
           currentSceneIndex={currentSceneIndex}
           sceneProgress={sceneProgress}
         />
 
-        {/* Cinematic Vignette / Scrim Overlay */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/40 to-[#0a1628]/60 pointer-events-none"
+          className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/35 to-[#0a1628]/60 pointer-events-none"
         />
 
-        {/* Text & UI Overlay Layer */}
         <AboutSceneOverlay
           currentSceneIndex={currentSceneIndex}
           sceneProgress={sceneProgress}
         />
       </section>
 
-      {/* Runway room for pinning */}
       <div
         id="about-room"
         ref={roomRef}

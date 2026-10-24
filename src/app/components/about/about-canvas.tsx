@@ -5,7 +5,7 @@ import { CIVILIZATION_SCENES } from "./about-data"
 
 interface AboutCanvasProps {
   currentSceneIndex: number
-  sceneProgress: number // 0 to 1 within the current scene
+  sceneProgress: number
 }
 
 export function AboutCanvas({
@@ -14,9 +14,8 @@ export function AboutCanvas({
 }: AboutCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imagesCacheRef = useRef<Map<string, HTMLImageElement[]>>(new Map())
-  const loadedRef = useRef<boolean>(false)
 
-  // Preload all frames on mount
+  // Robust multi-pattern frame loader
   useEffect(() => {
     let isMounted = true
 
@@ -32,28 +31,32 @@ export function AboutCanvas({
           (_, index) => {
             return new Promise<void>((resolve) => {
               const img = new window.Image()
-              const frameNum = String(index + 1).padStart(4, "0")
-              // e.g. /0_frame/frame-0001-0.00s.webp
-              // Let's check naming format: frame-0001-0.00s.webp
-              // We can construct the exact filenames dynamically or match what exists
-              // Let's verify exact naming from earlier check: frame-0001-0.00s.webp
-              // Notice index 0 is 0001, 1 is 0002... increments of 0.20s: 0.00s, 0.20s, 0.40s...
-              // Let's generate seconds correctly: (index * 0.2).toFixed(2)
+              const frameNumPadded = String(index + 1).padStart(4, "0")
+              const frameNumSimple = String(index + 1)
               const seconds = (index * 0.2).toFixed(2)
-              img.src = `/${scene.folder}/frame-${frameNum}-${seconds}s.webp`
+
+              img.src = `/${scene.folder}/frame-${frameNumPadded}-${seconds}s.webp`
 
               img.onload = () => {
                 imgArray[index] = img
                 resolve()
               }
               img.onerror = () => {
-                // Fallback attempt without seconds or standard numbering
-                img.src = `/${scene.folder}/frame-${frameNum}.webp`
-                img.onload = () => {
-                  imgArray[index] = img
+                const imgFallback = new window.Image()
+                imgFallback.src = `/${scene.folder}/frame-${frameNumPadded}.webp`
+                imgFallback.onload = () => {
+                  imgArray[index] = imgFallback
                   resolve()
                 }
-                img.onerror = () => resolve() // skip missing gracefully
+                imgFallback.onerror = () => {
+                  const imgSimple = new window.Image()
+                  imgSimple.src = `/${scene.folder}/frame-${frameNumSimple}.webp`
+                  imgSimple.onload = () => {
+                    imgArray[index] = imgSimple
+                    resolve()
+                  }
+                  imgSimple.onerror = () => resolve()
+                }
               }
             })
           }
@@ -64,8 +67,6 @@ export function AboutCanvas({
           cache.set(scene.folder, imgArray)
         }
       }
-
-      loadedRef.current = true
     }
 
     void loadAllFrames()
@@ -75,7 +76,7 @@ export function AboutCanvas({
     }
   }, [])
 
-  // Render canvas frame on progress change
+  // Canvas render loop with object-fit: cover scaling
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -89,16 +90,17 @@ export function AboutCanvas({
     const images = cache.get(currentScene.folder)
     if (!images || images.length === 0) return
 
-    // Calculate frame index based on sceneProgress (0 to 1)
+    const validImages = images.filter(Boolean)
+    if (validImages.length === 0) return
+
     const frameIndex = Math.min(
-      images.length - 1,
-      Math.floor(sceneProgress * images.length)
+      validImages.length - 1,
+      Math.floor(sceneProgress * validImages.length)
     )
 
-    const img = images[frameIndex] || images[0]
+    const img = validImages[frameIndex] || validImages[0]
     if (!img) return
 
-    // Resize canvas to match display size with DPR
     const dpr = window.devicePixelRatio || 1
     const width = canvas.clientWidth
     const height = canvas.clientHeight
@@ -112,7 +114,6 @@ export function AboutCanvas({
     ctx.scale(dpr, dpr)
     ctx.clearRect(0, 0, width, height)
 
-    // Draw image with object-fit: cover equivalent
     const imgRatio = img.width / img.height
     const canvasRatio = width / height
 
