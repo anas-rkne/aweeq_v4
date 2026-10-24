@@ -164,9 +164,7 @@ export function CartPageClient() {
           <span className="text-gold/40">
             <BagIcon />
           </span>
-          <h2 className="mt-6 font-primary text-2xl text-sand">
-            سلتك فارغة
-          </h2>
+          <h2 className="mt-6 font-primary text-2xl text-sand">سلتك فارغة</h2>
           <p className="mt-3 max-w-sm font-primary text-sm leading-7 text-sand/45">
             لم تضف أي قطعة بعد. تصفح إصداراتنا المحدودة واختر ما يناسبك.
           </p>
@@ -242,8 +240,7 @@ export function CartPageClient() {
 
                       <p className="shrink-0 font-secondary text-base text-gold sm:text-lg">
                         {formatPrice(
-                          item.total ??
-                            (item.unit_price ?? 0) * item.quantity,
+                          item.total ?? (item.unit_price ?? 0) * item.quantity,
                           currencyCode
                         )}
                       </p>

@@ -1,125 +1,127 @@
-"use client";
+"use client"
 
-import { useEffect, useRef, useState } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useEffect, useRef, useState } from "react"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger)
 
 interface FeaturedFragranceProps {
-  frameCount?: number;
+  frameCount?: number
 }
 
-export function FeaturedFragrance({ frameCount = 152 }: FeaturedFragranceProps) {
-  const sectionRef = useRef<HTMLElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
-  const [images, setImages] = useState<HTMLImageElement[]>([]);
-  const [loaded, setLoaded] = useState(false);
+export function FeaturedFragrance({
+  frameCount = 152,
+}: FeaturedFragranceProps) {
+  const sectionRef = useRef<HTMLElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const textRef = useRef<HTMLDivElement>(null)
+  const [images, setImages] = useState<HTMLImageElement[]>([])
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    let cancelled = false;
+    let cancelled = false
 
     const preload = async () => {
-      const promises: Promise<HTMLImageElement | null>[] = [];
+      const promises: Promise<HTMLImageElement | null>[] = []
 
       for (let i = 1; i <= frameCount; i++) {
-        const img = new window.Image();
-        const num = i.toString().padStart(3, "0");
-        img.src = `/featured_frames/frame-${num}.jpg`;
+        const img = new window.Image()
+        const num = i.toString().padStart(3, "0")
+        img.src = `/featured_frames/frame-${num}.jpg`
 
         promises.push(
           new Promise<HTMLImageElement | null>((resolve) => {
-            img.onload = () => resolve(img);
+            img.onload = () => resolve(img)
             // a missing frame must not hold the whole film hostage
-            img.onerror = () => resolve(null);
+            img.onerror = () => resolve(null)
           })
-        );
+        )
       }
 
-      const result = await Promise.all(promises);
-      if (cancelled) return;
+      const result = await Promise.all(promises)
+      if (cancelled) return
 
       const loadedImages = result.filter(
         (img): img is HTMLImageElement => img !== null
-      );
+      )
 
       if (loadedImages.length === 0) {
-        console.error("No featured frames found in /featured_frames");
-        return;
+        console.error("No featured frames found in /featured_frames")
+        return
       }
 
-      setImages(loadedImages);
-      setLoaded(true);
-    };
+      setImages(loadedImages)
+      setLoaded(true)
+    }
 
-    preload();
+    preload()
     return () => {
-      cancelled = true;
-    };
-  }, [frameCount]);
+      cancelled = true
+    }
+  }, [frameCount])
 
   useEffect(() => {
-    if (!loaded || images.length === 0) return;
-    const section = sectionRef.current;
-    const canvas = canvasRef.current;
-    const text = textRef.current;
-    if (!section || !canvas) return;
+    if (!loaded || images.length === 0) return
+    const section = sectionRef.current
+    const canvas = canvasRef.current
+    const text = textRef.current
+    if (!section || !canvas) return
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
 
-    let currentFrame = 0;
+    let currentFrame = 0
 
     // a tiny copy of a frame, stretched across the screen: bilinear smoothing
     // turns it into the soft, coloured haze that fills the sides
     const blurCache: (HTMLCanvasElement | null)[] = new Array(
       images.length
-    ).fill(null);
+    ).fill(null)
     const blurredFrame = (index: number, img: HTMLImageElement) => {
-      const cached = blurCache[index];
-      if (cached) return cached;
+      const cached = blurCache[index]
+      if (cached) return cached
 
-      const small = document.createElement("canvas");
-      small.width = 64;
-      small.height = 64;
-      small.getContext("2d")?.drawImage(img, 0, 0, 64, 64);
-      blurCache[index] = small;
-      return small;
-    };
+      const small = document.createElement("canvas")
+      small.width = 64
+      small.height = 64
+      small.getContext("2d")?.drawImage(img, 0, 0, 64, 64)
+      blurCache[index] = small
+      return small
+    }
 
     const render = (index: number) => {
-      const img = images[index];
-      if (!img) return;
+      const img = images[index]
+      if (!img) return
 
-      const cw = canvas.width;
-      const ch = canvas.height;
-      ctx.clearRect(0, 0, cw, ch);
-      ctx.fillStyle = "#0a1628";
-      ctx.fillRect(0, 0, cw, ch);
+      const cw = canvas.width
+      const ch = canvas.height
+      ctx.clearRect(0, 0, cw, ch)
+      ctx.fillStyle = "#0a1628"
+      ctx.fillRect(0, 0, cw, ch)
 
       // the master is portrait, so the picture itself is kept whole and the
       // same frame — blown up to cover and blurred — carries its light out to
       // the edges of the screen. no letterbox, no stretched bottle.
-      ctx.globalAlpha = 0.55;
-      ctx.drawImage(blurredFrame(index, img), 0, 0, cw, ch);
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = 0.55
+      ctx.drawImage(blurredFrame(index, img), 0, 0, cw, ch)
+      ctx.globalAlpha = 1
 
-      const scale = Math.min(cw / img.width, ch / img.height);
-      const w = img.width * scale;
-      const h = img.height * scale;
-      ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
-      currentFrame = index;
-    };
+      const scale = Math.min(cw / img.width, ch / img.height)
+      const w = img.width * scale
+      const h = img.height * scale
+      ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h)
+      currentFrame = index
+    }
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.round(window.innerWidth * dpr);
-      canvas.height = Math.round(window.innerHeight * dpr);
-      render(currentFrame);
-    };
-    resize();
-    window.addEventListener("resize", resize);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      canvas.width = Math.round(window.innerWidth * dpr)
+      canvas.height = Math.round(window.innerHeight * dpr)
+      render(currentFrame)
+    }
+    resize()
+    window.addEventListener("resize", resize)
 
     const tl = gsap.timeline({
       scrollTrigger: {
@@ -133,10 +135,10 @@ export function FeaturedFragrance({ frameCount = 152 }: FeaturedFragranceProps) 
         anticipatePin: 1,
         invalidateOnRefresh: true,
       },
-    });
+    })
 
     // ===== the film: the scroll is the playhead =====
-    const frameObj = { frame: 0 };
+    const frameObj = { frame: 0 }
     tl.to(
       frameObj,
       {
@@ -144,15 +146,15 @@ export function FeaturedFragrance({ frameCount = 152 }: FeaturedFragranceProps) 
         duration: 0.88,
         ease: "none",
         onUpdate: () => {
-          render(Math.round(frameObj.frame));
+          render(Math.round(frameObj.frame))
         },
       },
       0
-    );
+    )
 
     // ===== the words: appear in the last tenth, then lift off =====
     if (text) {
-      gsap.set(text, { opacity: 0, y: 60 });
+      gsap.set(text, { opacity: 0, y: 60 })
       tl.to(
         text,
         {
@@ -171,15 +173,15 @@ export function FeaturedFragrance({ frameCount = 152 }: FeaturedFragranceProps) 
           ease: "power2.in",
         },
         0.88
-      );
+      )
     }
 
     return () => {
-      window.removeEventListener("resize", resize);
-      tl.scrollTrigger?.kill();
-      tl.kill();
-    };
-  }, [loaded, images]);
+      window.removeEventListener("resize", resize)
+      tl.scrollTrigger?.kill()
+      tl.kill()
+    }
+  }, [loaded, images])
 
   return (
     <section
@@ -218,7 +220,8 @@ export function FeaturedFragrance({ frameCount = 152 }: FeaturedFragranceProps) 
         aria-hidden="true"
         className="pointer-events-none absolute bottom-0 left-0 z-10 h-32 w-full md:h-64"
         style={{
-          background: "linear-gradient(to bottom, transparent 0%, #0a1628 100%)",
+          background:
+            "linear-gradient(to bottom, transparent 0%, #0a1628 100%)",
         }}
       />
 
@@ -237,5 +240,5 @@ export function FeaturedFragrance({ frameCount = 152 }: FeaturedFragranceProps) 
         </p>
       </div>
     </section>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "next/image"
 
 function PerfumeIcon() {
   return (
@@ -17,7 +17,7 @@ function PerfumeIcon() {
       <path d="M11 3h2v3.5h-2z" />
       <path d="M8 13h8" />
     </svg>
-  );
+  )
 }
 
 function IncenseIcon() {
@@ -39,7 +39,7 @@ function IncenseIcon() {
       <path d="M9 6.5c1-.8 1-1.7 0-2.5" opacity=".45" />
       <path d="M15 6.5c1-.8 1-1.7 0-2.5" opacity=".45" />
     </svg>
-  );
+  )
 }
 
 function SmokersIcon() {
@@ -63,7 +63,7 @@ function SmokersIcon() {
       <path d="M17.5 6.5c1.4-.8 1.4-2 0-2.8" opacity=".55" />
       <path d="M20 8.5c1.2-.7 1.2-1.8 0-2.5" opacity=".35" />
     </svg>
-  );
+  )
 }
 
 function TextilesIcon() {
@@ -82,7 +82,7 @@ function TextilesIcon() {
       <path d="m4 13 8 4 8-4" />
       <path d="m4 17 8 4 8-4" />
     </svg>
-  );
+  )
 }
 
 function LeatherIcon() {
@@ -102,7 +102,7 @@ function LeatherIcon() {
       <path d="M4.5 12.5h15" />
       <path d="M10.5 12.5v2.5h3v-2.5" />
     </svg>
-  );
+  )
 }
 
 function CuratedIcon() {
@@ -122,7 +122,7 @@ function CuratedIcon() {
       <path d="M8.4 10.2c1.1.8 2.3 1.1 3.6 1.1s2.5-.3 3.6-1.1" />
       <path d="M9 20.2h6" />
     </svg>
-  );
+  )
 }
 
 const ICON_ITEMS = [
@@ -142,7 +142,7 @@ const ICON_ITEMS = [
     labelEn: "Curated",
     Icon: CuratedIcon,
   },
-] as const;
+] as const
 
 export function BeyondSection() {
   return (
@@ -155,7 +155,8 @@ export function BeyondSection() {
         aria-hidden="true"
         className="pointer-events-none absolute left-0 top-0 z-20 h-32 w-full md:h-64"
         style={{
-          background: "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
+          background:
+            "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
         }}
       />
 
@@ -176,8 +177,7 @@ export function BeyondSection() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-32 md:h-64"
         style={{
-          background:
-            "linear-gradient(to top, #0a1628 0%, transparent 100%)",
+          background: "linear-gradient(to top, #0a1628 0%, transparent 100%)",
         }}
       />
 
@@ -216,5 +216,5 @@ export function BeyondSection() {
         </div>
       </div>
     </section>
-  );
+  )
 }

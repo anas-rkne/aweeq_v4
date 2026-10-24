@@ -1,27 +1,27 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import { useState, type FormEvent } from "react";
+import Image from "next/image"
+import { useState, type FormEvent } from "react"
 
-type FormStatus = "idle" | "success" | "error";
+type FormStatus = "idle" | "success" | "error"
 
 export function NewsletterSection() {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<FormStatus>("idle");
+  const [email, setEmail] = useState("")
+  const [status, setStatus] = useState<FormStatus>("idle")
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    event.preventDefault()
 
-    const value = email.trim();
-    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    const value = email.trim()
+    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 
     if (!valid) {
-      setStatus("error");
-      return;
+      setStatus("error")
+      return
     }
 
-    setStatus("success");
-    setEmail("");
+    setStatus("success")
+    setEmail("")
   }
 
   return (
@@ -38,14 +38,18 @@ export function NewsletterSection() {
         className="z-0 object-cover object-center"
       />
 
-      <div aria-hidden="true" className="absolute inset-0 z-0 bg-[#0a1628]/50" />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 z-0 bg-[#0a1628]/50"
+      />
 
       {/* receives the midnight of the Journal without a seam */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-0 top-0 z-10 h-32 w-full md:h-64"
         style={{
-          background: "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
+          background:
+            "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
         }}
       />
 
@@ -76,8 +80,8 @@ export function NewsletterSection() {
             placeholder="بريدك الإلكتروني"
             value={email}
             onChange={(event) => {
-              setEmail(event.target.value);
-              if (status !== "idle") setStatus("idle");
+              setEmail(event.target.value)
+              if (status !== "idle") setStatus("idle")
             }}
             aria-invalid={status === "error"}
             aria-describedby="newsletter-message"
@@ -114,5 +118,5 @@ export function NewsletterSection() {
         }}
       />
     </section>
-  );
+  )
 }

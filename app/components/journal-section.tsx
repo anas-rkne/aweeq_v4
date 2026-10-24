@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Image from "next/image"
+import { useEffect, useRef } from "react"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 const POSTS = [
   {
@@ -27,31 +27,31 @@ const POSTS = [
     titleAr: "فن العطر",
     alt: "فن صناعة العطر",
   },
-] as const;
+] as const
 
 export function JournalSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const cardsRef = useRef<(HTMLElement | null)[]>([]);
+  const sectionRef = useRef<HTMLElement>(null)
+  const headerRef = useRef<HTMLDivElement>(null)
+  const cardsRef = useRef<(HTMLElement | null)[]>([])
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
-    const section = sectionRef.current;
-    const header = headerRef.current;
-    if (!section) return;
+    const section = sectionRef.current
+    const header = headerRef.current
+    if (!section) return
 
-    gsap.registerPlugin(ScrollTrigger);
+    gsap.registerPlugin(ScrollTrigger)
 
     const cards = cardsRef.current.filter(
-      (card): card is HTMLElement => card !== null,
-    );
+      (card): card is HTMLElement => card !== null
+    )
 
     const ctx = gsap.context(() => {
       if (header) {
-        gsap.set(header, { opacity: 0, y: 24 });
+        gsap.set(header, { opacity: 0, y: 24 })
       }
-      gsap.set(cards, { opacity: 0, y: 30 });
+      gsap.set(cards, { opacity: 0, y: 30 })
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -59,7 +59,7 @@ export function JournalSection() {
           start: "top 72%",
           once: true,
         },
-      });
+      })
 
       if (header) {
         tl.to(header, {
@@ -67,7 +67,7 @@ export function JournalSection() {
           y: 0,
           duration: 0.8,
           ease: "power2.out",
-        });
+        })
       }
 
       tl.to(
@@ -79,12 +79,12 @@ export function JournalSection() {
           stagger: 0.12,
           ease: "power3.out",
         },
-        header ? "-=0.45" : 0,
-      );
-    }, section);
+        header ? "-=0.45" : 0
+      )
+    }, section)
 
-    return () => ctx.revert();
-  }, []);
+    return () => ctx.revert()
+  }, [])
 
   return (
     <section
@@ -101,14 +101,18 @@ export function JournalSection() {
         className="z-0 object-cover object-center"
       />
 
-      <div aria-hidden="true" className="absolute inset-0 z-0 bg-[#0a1628]/80" />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 z-0 bg-[#0a1628]/80"
+      />
 
       {/* receives the midnight of Beyond without a seam */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-0 top-0 z-10 h-32 w-full md:h-64"
         style={{
-          background: "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
+          background:
+            "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
         }}
       />
 
@@ -147,7 +151,7 @@ export function JournalSection() {
             <article
               key={post.id}
               ref={(element) => {
-                cardsRef.current[index] = element;
+                cardsRef.current[index] = element
               }}
               className="group"
             >
@@ -216,5 +220,5 @@ export function JournalSection() {
         }}
       />
     </section>
-  );
+  )
 }

@@ -6,10 +6,7 @@ import { ProductCard } from "@/components/store/product-card"
 import { ProductGallery } from "@/components/store/product-gallery"
 import { ProductPurchasePanel } from "@/components/store/product-purchase-panel"
 import { getProductByHandle, getRelatedProducts } from "@/lib/api"
-import {
-  normalizeImageUrl,
-  parseJsonField,
-} from "@/lib/format"
+import { normalizeImageUrl, parseJsonField } from "@/lib/format"
 import type { OlfactoryPyramid, ProductSpecifications } from "@/types"
 
 const getProduct = cache(getProductByHandle)
@@ -107,8 +104,7 @@ export default async function ProductDetailPage({
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.title,
-    description:
-      product.short_description ?? product.description ?? undefined,
+    description: product.short_description ?? product.description ?? undefined,
     image: normalizeImageUrl(product.thumbnail) ?? undefined,
     brand: {
       "@type": "Brand",
@@ -146,7 +142,10 @@ export default async function ProductDetailPage({
               الرئيسية
             </Link>
             <span aria-hidden="true">/</span>
-            <Link href="/products" className="transition-colors hover:text-gold">
+            <Link
+              href="/products"
+              className="transition-colors hover:text-gold"
+            >
               المتجر
             </Link>
             <span aria-hidden="true">/</span>
@@ -203,15 +202,15 @@ export default async function ProductDetailPage({
                 {product.collection && (
                   <div className="flex justify-between gap-4">
                     <dt className="text-sand/40">المجموعة</dt>
-                    <dd className="text-sand/75">
-                      {product.collection.title}
-                    </dd>
+                    <dd className="text-sand/75">{product.collection.title}</dd>
                   </div>
                 )}
                 {product.product_type && (
                   <div className="flex justify-between gap-4">
                     <dt className="text-sand/40">النوع</dt>
-                    <dd className="text-sand/75">{product.product_type.name}</dd>
+                    <dd className="text-sand/75">
+                      {product.product_type.name}
+                    </dd>
                   </div>
                 )}
                 {product.edition_size != null && (
@@ -284,9 +283,7 @@ export default async function ProductDetailPage({
           <div className="space-y-12" dir="rtl">
             {product.description && (
               <div>
-                <h2 className="mb-4 font-primary text-2xl text-gold">
-                  الوصف
-                </h2>
+                <h2 className="mb-4 font-primary text-2xl text-gold">الوصف</h2>
                 <p className="whitespace-pre-line font-primary text-base leading-loose text-sand/60">
                   {product.description}
                 </p>

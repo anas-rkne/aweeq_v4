@@ -20,16 +20,16 @@
  */
 export type HeroFrame = {
   /** stable id, also the key of the frame and the name of its file */
-  id: string;
+  id: string
   /** short name for the gallery tabs */
-  label: string;
-  src: string;
-  width: number;
-  height: number;
-  alt: string;
-  position: string;
-  positionNarrow: string;
-};
+  label: string
+  src: string
+  width: number
+  height: number
+  alt: string
+  position: string
+  positionNarrow: string
+}
 
 export const HERO_FRAMES: HeroFrame[] = [
   {
@@ -72,7 +72,7 @@ export const HERO_FRAMES: HeroFrame[] = [
     position: "50% 50%",
     positionNarrow: "50% 50%",
   },
-];
+]
 
 /** The picture fills the screen: one hundred per cent of the viewport. */
-export const HERO_SIZES = "100vw";
+export const HERO_SIZES = "100vw"

@@ -8,11 +8,12 @@ export default function StoreError({
   reset: () => void
 }) {
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center" dir="rtl">
+    <div
+      className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center"
+      dir="rtl"
+    >
       <span className="mb-5 font-primary text-3xl text-gold/25">3WEEQ</span>
-      <h1 className="font-primary text-2xl text-sand/80">
-        حدث خطأ غير متوقع
-      </h1>
+      <h1 className="font-primary text-2xl text-sand/80">حدث خطأ غير متوقع</h1>
       <p className="mt-3 max-w-md font-primary text-sm leading-relaxed text-sand/45">
         تعذر تحميل هذا القسم. حاول مرة أخرى، وإذا استمرت المشكلة تأكد من اتصال
         المتجر بالخادم.

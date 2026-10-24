@@ -2,11 +2,7 @@
 
 import { useMemo, useState } from "react"
 import type { Product, ProductVariant } from "@/types"
-import {
-  concentrationLabel,
-  formatPrice,
-  stockLabel,
-} from "@/lib/format"
+import { concentrationLabel, formatPrice, stockLabel } from "@/lib/format"
 import { useCart } from "./cart-provider"
 
 interface ProductPurchasePanelProps {
@@ -20,7 +16,9 @@ export function ProductPurchasePanel({
 }: ProductPurchasePanelProps) {
   const initialVariant =
     product.default_variant &&
-    product.variants.some((variant) => variant.id === product.default_variant?.id)
+    product.variants.some(
+      (variant) => variant.id === product.default_variant?.id
+    )
       ? product.default_variant
       : product.variants[0]
 
@@ -183,9 +181,7 @@ export function ProductPurchasePanel({
             <button
               type="button"
               onClick={() =>
-                setQuantity((value) =>
-                  Math.min(purchaseLimit, value + 1)
-                )
+                setQuantity((value) => Math.min(purchaseLimit, value + 1))
               }
               disabled={quantity >= purchaseLimit || isAdding}
               aria-label="زيادة الكمية"
@@ -198,11 +194,7 @@ export function ProductPurchasePanel({
           <button
             type="button"
             onClick={() => void handleAddToCart()}
-            disabled={
-              !selectedVariant ||
-              !selectedVariant.in_stock ||
-              isAdding
-            }
+            disabled={!selectedVariant || !selectedVariant.in_stock || isAdding}
             className="flex-1 border border-gold bg-gold px-6 py-4 font-primary text-base font-bold text-royal-navy transition-colors duration-300 hover:bg-gold/85 disabled:cursor-not-allowed disabled:border-gold/35 disabled:bg-gold/10 disabled:text-gold/60 sm:text-lg"
           >
             {!selectedVariant || !selectedVariant.in_stock

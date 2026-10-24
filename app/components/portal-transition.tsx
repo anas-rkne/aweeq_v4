@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useEffect, useRef } from "react"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 /**
  * The glowing portal.
@@ -22,29 +22,29 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
  * arrives at the bottom of the viewport, and the door opens while it climbs.
  */
 export function PortalTransition() {
-  const ringRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const about = document.getElementById("story");
-    const room = document.getElementById("about-room");
-    const first = document.getElementById("first-chapter");
-    const content = document.getElementById("first-chapter-content");
-    const ring = ringRef.current;
-    if (!about || !room || !first || !content || !ring) return;
+    const about = document.getElementById("story")
+    const room = document.getElementById("about-room")
+    const first = document.getElementById("first-chapter")
+    const content = document.getElementById("first-chapter-content")
+    const ring = ringRef.current
+    if (!about || !room || !first || !content || !ring) return
 
     /**
      * Without motion there is no door: the chapter simply takes its place in
      * the flow, and the page is read from top to bottom.
      */
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      first.style.clipPath = "none";
-      first.style.position = "relative";
-      first.style.inset = "auto";
-      first.style.zIndex = "auto";
-      return;
+      first.style.clipPath = "none"
+      first.style.position = "relative"
+      first.style.inset = "auto"
+      first.style.zIndex = "auto"
+      return
     }
 
-    gsap.registerPlugin(ScrollTrigger);
+    gsap.registerPlugin(ScrollTrigger)
 
     /**
      * The radius a percentage of a circle is measured against: the diagonal
@@ -53,16 +53,16 @@ export function PortalTransition() {
      * stay together as the circle grows.
      */
     const diagonal = () =>
-      Math.sqrt((window.innerWidth ** 2 + window.innerHeight ** 2) / 2);
+      Math.sqrt((window.innerWidth ** 2 + window.innerHeight ** 2) / 2)
 
     const sizeRing = () => {
-      const r = diagonal();
-      ring.style.width = `${r * 2}px`;
-      ring.style.height = `${r * 2}px`;
-      ring.style.left = `calc(50% - ${r}px)`;
-      ring.style.top = `calc(50% - ${r}px)`;
-    };
-    sizeRing();
+      const r = diagonal()
+      ring.style.width = `${r * 2}px`
+      ring.style.height = `${r * 2}px`
+      ring.style.left = `calc(50% - ${r}px)`
+      ring.style.top = `calc(50% - ${r}px)`
+    }
+    sizeRing()
 
     /**
      * The door opens over the last screen of the About's pinned journey: the
@@ -70,11 +70,11 @@ export function PortalTransition() {
      * screen before that. The pin is the only honest measure of where the
      * About stops being held, so the range is taken from it.
      */
-    const aboutPin = ScrollTrigger.getAll().find((st) => st.trigger === about);
+    const aboutPin = ScrollTrigger.getAll().find((st) => st.trigger === about)
     const range = () => {
-      const end = aboutPin ? aboutPin.end : 0;
-      return { start: end - window.innerHeight, end };
-    };
+      const end = aboutPin ? aboutPin.end : 0
+      return { start: end - window.innerHeight, end }
+    }
 
     const tl = gsap.timeline({
       scrollTrigger: {
@@ -84,46 +84,46 @@ export function PortalTransition() {
         scrub: 1,
         invalidateOnRefresh: true,
       },
-    });
+    })
 
     tl.fromTo(
       first,
       { clipPath: "circle(0% at 50% 50%)" },
-      { clipPath: "circle(150% at 50% 50%)", duration: 1, ease: "power2.inOut" },
+      { clipPath: "circle(150% at 50% 50%)", duration: 1, ease: "power2.inOut" }
     )
       // the chapter comes forward, a little, as the door opens
       .fromTo(
         content,
         { scale: 1 },
         { scale: 1.08, duration: 1, ease: "power2.out" },
-        "<",
+        "<"
       )
       // the gold edge of the door, burning on the rim
       .fromTo(
         ring,
         { scale: 0, opacity: 0 },
         { scale: 1.5, opacity: 1, duration: 1, ease: "power2.inOut" },
-        "<",
+        "<"
       )
       // the About goes under the light
       .to(about, { autoAlpha: 0, duration: 0.75, ease: "power2.inOut" }, "<")
       // and a breath, for the door to settle
-      .to({}, { duration: 0.25 });
+      .to({}, { duration: 0.25 })
 
     const onResize = () => {
-      sizeRing();
-      ScrollTrigger.refresh();
-    };
-    window.addEventListener("resize", onResize);
-    const refresh = () => ScrollTrigger.refresh();
-    void document.fonts?.ready.then(refresh);
+      sizeRing()
+      ScrollTrigger.refresh()
+    }
+    window.addEventListener("resize", onResize)
+    const refresh = () => ScrollTrigger.refresh()
+    void document.fonts?.ready.then(refresh)
 
     return () => {
-      window.removeEventListener("resize", onResize);
-      tl.scrollTrigger?.kill();
-      tl.kill();
-    };
-  }, []);
+      window.removeEventListener("resize", onResize)
+      tl.scrollTrigger?.kill()
+      tl.kill()
+    }
+  }, [])
 
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-30">
@@ -137,5 +137,5 @@ export function PortalTransition() {
         }}
       />
     </div>
-  );
+  )
 }

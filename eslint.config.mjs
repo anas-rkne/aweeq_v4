@@ -17,6 +17,9 @@ const eslintConfig = defineConfig([
     // Vendored third-party agent skills are not our source.
     ".opencode/**",
     ".agents/**",
+    // Backend & E2E tests have separate linting paths
+    "medusa/**",
+    "e2e/**",
   ]),
 ]);
 

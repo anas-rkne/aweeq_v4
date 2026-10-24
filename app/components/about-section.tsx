@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { useEffect, useRef } from "react";
-import Image from "next/image";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useEffect, useRef } from "react"
+import Image from "next/image"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 /**
  * Four old worlds, told one after another.
@@ -58,26 +58,26 @@ const CIVILIZATIONS = [
     bodyEn:
       "From the Great Wall of China and the silk of empires, where power meets elegance. We present captivating fragrances embodying the wisdom of the East and the details of ancient Chinese civilization.",
   },
-] as const;
+] as const
 
-const IMAGE_START_SCALE = 1.05;
-const TEXT_START_Y = 20;
+const IMAGE_START_SCALE = 1.05
+const TEXT_START_Y = 20
 
 export function AboutSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const veilRef = useRef<HTMLDivElement>(null);
-  const roomRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null)
+  const veilRef = useRef<HTMLDivElement>(null)
+  const roomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
+    const section = sectionRef.current
+    if (!section) return
 
-    gsap.registerPlugin(ScrollTrigger);
+    gsap.registerPlugin(ScrollTrigger)
 
-    const images = gsap.utils.toArray<HTMLElement>(".about-image", section);
-    const texts = gsap.utils.toArray<HTMLElement>(".about-text", section);
-    const veil = veilRef.current;
-    const room = roomRef.current;
+    const images = gsap.utils.toArray<HTMLElement>(".about-image", section)
+    const texts = gsap.utils.toArray<HTMLElement>(".about-text", section)
+    const veil = veilRef.current
+    const room = roomRef.current
 
     /**
      * One slide: the picture that leaves dims and pulls back, the picture that
@@ -85,48 +85,62 @@ export function AboutSection() {
      * beat. Then a pause, to read.
      */
     const step = (tl: gsap.core.Timeline, from: number) => {
-      const outImage = images[from];
-      const outText = texts[from];
-      const inImage = images[from + 1];
-      const inText = texts[from + 1];
-      if (!outImage || !outText || !inImage || !inText) return;
+      const outImage = images[from]
+      const outText = texts[from]
+      const inImage = images[from + 1]
+      const inText = texts[from + 1]
+      if (!outImage || !outText || !inImage || !inText) return
 
-      tl.to(
-        outImage,
-        { opacity: 0, scale: IMAGE_START_SCALE, duration: 1, ease: "power2.inOut" },
-      )
-        .to(outText, { opacity: 0, y: -TEXT_START_Y, duration: 1, ease: "power2.inOut" }, "<")
+      tl.to(outImage, {
+        opacity: 0,
+        scale: IMAGE_START_SCALE,
+        duration: 1,
+        ease: "power2.inOut",
+      })
+        .to(
+          outText,
+          { opacity: 0, y: -TEXT_START_Y, duration: 1, ease: "power2.inOut" },
+          "<"
+        )
         .to(
           inImage,
           { opacity: 1, scale: 1, duration: 1, ease: "power2.inOut" },
-          "<",
+          "<"
         )
-        .to(inText, { opacity: 1, y: 0, duration: 1, ease: "power2.inOut" }, "<")
+        .to(
+          inText,
+          { opacity: 1, y: 0, duration: 1, ease: "power2.inOut" },
+          "<"
+        )
         // a breath, so the words can be read before the next world
-        .to({}, { duration: 1 });
-    };
+        .to({}, { duration: 1 })
+    }
 
     const build = (tl: gsap.core.Timeline, withVeil: boolean) => {
       for (let i = 0; i < CIVILIZATIONS.length - 1; i++) {
-        step(tl, i);
+        step(tl, i)
       }
 
       // the last picture rests, then the night settles over it
       if (withVeil && veil) {
-        tl.to(veil, { opacity: 0.4, duration: 1.2, ease: "power2.inOut" }, "+=0.6");
+        tl.to(
+          veil,
+          { opacity: 0.4, duration: 1.2, ease: "power2.inOut" },
+          "+=0.6"
+        )
       } else {
         // the phone keeps the same pace, then rests: the last stretch of the
         // pin belongs to the portal
-        tl.to({}, { duration: 1.8 });
+        tl.to({}, { duration: 1.8 })
       }
-    };
+    }
 
-    const mm = gsap.matchMedia();
+    const mm = gsap.matchMedia()
 
     mm.add("(min-width: 768px)", () => {
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        if (room) room.style.height = "0px";
-        return;
+        if (room) room.style.height = "0px"
+        return
       }
 
       const tl = gsap.timeline({
@@ -140,25 +154,25 @@ export function AboutSection() {
           anticipatePin: 1,
           invalidateOnRefresh: true,
         },
-      });
+      })
 
-      build(tl, true);
+      build(tl, true)
 
       // the room the sequence travels through: the pin adds no spacing of its
       // own, so the section leaves that room behind it
-      if (room) room.style.height = "4800px";
+      if (room) room.style.height = "4800px"
 
       return () => {
-        if (room) room.style.height = "";
-        tl.scrollTrigger?.kill();
-        tl.kill();
-      };
-    });
+        if (room) room.style.height = ""
+        tl.scrollTrigger?.kill()
+        tl.kill()
+      }
+    })
 
     mm.add("(max-width: 767px)", () => {
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        if (room) room.style.height = "0px";
-        return;
+        if (room) room.style.height = "0px"
+        return
       }
 
       // the phone holds the section too, but for less time
@@ -173,28 +187,28 @@ export function AboutSection() {
           anticipatePin: 1,
           invalidateOnRefresh: true,
         },
-      });
+      })
 
-      build(tl, false);
+      build(tl, false)
 
-      if (room) room.style.height = "3400px";
+      if (room) room.style.height = "3400px"
 
       return () => {
-        if (room) room.style.height = "";
-        tl.scrollTrigger?.kill();
-        tl.kill();
-      };
-    });
+        if (room) room.style.height = ""
+        tl.scrollTrigger?.kill()
+        tl.kill()
+      }
+    })
 
-    const refresh = () => ScrollTrigger.refresh();
-    void document.fonts?.ready.then(refresh);
-    window.addEventListener("load", refresh);
+    const refresh = () => ScrollTrigger.refresh()
+    void document.fonts?.ready.then(refresh)
+    window.addEventListener("load", refresh)
 
     return () => {
-      window.removeEventListener("load", refresh);
-      mm.revert();
-    };
-  }, []);
+      window.removeEventListener("load", refresh)
+      mm.revert()
+    }
+  }, [])
 
   return (
     <>
@@ -294,7 +308,10 @@ export function AboutSection() {
                     style={
                       i === 0
                         ? { opacity: 1, transform: "translateY(0)" }
-                        : { opacity: 0, transform: `translateY(${TEXT_START_Y}px)` }
+                        : {
+                            opacity: 0,
+                            transform: `translateY(${TEXT_START_Y}px)`,
+                          }
                     }
                   >
                     {/* the name of the world */}
@@ -361,5 +378,5 @@ export function AboutSection() {
         className="h-[3400px] md:h-[4800px]"
       />
     </>
-  );
+  )
 }

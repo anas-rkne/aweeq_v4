@@ -66,9 +66,7 @@ export function ProductCard({ product, locale = "ar" }: ProductCardProps) {
             {product.title}
           </h3>
           {price && (
-            <p className="shrink-0 font-secondary text-sm text-gold">
-              {price}
-            </p>
+            <p className="shrink-0 font-secondary text-sm text-gold">{price}</p>
           )}
         </div>
 

@@ -72,9 +72,7 @@ export function StoreHeader() {
           <button
             type="button"
             onClick={openCart}
-            aria-label={
-              itemCount > 0 ? `السلة، ${itemCount} قطعة` : "السلة"
-            }
+            aria-label={itemCount > 0 ? `السلة، ${itemCount} قطعة` : "السلة"}
             className="relative p-1 text-sand/70 transition-colors duration-300 hover:text-gold"
           >
             <svg

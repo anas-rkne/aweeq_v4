@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import Lenis from "lenis";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useEffect } from "react"
+import Lenis from "lenis"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 /**
  * Smooth scroll for the whole page.
@@ -23,29 +23,29 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
  */
 export function SmoothScroll({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
-    gsap.registerPlugin(ScrollTrigger);
+    gsap.registerPlugin(ScrollTrigger)
 
     const lenis = new Lenis({
       autoRaf: false,
       smoothWheel: true,
       syncTouch: false,
       duration: 1.1,
-    });
+    })
 
-    const onScroll = () => ScrollTrigger.update();
-    lenis.on("scroll", onScroll);
+    const onScroll = () => ScrollTrigger.update()
+    lenis.on("scroll", onScroll)
 
-    const raf = (time: number) => lenis.raf(time * 1000);
-    gsap.ticker.add(raf);
-    gsap.ticker.lagSmoothing(0);
+    const raf = (time: number) => lenis.raf(time * 1000)
+    gsap.ticker.add(raf)
+    gsap.ticker.lagSmoothing(0)
 
     // the page is measured before the fonts and the pictures are in place,
     // so the triggers are asked to measure themselves again once they are
-    const refresh = () => ScrollTrigger.refresh();
-    void document.fonts?.ready.then(refresh);
-    window.addEventListener("load", refresh);
+    const refresh = () => ScrollTrigger.refresh()
+    void document.fonts?.ready.then(refresh)
+    window.addEventListener("load", refresh)
 
     // anchors travel on the same curve as the wheel
     const onClick = (event: MouseEvent) => {
@@ -57,33 +57,33 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
         event.shiftKey ||
         event.altKey
       ) {
-        return;
+        return
       }
 
       const anchor = (event.target as HTMLElement | null)?.closest?.(
-        "a[href^='#']",
-      ) as HTMLAnchorElement | null;
-      if (!anchor) return;
+        "a[href^='#']"
+      ) as HTMLAnchorElement | null
+      if (!anchor) return
 
-      const hash = anchor.getAttribute("href");
-      if (!hash || hash === "#") return;
+      const hash = anchor.getAttribute("href")
+      if (!hash || hash === "#") return
 
-      const target = document.querySelector(hash);
-      if (!target) return;
+      const target = document.querySelector(hash)
+      if (!target) return
 
-      event.preventDefault();
-      lenis.scrollTo(target as HTMLElement, { offset: 0 });
-    };
+      event.preventDefault()
+      lenis.scrollTo(target as HTMLElement, { offset: 0 })
+    }
 
-    document.addEventListener("click", onClick);
+    document.addEventListener("click", onClick)
 
     return () => {
-      document.removeEventListener("click", onClick);
-      window.removeEventListener("load", refresh);
-      gsap.ticker.remove(raf);
-      lenis.destroy();
-    };
-  }, []);
+      document.removeEventListener("click", onClick)
+      window.removeEventListener("load", refresh)
+      gsap.ticker.remove(raf)
+      lenis.destroy()
+    }
+  }, [])
 
-  return <>{children}</>;
+  return <>{children}</>
 }

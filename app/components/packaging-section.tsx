@@ -1,27 +1,27 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Image from "next/image"
+import { useEffect, useRef } from "react"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger)
 
 export function PackagingSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const bgRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null)
+  const bgRef = useRef<HTMLDivElement>(null)
+  const textRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
-    const section = sectionRef.current;
-    const bg = bgRef.current;
-    const text = textRef.current;
-    if (!section || !bg || !text) return;
+    const section = sectionRef.current
+    const bg = bgRef.current
+    const text = textRef.current
+    if (!section || !bg || !text) return
 
-    gsap.set(bg, { scale: 1.18, opacity: 0 });
-    gsap.set(text, { opacity: 0, y: 40 });
+    gsap.set(bg, { scale: 1.18, opacity: 0 })
+    gsap.set(text, { opacity: 0, y: 40 })
 
     const tl = gsap.timeline({
       scrollTrigger: {
@@ -30,7 +30,7 @@ export function PackagingSection() {
         end: "top 25%",
         scrub: 1,
       },
-    });
+    })
 
     tl.to(bg, {
       scale: 1,
@@ -44,13 +44,13 @@ export function PackagingSection() {
         ease: "power2.out",
       },
       "-=0.5"
-    );
+    )
 
     return () => {
-      tl.scrollTrigger?.kill();
-      tl.kill();
-    };
-  }, []);
+      tl.scrollTrigger?.kill()
+      tl.kill()
+    }
+  }, [])
 
   return (
     <section
@@ -95,7 +95,8 @@ export function PackagingSection() {
         aria-hidden="true"
         className="pointer-events-none absolute left-0 top-0 z-10 h-32 w-full md:h-64"
         style={{
-          background: "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
+          background:
+            "linear-gradient(to bottom, #0a1628 0%, transparent 100%)",
         }}
       />
 
@@ -105,7 +106,8 @@ export function PackagingSection() {
         aria-hidden="true"
         className="pointer-events-none relative z-10 -mt-32 h-32 w-full md:hidden"
         style={{
-          background: "linear-gradient(to bottom, transparent 0%, #0a1628 100%)",
+          background:
+            "linear-gradient(to bottom, transparent 0%, #0a1628 100%)",
         }}
       />
 
@@ -115,7 +117,8 @@ export function PackagingSection() {
         aria-hidden="true"
         className="pointer-events-none absolute bottom-0 left-0 z-10 hidden h-32 w-full md:block md:h-64"
         style={{
-          background: "linear-gradient(to bottom, transparent 0%, #0a1628 100%)",
+          background:
+            "linear-gradient(to bottom, transparent 0%, #0a1628 100%)",
         }}
       />
 
@@ -176,5 +179,5 @@ export function PackagingSection() {
         </div>
       </div>
     </section>
-  );
+  )
 }

@@ -1,61 +1,61 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { DarkGradientBg } from "./dark-gradient-bg";
+import Image from "next/image"
+import { useEffect, useRef } from "react"
+import gsap from "gsap"
+import { DarkGradientBg } from "./dark-gradient-bg"
 
 export function Hero() {
-  const heroRef = useRef<HTMLElement>(null);
-  const imageRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLElement>(null)
+  const imageRef = useRef<HTMLDivElement>(null)
+  const textRef = useRef<HTMLDivElement>(null)
 
   /* the parallax: the picture leans away from the cursor, the words follow
      it. quickTo keeps the movement smooth without a tween on every event. */
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
-    const hero = heroRef.current;
-    const image = imageRef.current;
-    const text = textRef.current;
-    if (!hero || !image || !text) return;
+    const hero = heroRef.current
+    const image = imageRef.current
+    const text = textRef.current
+    if (!hero || !image || !text) return
 
     const imageX = gsap.quickTo(image, "x", {
       duration: 1.2,
       ease: "power2.out",
-    });
+    })
     const imageY = gsap.quickTo(image, "y", {
       duration: 1.2,
       ease: "power2.out",
-    });
-    const textX = gsap.quickTo(text, "x", { duration: 1, ease: "power2.out" });
-    const textY = gsap.quickTo(text, "y", { duration: 1, ease: "power2.out" });
+    })
+    const textX = gsap.quickTo(text, "x", { duration: 1, ease: "power2.out" })
+    const textY = gsap.quickTo(text, "y", { duration: 1, ease: "power2.out" })
 
     const handleMouseMove = (event: MouseEvent) => {
-      const x = (event.clientX / window.innerWidth - 0.5) * 2;
-      const y = (event.clientY / window.innerHeight - 0.5) * 2;
+      const x = (event.clientX / window.innerWidth - 0.5) * 2
+      const y = (event.clientY / window.innerHeight - 0.5) * 2
 
-      imageX(x * -20);
-      imageY(y * -20);
-      textX(x * 10);
-      textY(y * 10);
-    };
+      imageX(x * -20)
+      imageY(y * -20)
+      textX(x * 10)
+      textY(y * 10)
+    }
 
     const handleMouseLeave = () => {
-      imageX(0);
-      imageY(0);
-      textX(0);
-      textY(0);
-    };
+      imageX(0)
+      imageY(0)
+      textX(0)
+      textY(0)
+    }
 
-    hero.addEventListener("mousemove", handleMouseMove);
-    hero.addEventListener("mouseleave", handleMouseLeave);
+    hero.addEventListener("mousemove", handleMouseMove)
+    hero.addEventListener("mouseleave", handleMouseLeave)
 
     return () => {
-      hero.removeEventListener("mousemove", handleMouseMove);
-      hero.removeEventListener("mouseleave", handleMouseLeave);
-    };
-  }, []);
+      hero.removeEventListener("mousemove", handleMouseMove)
+      hero.removeEventListener("mouseleave", handleMouseLeave)
+    }
+  }, [])
 
   return (
     <section
@@ -172,7 +172,8 @@ export function Hero() {
               aria-hidden="true"
               className="pointer-events-none absolute bottom-0 left-0 h-64 w-full"
               style={{
-                backgroundImage: "linear-gradient(to top, #0a1628 0%, transparent 100%)",
+                backgroundImage:
+                  "linear-gradient(to top, #0a1628 0%, transparent 100%)",
               }}
             />
           </div>
@@ -189,5 +190,5 @@ export function Hero() {
         </div>
       </DarkGradientBg>
     </section>
-  );
+  )
 }

@@ -75,9 +75,7 @@ export default async function ProductsPage({
       count > 0
         ? Math.floor((count - 1) / STORE_PAGE_SIZE) * STORE_PAGE_SIZE
         : 0
-    redirect(
-      buildHref({ offset: lastOffset > 0 ? String(lastOffset) : "" })
-    )
+    redirect(buildHref({ offset: lastOffset > 0 ? String(lastOffset) : "" }))
   }
 
   const selectedCivilization = civilizations.find(
@@ -97,9 +95,7 @@ export default async function ProductsPage({
   const rangeStart = count === 0 ? 0 : offset + 1
   const rangeEnd = Math.min(offset + products.length, count)
 
-  const hasAnyFilter = Boolean(
-    q || civilization || collection || productType
-  )
+  const hasAnyFilter = Boolean(q || civilization || collection || productType)
 
   return (
     <main className="min-h-screen bg-[#0a1628]">
@@ -192,8 +188,7 @@ export default async function ProductsPage({
                 key: item.id,
                 label: item.title ?? item.handle,
                 href: buildHref({ collection: item.handle, offset: "" }),
-                active:
-                  collection === item.handle || collection === item.id,
+                active: collection === item.handle || collection === item.id,
               }))}
             />
 

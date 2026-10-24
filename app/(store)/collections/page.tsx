@@ -87,7 +87,10 @@ export default async function CollectionsPage() {
 
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/45 to-transparent" />
 
-                    <div className="absolute inset-x-0 bottom-0 p-6 md:p-8" dir="rtl">
+                    <div
+                      className="absolute inset-x-0 bottom-0 p-6 md:p-8"
+                      dir="rtl"
+                    >
                       {collection.civilization_name && (
                         <p className="mb-2 font-secondary text-[11px] tracking-[0.22em] text-gold/70">
                           {collection.civilization_name}

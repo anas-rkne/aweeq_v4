@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react"
 
 /**
  * Scroll reveal for the sections below the fold.
@@ -16,30 +16,30 @@ export function Reveal({
   children,
   className = "",
 }: {
-  children: React.ReactNode;
-  className?: string;
+  children: React.ReactNode
+  className?: string
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const tall = el.getBoundingClientRect().height > window.innerHeight;
+    const el = ref.current
+    if (!el) return
+    const tall = el.getBoundingClientRect().height > window.innerHeight
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return;
-        el.dataset.reveal = "in";
-        observer.disconnect();
+        if (!entry.isIntersecting) return
+        el.dataset.reveal = "in"
+        observer.disconnect()
       },
-      { threshold: tall ? 0 : 0.15 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+      { threshold: tall ? 0 : 0.15 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <div ref={ref} data-reveal="out" className={className}>
       {children}
     </div>
-  );
+  )
 }

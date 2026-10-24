@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react"
 
 /**
  * The scroll cue at the foot of the hero: a chevron that lifts while it is on
@@ -16,22 +16,22 @@ export function ScrollCue({
   target = "#chapter-one",
   label = "انتقل إلى الفصل الأول",
 }: {
-  target?: string;
-  label?: string;
+  target?: string
+  label?: string
 }) {
-  const ref = useRef<HTMLAnchorElement>(null);
-  const [inView, setInView] = useState(false);
+  const ref = useRef<HTMLAnchorElement>(null)
+  const [inView, setInView] = useState(false)
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+    const el = ref.current
+    if (!el) return
     const observer = new IntersectionObserver(
       ([entry]) => setInView(entry.isIntersecting),
-      { threshold: 0.1 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+      { threshold: 0.1 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <a
@@ -53,5 +53,5 @@ export function ScrollCue({
         <path d="M20 24l8 8 8-8" />
       </svg>
     </a>
-  );
+  )
 }

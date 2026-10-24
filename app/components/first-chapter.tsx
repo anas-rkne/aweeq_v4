@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Image from "next/image"
+import { useEffect, useRef } from "react"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger)
 
 /**
  * The first chapter: Mesopotamia.
@@ -20,22 +20,22 @@ gsap.registerPlugin(ScrollTrigger);
  * from once it begins scrubbing.
  */
 export function FirstChapter() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const imageWrapRef = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const spacerRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null)
+  const imageWrapRef = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const spacerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      if (spacerRef.current) spacerRef.current.style.height = "0px";
-      return;
+      if (spacerRef.current) spacerRef.current.style.height = "0px"
+      return
     }
 
-    const section = sectionRef.current;
-    const imageWrap = imageWrapRef.current;
-    const overlay = overlayRef.current;
-    const spacer = spacerRef.current;
-    if (!section || !imageWrap || !overlay || !spacer) return;
+    const section = sectionRef.current
+    const imageWrap = imageWrapRef.current
+    const overlay = overlayRef.current
+    const spacer = spacerRef.current
+    if (!section || !imageWrap || !overlay || !spacer) return
 
     const ctx = gsap.context(() => {
       // ===== the exit: zoom into the archway, then close to black =====
@@ -63,26 +63,28 @@ export function FirstChapter() {
           { opacity: 0 },
           { opacity: 1, ease: "none", duration: 0.5 },
           0.5
-        );
+        )
 
       // ===== the reveal: the black sheet lifts off the canvas =====
       // starts exactly where the spacer ends, which is where the canvas
       // section takes the screen and begins scrubbing its frames
-      gsap.timeline({
-        scrollTrigger: {
-          trigger: spacer,
-          start: "bottom top",
-          end: "+=900",
-          scrub: 1,
-          invalidateOnRefresh: true,
-        },
-      }).to(section, { autoAlpha: 0, ease: "none" });
-    }, section);
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: spacer,
+            start: "bottom top",
+            end: "+=900",
+            scrub: 1,
+            invalidateOnRefresh: true,
+          },
+        })
+        .to(section, { autoAlpha: 0, ease: "none" })
+    }, section)
 
-    ScrollTrigger.refresh();
+    ScrollTrigger.refresh()
 
-    return () => ctx.revert();
-  }, []);
+    return () => ctx.revert()
+  }, [])
 
   return (
     <>
@@ -205,5 +207,5 @@ export function FirstChapter() {
         className="relative h-[250vh] w-full shrink-0"
       />
     </>
-  );
+  )
 }

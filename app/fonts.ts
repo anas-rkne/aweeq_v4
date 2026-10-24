@@ -12,12 +12,12 @@
  */
 
 export const fontPrimary =
-  '"Lyon Arabic Display", "Ador Hairline", "Segoe UI", Tahoma, Arial, sans-serif';
+  '"Lyon Arabic Display", "Ador Hairline", "Segoe UI", Tahoma, Arial, sans-serif'
 
 export const fontSecondary =
-  '"Ador Hairline", "Lyon Arabic Display", "Segoe UI", Tahoma, Arial, sans-serif';
+  '"Ador Hairline", "Lyon Arabic Display", "Segoe UI", Tahoma, Arial, sans-serif'
 
 export const fontPreloads = [
   "/fonts/lyon-arabic-display-regular.woff2",
   "/fonts/ador-hairline-bold.woff2",
-] as const;
+] as const

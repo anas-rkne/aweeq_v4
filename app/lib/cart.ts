@@ -47,9 +47,7 @@ function cartQuery(cartId?: string | null) {
 }
 
 export async function fetchCart(cartId?: string | null) {
-  return medusaFetch<CartResponse>(
-    `/store/threeweeq/cart?${cartQuery(cartId)}`
-  )
+  return medusaFetch<CartResponse>(`/store/threeweeq/cart?${cartQuery(cartId)}`)
 }
 
 export async function createCart(cartId?: string | null) {
@@ -102,10 +100,7 @@ export function cartErrorMessage(error: unknown) {
     return "تعذر الاتصال بالمتجر. تأكد من تشغيل الخادم ثم حاول مرة أخرى."
   }
 
-  const message = error.message.replace(
-    /^Medusa API error \(\d+\):\s*/,
-    ""
-  )
+  const message = error.message.replace(/^Medusa API error \(\d+\):\s*/, "")
 
   const limit = message.match(/purchase limit for this item is (\d+)/i)
   if (limit) {

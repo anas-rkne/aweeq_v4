@@ -1,5 +1,5 @@
-import Image from "next/image";
-import { Instagram, Youtube } from "lucide-react";
+import Image from "next/image"
+import { Instagram, Youtube } from "lucide-react"
 
 const QUICK_LINKS = [
   { label: "الرئيسية", href: "#hero" },
@@ -7,7 +7,7 @@ const QUICK_LINKS = [
   { label: "المجموعات", href: "#beyond" },
   { label: "المجلة", href: "#journal" },
   { label: "تواصل", href: "#newsletter" },
-] as const;
+] as const
 
 const HELP_LINKS = [
   { label: "الأسئلة الشائعة", href: "#footer" },
@@ -15,7 +15,7 @@ const HELP_LINKS = [
   { label: "الرجوع", href: "#footer" },
   { label: "الشروط والأحكام", href: "#footer" },
   { label: "سياسة الخصوصية", href: "#footer" },
-] as const;
+] as const
 
 export function Footer() {
   return (
@@ -23,11 +23,7 @@ export function Footer() {
       <div className="mx-auto grid w-full max-w-7xl grid-cols-2 items-center gap-8 px-6 md:flex md:flex-row md:items-center md:justify-between md:gap-12 md:px-12">
         {/* far right: the mark */}
         <div className="col-start-1 row-start-1 flex justify-start">
-          <a
-            href="#hero"
-            aria-label="3WEEQ — الرئيسية"
-            className="inline-flex"
-          >
+          <a href="#hero" aria-label="3WEEQ — الرئيسية" className="inline-flex">
             <Image
               src="/images/logo-mark.png"
               alt="3WEEQ"
@@ -128,5 +124,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  );
+  )
 }

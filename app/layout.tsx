@@ -1,23 +1,23 @@
-import type { Metadata, Viewport } from "next";
-import { fontPreloads } from "./fonts";
-import "lenis/dist/lenis.css";
-import "./globals.css";
-import { SiteHeader } from "./components/site-header";
-import { SmoothScroll } from "./components/smooth-scroll";
-import { CartProvider } from "./components/store/cart-provider";
-import { CartDrawer } from "./components/store/cart-drawer";
+import type { Metadata, Viewport } from "next"
+import { fontPreloads } from "./fonts"
+import "lenis/dist/lenis.css"
+import "./globals.css"
+import { SiteHeader } from "./components/site-header"
+import { SmoothScroll } from "./components/smooth-scroll"
+import { CartProvider } from "./components/store/cart-provider"
+import { CartDrawer } from "./components/store/cart-drawer"
 
 export const metadata: Metadata = {
   title: "3WWEQ",
   description: "3WWEQ — A world where civilizations are told in scent.",
-};
+}
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: "#0a1628",
   viewportFit: "cover",
-};
+}
 
 export default function RootLayout({
   children,
@@ -49,5 +49,5 @@ export default function RootLayout({
         </CartProvider>
       </body>
     </html>
-  );
+  )
 }

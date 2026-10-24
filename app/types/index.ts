@@ -1,7 +1,14 @@
 export interface ProductMedia {
   id: string
   product_id: string
-  role: "hero" | "gallery" | "detail" | "packaging" | "editorial" | "video" | string
+  role:
+    | "hero"
+    | "gallery"
+    | "detail"
+    | "packaging"
+    | "editorial"
+    | "video"
+    | string
   sort_order?: number
   url: string
   mime_type?: string | null

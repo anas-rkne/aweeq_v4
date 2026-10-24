@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import gsap from "gsap";
-import { useCart } from "./store/cart-provider";
+import Image from "next/image"
+import { usePathname } from "next/navigation"
+import { useEffect, useRef, useState } from "react"
+import gsap from "gsap"
+import { useCart } from "./store/cart-provider"
 
-const STORE_PREFIXES = ["/products", "/collections", "/cart", "/checkout"];
+const STORE_PREFIXES = ["/products", "/collections", "/cart", "/checkout"]
 
 const NAV_LINKS = [
   { href: "#hero", label: "الرئيسية", current: true },
@@ -14,7 +14,7 @@ const NAV_LINKS = [
   { href: "#beyond", label: "المجموعات", current: false },
   { href: "#civilizations", label: "الحضارات", current: false },
   { href: "#journal", label: "المجلة", current: false },
-] as const;
+] as const
 
 function SearchIcon() {
   return (
@@ -30,7 +30,7 @@ function SearchIcon() {
       <circle cx="10.75" cy="10.75" r="6.75" />
       <path d="M15.75 15.75 21 21" />
     </svg>
-  );
+  )
 }
 
 function CartIcon() {
@@ -47,7 +47,7 @@ function CartIcon() {
       <path d="M5 8h14l1 12.5H4L5 8Z" />
       <path d="M9 8V6.5a3 3 0 0 1 6 0V8" />
     </svg>
-  );
+  )
 }
 
 function SimpleMenuIcon() {
@@ -65,22 +65,22 @@ function SimpleMenuIcon() {
       <line x1="4" y1="12" x2="20" y2="12" />
       <line x1="4" y1="17" x2="20" y2="17" />
     </svg>
-  );
+  )
 }
 
 function MobileNav({
   isOpen,
   onClose,
 }: {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
 }) {
-  const shellRef = useRef<HTMLDivElement>(null);
-  const pictureRef = useRef<HTMLDivElement>(null);
-  const linksRef = useRef<(HTMLAnchorElement | null)[]>([]);
+  const shellRef = useRef<HTMLDivElement>(null)
+  const pictureRef = useRef<HTMLDivElement>(null)
+  const linksRef = useRef<(HTMLAnchorElement | null)[]>([])
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return
 
     const ctx = gsap.context(() => {
       gsap
@@ -89,7 +89,7 @@ function MobileNav({
           pictureRef.current,
           { opacity: 0 },
           { opacity: 1, duration: 0.5, ease: "power2.out" },
-          0,
+          0
         )
         .fromTo(
           linksRef.current,
@@ -101,25 +101,25 @@ function MobileNav({
             stagger: 0.1,
             ease: "power2.out",
           },
-          0.15,
-        );
-    }, shellRef);
+          0.15
+        )
+    }, shellRef)
 
-    return () => ctx.revert();
-  }, [isOpen]);
+    return () => ctx.revert()
+  }, [isOpen])
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return
 
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const previous = document.body.style.overflow
+    document.body.style.overflow = "hidden"
 
     return () => {
-      document.body.style.overflow = previous;
-    };
-  }, [isOpen]);
+      document.body.style.overflow = previous
+    }
+  }, [isOpen])
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <div
@@ -178,7 +178,7 @@ function MobileNav({
               <li key={link.href}>
                 <a
                   ref={(element) => {
-                    linksRef.current[index] = element;
+                    linksRef.current[index] = element
                   }}
                   href={link.href}
                   onClick={onClose}
@@ -197,37 +197,35 @@ function MobileNav({
         </nav>
       </div>
     </div>
-  );
+  )
 }
 
 export function SiteHeader() {
-  const pathname = usePathname();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const { itemCount, openCart } = useCart();
+  const pathname = usePathname()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const { itemCount, openCart } = useCart()
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   const isStoreRoute = STORE_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-  );
+  )
 
   if (isStoreRoute) {
-    return null;
+    return null
   }
 
   return (
     <>
       <header
         className={`fixed inset-x-0 top-0 z-50 px-4 pb-4 pt-5 transition-colors duration-300 sm:px-5 sm:pt-6 md:px-10 md:pb-5 md:pt-8 ${
-          scrolled
-            ? "bg-[#0a1628]/80 backdrop-blur-md"
-            : "bg-transparent"
+          scrolled ? "bg-[#0a1628]/80 backdrop-blur-md" : "bg-transparent"
         }`}
       >
         <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-4 md:gap-6">
@@ -263,9 +261,7 @@ export function SiteHeader() {
             <button
               type="button"
               onClick={openCart}
-              aria-label={
-                itemCount > 0 ? `السلة، ${itemCount} قطعة` : "السلة"
-              }
+              aria-label={itemCount > 0 ? `السلة، ${itemCount} قطعة` : "السلة"}
               className="relative shrink-0 p-1 text-sand/70 transition-colors duration-200 ease-out hover:text-gold"
             >
               <CartIcon />
@@ -288,9 +284,7 @@ export function SiteHeader() {
                 href={link.href}
                 aria-current={link.current ? "page" : undefined}
                 className={`group relative whitespace-nowrap font-primary text-[13px] transition-colors duration-300 ${
-                  link.current
-                    ? "text-gold"
-                    : "text-sand/75 hover:text-gold"
+                  link.current ? "text-gold" : "text-sand/75 hover:text-gold"
                 }`}
               >
                 {link.label}
@@ -328,10 +322,7 @@ export function SiteHeader() {
         </div>
       </header>
 
-      <MobileNav
-        isOpen={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
-      />
+      <MobileNav isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
     </>
-  );
+  )
 }

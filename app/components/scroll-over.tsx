@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useEffect, useRef } from "react"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 /**
  * The cover.
@@ -29,22 +29,22 @@ export function ScrollOver({
   hero,
   about,
 }: {
-  hero: React.ReactNode;
-  about: React.ReactNode;
+  hero: React.ReactNode
+  about: React.ReactNode
 }) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const heroRef = useRef<HTMLDivElement>(null);
-  const aboutRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const heroRef = useRef<HTMLDivElement>(null)
+  const aboutRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
-    gsap.registerPlugin(ScrollTrigger);
+    gsap.registerPlugin(ScrollTrigger)
 
-    const wrap = wrapRef.current;
-    const heroEl = heroRef.current;
-    const aboutEl = aboutRef.current;
-    if (!wrap || !heroEl || !aboutEl) return;
+    const wrap = wrapRef.current
+    const heroEl = heroRef.current
+    const aboutEl = aboutRef.current
+    if (!wrap || !heroEl || !aboutEl) return
 
     const ctx = gsap.context(() => {
       // the hero is held in place; the about, one screen below it, is
@@ -60,18 +60,18 @@ export function ScrollOver({
           anticipatePin: 1,
           invalidateOnRefresh: true,
         },
-      });
-    }, wrap);
+      })
+    }, wrap)
 
-    const refresh = () => ScrollTrigger.refresh();
-    void document.fonts?.ready.then(refresh);
-    window.addEventListener("load", refresh);
+    const refresh = () => ScrollTrigger.refresh()
+    void document.fonts?.ready.then(refresh)
+    window.addEventListener("load", refresh)
 
     return () => {
-      window.removeEventListener("load", refresh);
-      ctx.revert();
-    };
-  }, []);
+      window.removeEventListener("load", refresh)
+      ctx.revert()
+    }
+  }, [])
 
   return (
     <div ref={wrapRef} className="relative">
@@ -85,5 +85,5 @@ export function ScrollOver({
         {about}
       </div>
     </div>
-  );
+  )
 }

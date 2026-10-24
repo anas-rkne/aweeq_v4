@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+build
+medusa
+public
+.opencode
+.agents
+.taste-skill
+.impeccable
+.asset-backup
+coverage
+test-results
+playwright-report
+*.md

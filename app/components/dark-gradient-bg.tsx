@@ -1,8 +1,8 @@
-import type React from "react";
+import type React from "react"
 
 interface DarkGradientBgProps {
-  children?: React.ReactNode;
-  className?: string;
+  children?: React.ReactNode
+  className?: string
 }
 
 export function DarkGradientBg({ children, className }: DarkGradientBgProps) {
@@ -42,5 +42,5 @@ export function DarkGradientBg({ children, className }: DarkGradientBgProps) {
       {/* Content */}
       <div className="relative z-10">{children}</div>
     </div>
-  );
+  )
 }
