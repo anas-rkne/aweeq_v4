@@ -21,30 +21,50 @@ export function AboutSection() {
 
     gsap.registerPlugin(ScrollTrigger)
 
-    const totalScenes = CIVILIZATION_SCENES.length
-    const roomHeight = totalScenes * 2400 // 2400px scroll runway per scene
+    const totalFrames = CIVILIZATION_SCENES.reduce(
+      (acc, scene) => acc + scene.frameCount,
+      0
+    )
+    const totalRunway = totalFrames * 70
 
-    room.style.height = `${roomHeight}px`
+    room.style.height = `${totalRunway}px`
 
     const st = ScrollTrigger.create({
       trigger: section,
       start: "top top",
-      end: `+=${roomHeight}`,
+      end: `+=${totalRunway}`,
       pin: true,
       pinSpacing: false,
       scrub: 1,
       anticipatePin: 1,
       onUpdate: (self) => {
-        const progress = self.progress // 0 to 1 overall
-        const scaledProgress = progress * totalScenes
-        const sceneIndex = Math.min(
-          totalScenes - 1,
-          Math.floor(scaledProgress)
+        const progress = self.progress
+        const targetFrameFloat = progress * (totalFrames - 1)
+
+        let accumulatedFrames = 0
+        let sceneIndex = 0
+        let localFrameIndex = 0
+
+        for (let i = 0; i < CIVILIZATION_SCENES.length; i++) {
+          const count = CIVILIZATION_SCENES[i].frameCount
+          if (targetFrameFloat <= accumulatedFrames + count) {
+            sceneIndex = i
+            localFrameIndex = targetFrameFloat - accumulatedFrames
+            break
+          }
+          accumulatedFrames += count
+          sceneIndex = i
+          localFrameIndex = count - 1
+        }
+
+        const currentScene = CIVILIZATION_SCENES[sceneIndex]
+        const sceneProg = Math.max(
+          0,
+          Math.min(1, localFrameIndex / (currentScene.frameCount - 1))
         )
-        const localProgress = scaledProgress - sceneIndex
 
         setCurrentSceneIndex(sceneIndex)
-        setSceneProgress(localProgress)
+        setSceneProgress(sceneProg)
       },
     })
 
@@ -66,26 +86,22 @@ export function AboutSection() {
         ref={sectionRef}
         className="relative z-10 h-screen w-screen overflow-hidden bg-[#0a1628]"
       >
-        {/* Canvas Background Layer */}
         <AboutCanvas
           currentSceneIndex={currentSceneIndex}
           sceneProgress={sceneProgress}
         />
 
-        {/* Cinematic Vignette / Scrim Overlay */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/40 to-[#0a1628]/60 pointer-events-none"
+          className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/35 to-[#0a1628]/60 pointer-events-none"
         />
 
-        {/* Text & UI Overlay Layer */}
         <AboutSceneOverlay
           currentSceneIndex={currentSceneIndex}
           sceneProgress={sceneProgress}
         />
       </section>
 
-      {/* Runway room for pinning */}
       <div
         id="about-room"
         ref={roomRef}

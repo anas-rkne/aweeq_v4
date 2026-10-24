@@ -1,13 +1,12 @@
 "use client"
 
 import Image from "next/image"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import gsap from "gsap"
 import { DarkGradientBg } from "./dark-gradient-bg"
 
 const FRAME_COUNT = 16
-const FPS = 30
-const FRAME_INTERVAL = 1000 / FPS
+const FRAME_INTERVAL = 200
 
 export function Hero() {
   const heroRef = useRef<HTMLElement>(null)
@@ -17,7 +16,7 @@ export function Hero() {
   const imagesRef = useRef<HTMLImageElement[]>([])
   const rafRef = useRef<number | null>(null)
   const frameIndexRef = useRef(0)
-  const lastTimeRef = useRef(0)
+  const [framesReady, setFramesReady] = useState(false)
 
   /* the parallax: the picture leans away from the cursor, the words follow
      it. quickTo keeps the movement smooth without a tween on every event. */
@@ -87,6 +86,7 @@ export function Hero() {
     if (!canvas) return
     canvas.width = canvas.offsetWidth || window.innerWidth
     canvas.height = canvas.offsetHeight || window.innerHeight
+    drawFrame(frameIndexRef.current)
   }
 
   const drawFrame = (index: number) => {
@@ -138,12 +138,12 @@ export function Hero() {
       const img = new (globalThis as unknown as { Image: new () => HTMLImageElement }).Image()
       img.src = `/hero_frames/frame-0016-3.00s.webp`
       img.onload = () => {
+        const frames: HTMLImageElement[] = []
+        frames[FRAME_COUNT - 1] = img
+        imagesRef.current = frames
+        frameIndexRef.current = FRAME_COUNT - 1
         resizeCanvas()
-        const canvas = canvasRef.current
-        if (!canvas) return
-        const ctx = canvas.getContext("2d")
-        if (!ctx) return
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        setFramesReady(true)
       }
       return
     }
@@ -152,6 +152,7 @@ export function Hero() {
       try {
         imagesRef.current = await preloadFrames()
         drawFrame(0)
+        setFramesReady(true)
         startAnimation()
       } catch (err) {
         console.error("Failed to preload hero frames", err)
@@ -178,13 +179,6 @@ export function Hero() {
     >
       <DarkGradientBg className="min-h-svh">
         <div className="relative min-h-svh">
-          {/* Canvas background: plays once on load, freezes on last frame */}
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 w-full h-full z-0 object-cover"
-            aria-hidden="true"
-          />
-
           {/* ===== كتلة النص: تتمركز عمودياً فوق منطقة السماء، وتنتهي قبل خط الآثار ===== */}
           <div
             ref={textRef}
@@ -259,8 +253,15 @@ export function Hero() {
             data-parallax-image
             className="absolute inset-0 z-0 scale-[1.08] will-change-transform"
           >
+            {/* Canvas background: plays once on load, freezes on last frame */}
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 h-full w-full object-cover"
+              aria-hidden="true"
+            />
+
             {/* Static images hidden once canvas frames are loaded */}
-            {imagesRef.current.length === 0 && (
+            {!framesReady && (
               <>
                 <Image
                   src="/images/hero/hero_img.webp"
@@ -285,7 +286,7 @@ export function Hero() {
             {/* the night keeps the words readable */}
             <div
               aria-hidden="true"
-              className="absolute inset-0"
+              className="absolute inset-0 z-10"
               style={{
                 background:
                   "linear-gradient(to bottom, rgba(10,22,40,0.72) 0%, rgba(10,22,40,0.18) 45%, rgba(10,22,40,0.55) 100%)",
@@ -295,7 +296,7 @@ export function Hero() {
             {/* Cinematic Gradient Fade */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute bottom-0 left-0 h-64 w-full"
+              className="pointer-events-none absolute bottom-0 left-0 z-20 h-64 w-full"
               style={{
                 backgroundImage:
                   "linear-gradient(to top, #0a1628 0%, transparent 100%)",

@@ -12,7 +12,7 @@ export const CIVILIZATION_SCENES: CivilizationScene[] = [
   {
     id: "gulf",
     folder: "0_frame",
-    frameCount: 21,
+    frameCount: 33,
     label: "THE GULF · الخليج",
     title: "The Golden Coast",
     body: "من شواطئ الخليج العربي، حيث يلتقي عبق اللبان والبخور بسحر اللآلئ، تبدأ حكاية 3WEEQ في استنطاق أصالة التراث بروح عصرية فاخرة.",
@@ -22,7 +22,7 @@ export const CIVILIZATION_SCENES: CivilizationScene[] = [
   {
     id: "babylon",
     folder: "babel_frames",
-    frameCount: 21,
+    frameCount: 41,
     label: "BABYLON · بابل",
     title: "The Lamassu",
     body: "من بوابة عشتار، حيث تُروى الحكايات بالنقوش المسمارية. من بابل، مهد الحضارات، نستلهم عطوراً تحمل عبق التاريخ وتُخلّد أسراراً منذ آلاف السنين.",
@@ -32,7 +32,7 @@ export const CIVILIZATION_SCENES: CivilizationScene[] = [
   {
     id: "egypt",
     folder: "egypt_frames",
-    frameCount: 21,
+    frameCount: 41,
     label: "EGYPT · مصر",
     title: "The Sphinx",
     body: "أبو الهول، الحارس الصامت لوادي الملوك. من مصر، حيث يلتقي الذهب بالأسرار الخالدة، نصنع عطوراً ملكية تُجسد فخامة الفراعنة وخلود النيل.",
@@ -42,7 +42,7 @@ export const CIVILIZATION_SCENES: CivilizationScene[] = [
   {
     id: "greece",
     folder: "greese_frames",
-    frameCount: 21,
+    frameCount: 41,
     label: "GREECE · اليونان",
     title: "Marble Memory",
     body: "من رخام أثينا وأساطير الأولمب، حيث تُنسج الحكايات عن الآلهة والأبطال. نقدم لكم عطوراً كلاسيكية تجمع بين الأناقة الإغريقية والحداثة الخالدة.",
@@ -52,7 +52,7 @@ export const CIVILIZATION_SCENES: CivilizationScene[] = [
   {
     id: "china",
     folder: "china_frames",
-    frameCount: 21,
+    frameCount: 41,
     label: "CHINA · الصين",
     title: "Silk & Stone",
     body: "من سور الصين العظيم، وحرير الإمبراطوريات، حيث تلتقي القوة بالرقي. نقدم عطوراً آسرة تجسد حكمة الشرق وتفاصيل الحضارة الصينية العريقة.",
