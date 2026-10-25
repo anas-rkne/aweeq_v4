@@ -12,8 +12,8 @@ const STORE_PREFIXES = ["/products", "/collections", "/cart", "/checkout"]
 
 const NAV_LINKS = [
   { href: "#hero", label: "الرئيسية", current: true },
+  { href: "/products", label: "المتجر", current: false },
   { href: "/story", label: "قصتنا", current: false },
-  { href: "#beyond", label: "ما بعد", current: false },
   { href: "#civilizations", label: "الحضارات", current: false },
   { href: "#journal", label: "المجلة", current: false },
 ] as const
@@ -220,7 +220,7 @@ export function SiteHeader() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const { itemCount } = useCart()
+  const { itemCount, openCart } = useCart()
 
   const isStoreRoute = STORE_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
@@ -269,9 +269,11 @@ export function SiteHeader() {
               <SearchIcon />
             </button>
 
-            <Link
-              href="/cart"
+            <button
+              type="button"
+              onClick={openCart}
               aria-label={itemCount > 0 ? `السلة، ${itemCount} قطعة` : "السلة"}
+              aria-haspopup="dialog"
               className="relative shrink-0 p-1 text-sand/70 transition-colors duration-200 ease-out hover:text-gold"
             >
               <CartIcon />
@@ -280,7 +282,7 @@ export function SiteHeader() {
                   {itemCount > 99 ? "99+" : itemCount}
                 </span>
               )}
-            </Link>
+            </button>
           </div>
 
           {/* the five rooms, in the middle of the bar */}

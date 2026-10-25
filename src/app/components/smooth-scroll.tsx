@@ -14,6 +14,12 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
  * and hands every frame to ScrollTrigger — so a trigger and the scroll it
  * follows can never disagree about where the page is.
  *
+ * Lenis measures the document height once and caches the maximum scroll
+ * position. Pinned sections are created (and refresh) *after* the first paint,
+ * which grows the document. Without a forced re-measure, Lenis keeps the old
+ * limit and the wheel stops dead at the height the page had on load. Every
+ * ScrollTrigger refresh therefore re-measures Lenis as well.
+ *
  * Lenis writes the *real* scroll position of the document, so the browser's
  * own scroll timelines (`animation-timeline: scroll()`) stay true to what is
  * on screen.
@@ -41,11 +47,16 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     gsap.ticker.add(raf)
     gsap.ticker.lagSmoothing(0)
 
-    // the page is measured before the fonts and the pictures are in place,
-    // so the triggers are asked to measure themselves again once they are
-    const refresh = () => ScrollTrigger.refresh()
+    // pinned sections change the document height long after Lenis measured it
+    const syncLimit = () => lenis.resize()
+    ScrollTrigger.addEventListener("refresh", syncLimit)
+
+    const refresh = () => {
+      ScrollTrigger.refresh()
+    }
     void document.fonts?.ready.then(refresh)
     window.addEventListener("load", refresh)
+    lenis.resize()
 
     // anchors travel on the same curve as the wheel
     const onClick = (event: MouseEvent) => {
@@ -79,6 +90,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
 
     return () => {
       document.removeEventListener("click", onClick)
+      ScrollTrigger.removeEventListener("refresh", syncLimit)
       window.removeEventListener("load", refresh)
       gsap.ticker.remove(raf)
       lenis.destroy()

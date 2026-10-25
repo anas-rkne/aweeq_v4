@@ -271,7 +271,7 @@ export function Hero() {
               <div className="mt-6 flex flex-wrap items-center justify-start gap-4 md:gap-6">
                 <span className="hero-part-4 inline-flex">
                   <Link
-                    href="/products"
+                    href="/products/rafid"
                     className="group relative inline-flex h-9 items-center overflow-hidden whitespace-nowrap bg-gold px-4 font-primary text-[13px] text-royal-navy transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] md:h-[40px] md:px-5 md:text-[14px]"
                   >
                     <span aria-hidden="true" className="cta-sheen" />
