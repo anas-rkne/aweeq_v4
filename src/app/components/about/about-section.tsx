@@ -121,17 +121,6 @@ export function AboutSection() {
       >
         <AboutCanvas ref={canvasRef} />
 
-        {/* a light scrim on the text side only — the scene stays clear, the
-            words on the right keep their contrast */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-10"
-          style={{
-            backgroundImage:
-              "linear-gradient(to left, rgba(10, 22, 40, 0.7) 0%, rgba(10, 22, 40, 0.35) 34%, rgba(10, 22, 40, 0) 70%)",
-          }}
-        />
-
         {/* the divider shared by the rest of the page: the top of the section
             melts into the midnight of the hero above */}
         <div

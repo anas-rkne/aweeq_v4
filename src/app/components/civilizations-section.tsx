@@ -389,7 +389,7 @@ export function CivilizationsSection() {
         className="pointer-events-none absolute inset-0 z-[5] motion-reduce:hidden"
         style={{
           backgroundImage:
-            "radial-gradient(ellipse 88% 78% at 50% 50%, rgba(10, 22, 40, 0.8) 0%, rgba(10, 22, 40, 0.52) 46%, rgba(10, 22, 40, 0.92) 100%)",
+            "radial-gradient(ellipse 88% 78% at 50% 50%, rgba(10, 22, 40, 0.22) 0%, rgba(10, 22, 40, 0.05) 46%, rgba(10, 22, 40, 0.38) 100%)",
         }}
       />
 
