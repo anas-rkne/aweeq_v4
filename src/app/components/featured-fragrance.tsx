@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { useTranslations } from "next-intl"
+import { Link } from "@/i18n/navigation"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { BRAND_COLORS } from "@/shared/config/brand"
@@ -14,6 +16,7 @@ interface FeaturedFragranceProps {
 export function FeaturedFragrance({
   frameCount = 101,
 }: FeaturedFragranceProps) {
+  const t = useTranslations("Featured")
   const sectionRef = useRef<HTMLElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
@@ -260,15 +263,55 @@ export function FeaturedFragrance({
           the page on a wide screen ===== */}
       <div
         ref={textRef}
-        className="pointer-events-none absolute inset-y-0 right-0 z-[20] flex w-full flex-col justify-end px-8 pb-20 text-right md:w-1/2 md:justify-center md:px-24 md:pb-0"
+        className="pointer-events-none absolute inset-y-0 right-0 z-[20] flex w-full flex-col justify-end px-8 pb-20 text-start md:w-1/2 md:justify-center md:px-24 md:pb-0"
       >
         <h2 className="font-secondary text-[clamp(2.25rem,4.6vw,4.25rem)] leading-[1.04] tracking-[-0.02em] text-gold">
-          عطر رافد - RAFID
+          {t("title")}
         </h2>
         <p className="mt-6 max-w-[30rem] font-primary text-[clamp(1.05rem,1.5vw,1.35rem)] leading-[1.8] text-sand/90">
-          عطر يحمل روح بلاد الرافدين. مستوحى من عمق التاريخ وقوة المكان، ليروي
-          حكايات بابل في كل رشة.
+          {t("body")}
         </p>
+
+        <div className="pointer-events-auto mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+          <Link
+            href="/products/rafid"
+            className="group relative inline-flex h-10 items-center overflow-hidden whitespace-nowrap bg-gold px-5 font-primary text-[13px] text-royal-navy transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] md:h-[44px] md:px-6 md:text-[14px]"
+          >
+            <span aria-hidden="true" className="cta-sheen" />
+            <span className="relative">{t("discover")}</span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.2}
+              strokeLinecap="square"
+              aria-hidden="true"
+              className="relative ms-2 h-3.5 w-3.5 -translate-x-1 opacity-0 transition-[transform,opacity] duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 md:h-4 md:w-4"
+            >
+              <path d="M19 12H5" />
+              <path d="M11 6l-6 6 6 6" />
+            </svg>
+          </Link>
+
+          <Link
+            href="/products?collection=rafid"
+            className="group inline-flex items-center gap-2 font-primary text-[13px] text-sand/80 transition-colors duration-200 ease-out hover:text-gold md:text-[14px]"
+          >
+            {t("collection")}
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              strokeLinecap="square"
+              aria-hidden="true"
+              className="h-4 w-4 transition-transform duration-300 ease-out group-hover:-translate-x-1"
+            >
+              <path d="M19 12H5" />
+              <path d="M11 6l-6 6 6 6" />
+            </svg>
+          </Link>
+        </div>
       </div>
     </section>
   )

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { useReducedMotion } from "@/shared/motion/use-reduced-motion"
 
 /**
  * Scroll reveal for the sections below the fold.
@@ -20,8 +21,10 @@ export function Reveal({
   className?: string
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  const reducedMotion = useReducedMotion()
 
   useEffect(() => {
+    if (reducedMotion) return
     const el = ref.current
     if (!el) return
     const tall = el.getBoundingClientRect().height > window.innerHeight
@@ -35,7 +38,7 @@ export function Reveal({
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [reducedMotion])
 
   return (
     <div ref={ref} data-reveal="out" className={className}>

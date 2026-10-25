@@ -1,15 +1,19 @@
 "use client"
 
 import Image from "next/image"
-import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 import gsap from "gsap"
+import { Link } from "@/i18n/navigation"
+import { RollingText } from "@/shared/ui/rolling-text"
+import { TextReveal } from "@/shared/ui/text-reveal"
 import { DarkGradientBg } from "./dark-gradient-bg"
 
 const FRAME_COUNT = 30
 const FRAME_INTERVAL = 100
 
 export function Hero() {
+  const t = useTranslations("Hero")
   const heroRef = useRef<HTMLElement>(null)
   const imageRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
@@ -247,7 +251,7 @@ export function Hero() {
             data-parallax-text
             className="relative z-30 flex min-h-svh items-center px-5 pb-16 pt-28 will-change-transform sm:px-8 sm:pt-32 md:px-16 md:pt-36"
           >
-            <div className="relative flex w-full flex-col justify-center text-right md:ml-auto md:w-1/2 md:max-w-[38rem]">
+            <div className="relative flex w-full flex-col justify-center text-start md:ml-auto md:w-1/2 md:max-w-[38rem]">
               {/* a very light pool behind the words — just enough to read */}
               <div
                 aria-hidden="true"
@@ -257,25 +261,24 @@ export function Hero() {
                     "radial-gradient(ellipse at center, rgba(10,22,40,0.5) 0%, rgba(10,22,40,0.22) 45%, rgba(10,22,40,0) 78%)",
                 }}
               />
-              <h1 className="hero-part-2 font-primary text-[clamp(2.5rem,4.8vw,4.25rem)] leading-[1.1] text-sand">
-                حضارات
-                <br />
-                تروى بالعطر
+              <h1 className="font-primary text-[clamp(2.5rem,4.8vw,4.25rem)] leading-[1.1] text-sand">
+                <TextReveal preset="words" blur stagger={0.08}>
+                  {`${t("titleLine1")}\n${t("titleLine2")}`}
+                </TextReveal>
               </h1>
 
               <p className="hero-part-3 mt-5 max-w-[31rem] text-body text-sand/80">
-                بوابتك إلى كنوز الحضارات: من بابل إلى مصر، الصين، اليونان،
-                والخليج
+                {t("description")}
               </p>
 
               <div className="mt-6 flex flex-wrap items-center justify-start gap-4 md:gap-6">
                 <span className="hero-part-4 inline-flex">
                   <Link
                     href="/products/rafid"
-                    className="group relative inline-flex h-9 items-center overflow-hidden whitespace-nowrap bg-gold px-4 font-primary text-[13px] text-royal-navy transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] md:h-[40px] md:px-5 md:text-[14px]"
+                    className="group relative inline-flex h-9 items-center overflow-hidden whitespace-nowrap bg-gold px-4 font-primary text-[13px] text-royal-navy transition-transform duration-150 ease-out active:scale-[0.98] md:h-[40px] md:px-5 md:text-[14px]"
                   >
                     <span aria-hidden="true" className="cta-sheen" />
-                    <span className="relative">اكتشف عطر رافد</span>
+                    <RollingText>{t("discoverRafid")}</RollingText>
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -296,7 +299,7 @@ export function Hero() {
                     href="#civilizations"
                     className="group inline-flex items-center gap-1.5 whitespace-nowrap font-primary text-[13px] text-sand/80 transition-colors duration-200 ease-out hover:text-gold md:gap-2 md:text-[14px]"
                   >
-                    استكشف الحضارات القادمة
+                    <RollingText>{t("exploreCivilizations")}</RollingText>
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -336,7 +339,7 @@ export function Hero() {
               <>
                 <Image
                   src="/images/hero/hero_img.webp"
-                  alt="الأهرامات وبابل واليونان والصين في مدينة واحدة"
+                  alt={t("imageAlt")}
                   fill
                   priority
                   quality={90}
@@ -346,7 +349,7 @@ export function Hero() {
 
                 <img
                   src="/images/hero/hero_img_mobile.webp"
-                  alt="الأهرامات وبابل واليونان والصين في مدينة واحدة"
+                  alt={t("imageAlt")}
                   className="block h-full w-full object-cover md:hidden"
                   loading="eager"
                   fetchPriority="high"

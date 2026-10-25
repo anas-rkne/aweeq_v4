@@ -1,7 +1,8 @@
 "use client"
 
 import Image from "next/image"
-import Link from "next/link"
+import { useLocale, useTranslations } from "next-intl"
+import { Link } from "@/i18n/navigation"
 import { useEffect, useRef } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
@@ -21,6 +22,9 @@ gsap.registerPlugin(ScrollTrigger)
  * from once it begins scrubbing.
  */
 export function FirstChapter() {
+  const t = useTranslations("FirstChapter")
+  const locale = useLocale()
+  const isArabic = locale === "ar"
   const sectionRef = useRef<HTMLElement>(null)
   const imageWrapRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -107,7 +111,7 @@ export function FirstChapter() {
           >
             <Image
               src="/images/first_chapter/main_first_chapter.webp"
-              alt="بوابة عشتار — بوابة بابل"
+              alt={t("imageAlt")}
               fill
               priority
               quality={90}
@@ -117,7 +121,7 @@ export function FirstChapter() {
 
             <img
               src="/images/first_chapter/main_first_chapter_mobile.webp"
-              alt="بوابة عشتار — بوابة بابل"
+              alt={t("imageAlt")}
               className="block h-full w-full object-cover md:hidden"
               loading="eager"
               fetchPriority="high"
@@ -150,32 +154,35 @@ export function FirstChapter() {
           />
 
           {/* ===== the words, on the right of the page ===== */}
-          <div className="relative z-20 mx-auto flex h-full w-full max-w-[84rem] flex-col items-start justify-center px-5 pb-16 pr-12 pt-32 sm:px-8 sm:pr-16 md:px-16 md:pb-0 md:pr-24 md:pt-0 lg:pr-32">
-            <div className="w-full max-w-xl text-right">
+          <div
+            className={`relative z-20 mx-auto flex h-full w-full max-w-[84rem] flex-col justify-center px-5 pb-16 pr-12 pt-32 sm:px-8 sm:pr-16 md:px-16 md:pb-0 md:pr-24 md:pt-0 lg:pr-32 ${
+              isArabic ? "items-start" : "items-end"
+            }`}
+          >
+            <div className="w-full max-w-xl text-start">
               <p className="font-secondary text-[12px] tracking-[0.34em] text-gold">
-                THE FIRST CHAPTER
+                {t("eyebrow")}
               </p>
 
               <h2 className="mt-5 font-secondary text-[clamp(2rem,4vw,4rem)] leading-[1.06] tracking-[-0.015em] text-sand">
-                MESOPOTAMIA
+                {t("title")}
               </h2>
 
               <p className="mt-6 font-primary text-[clamp(1.25rem,2.1vw,1.7rem)] leading-[1.5] text-gold">
-                بابل — مهد الحضارات
+                {t("subtitle")}
               </p>
 
               <p className="mt-6 max-w-[30rem] text-body text-sand/85">
-                من ضفاف دجلة والفرات، وُلدت حكايات تُظل خالدة... عطر يحسد روح
-                بابل، يجيب بنقشي التاريخ بالفخامة.
+                {t("body")}
               </p>
 
               {/* the way in — the same gold door as the hero */}
               <Link
-                href="/products"
+                href="/products?collection=rafid"
                 className="group relative mt-12 inline-flex h-9 items-center overflow-hidden whitespace-nowrap bg-gold px-4 font-primary text-[13px] text-royal-navy transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] md:h-[40px] md:px-5 md:text-[14px]"
               >
                 <span aria-hidden="true" className="cta-sheen" />
-                <span className="relative">استكشف مجموعة بابل</span>
+                <span className="relative">{t("cta")}</span>
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"

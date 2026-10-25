@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { formatPrice, normalizeImageUrl } from "@/lib/format"
 import { cartItemLimit } from "@/lib/cart"
 import type { CartItem } from "@/types"
@@ -43,6 +44,7 @@ function BagIcon() {
 }
 
 export function CartPageClient() {
+  const t = useTranslations("Cart")
   const {
     cart,
     status,
@@ -75,34 +77,31 @@ export function CartPageClient() {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-5 pb-24 pt-8 md:px-10 md:pt-12">
-      <nav
-        aria-label="مسار التنقل"
-        className="font-primary text-xs text-sand/40"
-      >
+      <nav aria-label={t("title")} className="font-primary text-xs text-sand/40">
         <Link href="/" className="transition-colors hover:text-gold">
-          الرئيسية
+          {t("continueShopping")}
         </Link>
         <span className="mx-2 text-sand/20">/</span>
-        <span className="text-sand/65">سلة التسوق</span>
+        <span className="text-sand/65">{t("title")}</span>
       </nav>
 
       <div className="mt-8 flex flex-wrap items-end justify-between gap-4 border-b border-sand/10 pb-6">
         <div>
           <h1 className="font-primary text-3xl text-sand md:text-4xl">
-            سلة التسوق
+            {t("title")}
           </h1>
           <p
             className="mt-2 font-secondary text-[11px] tracking-[0.16em] text-sand/40"
             aria-live="polite"
           >
-            {itemCount > 0 ? `${itemCount} قطعة` : "لا توجد قطع في السلة"}
+            {itemCount > 0 ? t("items", { count: itemCount }) : t("noItems")}
           </p>
         </div>
         <Link
           href="/products"
           className="font-primary text-sm text-sand/55 underline-offset-4 transition-colors hover:text-gold hover:underline"
         >
-          متابعة التسوق
+          {t("continueShopping")}
         </Link>
       </div>
 
@@ -115,7 +114,7 @@ export function CartPageClient() {
           <button
             type="button"
             onClick={clearActionError}
-            aria-label="إخفاء التنبيه"
+            aria-label={t("dismiss")}
             className="shrink-0 text-red-200/60 transition-colors hover:text-red-100"
           >
             <CloseIcon />
@@ -154,7 +153,7 @@ export function CartPageClient() {
             onClick={() => void refreshCart()}
             className="mt-6 border border-gold/40 px-6 py-3 font-primary text-sm text-gold transition-colors hover:bg-gold hover:text-royal-navy"
           >
-            إعادة المحاولة
+            {t("retry")}
           </button>
         </div>
       )}
@@ -164,15 +163,17 @@ export function CartPageClient() {
           <span className="text-gold/40">
             <BagIcon />
           </span>
-          <h2 className="mt-6 font-primary text-2xl text-sand">سلتك فارغة</h2>
+          <h2 className="mt-6 font-primary text-2xl text-sand">
+            {t("emptyTitle")}
+          </h2>
           <p className="mt-3 max-w-sm font-primary text-sm leading-7 text-sand/45">
-            لم تضف أي قطعة بعد. تصفح إصداراتنا المحدودة واختر ما يناسبك.
+            {t("emptyPage")}
           </p>
           <Link
             href="/products"
             className="mt-8 border border-gold bg-gold px-8 py-3.5 font-primary text-sm font-bold text-royal-navy transition-colors duration-300 hover:bg-gold/85"
           >
-            تصفح المتجر
+            {t("browseStore")}
           </Link>
         </div>
       )}
@@ -233,7 +234,8 @@ export function CartPageClient() {
                         )}
                         {item.unit_price != null && (
                           <p className="mt-1 font-secondary text-xs text-sand/35">
-                            {formatPrice(item.unit_price, currencyCode)} للقطعة
+                            {formatPrice(item.unit_price, currencyCode)}{" "}
+                            {t("perItem")}
                           </p>
                         )}
                       </div>
@@ -254,7 +256,7 @@ export function CartPageClient() {
                             void changeQuantity(item, item.quantity - 1)
                           }
                           disabled={pending || item.quantity <= 1}
-                          aria-label="تقليل الكمية"
+                          aria-label={t("decrease")}
                           className="grid h-9 w-9 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
                         >
                           −
@@ -268,7 +270,7 @@ export function CartPageClient() {
                             void changeQuantity(item, item.quantity + 1)
                           }
                           disabled={pending || item.quantity >= limit}
-                          aria-label="زيادة الكمية"
+                          aria-label={t("increase")}
                           className="grid h-9 w-9 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
                         >
                           +
@@ -281,7 +283,7 @@ export function CartPageClient() {
                         disabled={pending}
                         className="font-primary text-xs text-sand/35 underline-offset-4 transition-colors hover:text-red-300 hover:underline disabled:opacity-40"
                       >
-                        إزالة
+                        {t("remove")}
                       </button>
                     </div>
                   </div>
@@ -291,27 +293,31 @@ export function CartPageClient() {
           </ul>
 
           <aside className="border border-sand/10 bg-sand/[0.02] p-6 lg:sticky lg:top-32">
-            <h2 className="font-primary text-xl text-sand">ملخص الطلب</h2>
+            <h2 className="font-primary text-xl text-sand">
+              {t("orderSummary")}
+            </h2>
 
             <dl className="mt-6 space-y-4 border-b border-sand/10 pb-5 font-primary text-sm">
               <div className="flex items-center justify-between gap-4">
-                <dt className="text-sand/50">المجموع الفرعي</dt>
+                <dt className="text-sand/50">{t("subtotal")}</dt>
                 <dd className="text-sand/85">
                   {formatPrice(subtotal, currencyCode)}
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-4">
-                <dt className="text-sand/50">الشحن</dt>
-                <dd className="text-sand/45">يُحسب عند الدفع</dd>
+                <dt className="text-sand/50">{t("shipping")}</dt>
+                <dd className="text-sand/45">{t("calculatedAtCheckout")}</dd>
               </div>
               <div className="flex items-center justify-between gap-4">
-                <dt className="text-sand/50">الضرائب</dt>
-                <dd className="text-sand/45">تُحسب عند الدفع</dd>
+                <dt className="text-sand/50">{t("taxes")}</dt>
+                <dd className="text-sand/45">{t("calculatedAtCheckout")}</dd>
               </div>
             </dl>
 
             <div className="mt-5 flex items-baseline justify-between gap-4">
-              <span className="font-primary text-base text-sand">الإجمالي</span>
+              <span className="font-primary text-base text-sand">
+                {t("total")}
+              </span>
               <span className="font-secondary text-xl text-gold">
                 {formatPrice(total, currencyCode)}
               </span>
@@ -322,17 +328,17 @@ export function CartPageClient() {
               disabled
               className="mt-6 w-full cursor-not-allowed border border-sand/10 px-6 py-4 font-primary text-sm text-sand/35"
             >
-              إتمام الشراء — قريباً
+              {t("checkoutSoon")}
             </button>
             <p className="mt-3 text-center font-primary text-[11px] leading-5 text-sand/35">
-              سيتم تفعيل الدفع الإلكتروني قريباً. يمكنك مراجعة سلتك الآن.
+              {t("checkoutNote")}
             </p>
 
             <Link
               href="/products"
               className="mt-5 block text-center font-primary text-xs text-sand/45 underline-offset-4 transition-colors hover:text-gold hover:underline"
             >
-              متابعة التسوق
+              {t("continueShopping")}
             </Link>
           </aside>
         </div>

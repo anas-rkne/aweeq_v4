@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect, useRef, useState, type FormEvent } from "react"
-import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { useRouter } from "@/i18n/navigation"
 
 const SUGGESTIONS = [
-  { label: "عطور", href: "/products?product_type=fragrance" },
-  { label: "بخور", href: "/products?product_type=incense" },
-  { label: "إصدار محدود", href: "/products" },
-  { label: "المجموعات", href: "/collections" },
+  { key: "fragrances", href: "/products?product_type=fragrance" },
+  { key: "incense", href: "/products?product_type=incense" },
+  { key: "all", href: "/products" },
+  { key: "collections", href: "/collections" },
 ] as const
 
 export function SearchModal({
@@ -17,6 +18,7 @@ export function SearchModal({
   isOpen: boolean
   onClose: () => void
 }) {
+  const t = useTranslations("Search")
   const router = useRouter()
   const [term, setTerm] = useState("")
   const panelRef = useRef<HTMLDivElement>(null)
@@ -91,10 +93,10 @@ export function SearchModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[120]" dir="rtl">
+    <div className="fixed inset-0 z-[120]">
       <button
         type="button"
-        aria-label="إغلاق البحث"
+        aria-label={t("close")}
         onClick={onClose}
         className="absolute inset-0 bg-royal-navy/80 backdrop-blur-sm"
       />
@@ -111,12 +113,12 @@ export function SearchModal({
             id="search-modal-title"
             className="font-primary text-lg text-sand"
           >
-            ابحث في المتجر
+            {t("title")}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="إغلاق البحث"
+            aria-label={t("close")}
             className="p-1 text-sand/55 transition-colors hover:text-gold"
           >
             <svg
@@ -139,7 +141,7 @@ export function SearchModal({
           className="mt-5 flex items-stretch border border-sand/20 bg-navy-900"
         >
           <label htmlFor="search-modal-input" className="sr-only">
-            كلمة البحث
+            {t("label")}
           </label>
           <input
             ref={inputRef}
@@ -148,25 +150,25 @@ export function SearchModal({
             type="search"
             value={term}
             onChange={(event) => setTerm(event.target.value)}
-            placeholder="ابحث عن عطر أو قطعة..."
+            placeholder={t("placeholder")}
             className="min-w-0 flex-1 bg-transparent px-4 py-3 font-primary text-sm text-sand placeholder:text-sand/35 focus:outline-none"
           />
           <button
             type="submit"
             className="shrink-0 bg-gold px-5 font-primary text-sm font-bold text-royal-navy transition-colors hover:bg-sand"
           >
-            بحث
+            {t("submit")}
           </button>
         </form>
 
         <div className="mt-5">
           <p className="font-secondary text-[11px] tracking-[0.2em] text-sand/40">
-            SUGGESTED
+            {t("suggested")}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {SUGGESTIONS.map((item) => (
               <button
-                key={item.label}
+                key={item.key}
                 type="button"
                 onClick={() => {
                   setTerm("")
@@ -175,7 +177,7 @@ export function SearchModal({
                 }}
                 className="border border-sand/15 px-3 py-1.5 font-primary text-xs text-sand/70 transition-colors hover:border-gold/50 hover:text-gold"
               >
-                {item.label}
+                {t(`suggestions.${item.key}`)}
               </button>
             ))}
           </div>

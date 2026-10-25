@@ -1,11 +1,14 @@
 "use client"
 
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 import { useState, type FormEvent } from "react"
+import { TextReveal } from "@/shared/ui/text-reveal"
 
 type FormStatus = "idle" | "submitting" | "success" | "error"
 
 export function NewsletterSection() {
+  const t = useTranslations("Newsletter")
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<FormStatus>("idle")
   const [message, setMessage] = useState("")
@@ -18,7 +21,7 @@ export function NewsletterSection() {
 
     if (!valid) {
       setStatus("error")
-      setMessage("يرجى إدخال بريد إلكتروني صحيح.")
+      setMessage(t("invalidEmail"))
       return
     }
 
@@ -40,18 +43,18 @@ export function NewsletterSection() {
         setStatus("error")
         setMessage(
           data?.error === "invalid_email"
-            ? "يرجى إدخال بريد إلكتروني صحيح."
-            : "تعذر إتمام الاشتراك. حاول مرة أخرى."
+            ? t("invalidEmail")
+            : t("error")
         )
         return
       }
 
       setStatus("success")
-      setMessage("شكراً لك، أصبحت جزءاً من الرحلة.")
+      setMessage(t("success"))
       setEmail("")
     } catch {
       setStatus("error")
-      setMessage("تعذر الاتصال بالخادم. تحقق من الشبكة وحاول مرة أخرى.")
+      setMessage(t("network"))
     }
   }
 
@@ -88,11 +91,13 @@ export function NewsletterSection() {
 
       <div className="relative z-10 flex min-h-[60vh] flex-col items-center justify-center px-6 py-24 text-center md:py-32">
         <h2 className="font-secondary text-4xl leading-tight tracking-[-0.01em] text-gold md:text-5xl">
-          Be Part of the Journey
+          <TextReveal preset="words" blur>
+            {t("title")}
+          </TextReveal>
         </h2>
 
         <p className="mt-4 max-w-xl font-primary text-lg leading-[1.8] text-sand">
-          كن جزءاً من رحلتنا. وكن أول من يعرف عن الإصدارات القادمة
+          <TextReveal preset="block">{t("subtitle")}</TextReveal>
         </p>
 
         <form
@@ -101,29 +106,32 @@ export function NewsletterSection() {
           className="mt-10 flex w-full max-w-lg flex-row"
         >
           <label htmlFor="newsletter-email" className="sr-only">
-            بريدك الإلكتروني
+            {t("emailLabel")}
           </label>
 
-          <input
-            id="newsletter-email"
-            name="email"
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            placeholder="بريدك الإلكتروني"
-            value={email}
-            onChange={(event) => {
-              setEmail(event.target.value)
-              if (status !== "idle") {
-                setStatus("idle")
-                setMessage("")
-              }
-            }}
-            disabled={isSubmitting}
-            aria-invalid={status === "error"}
-            aria-describedby="newsletter-message"
-            className="min-w-0 flex-1 border border-sand/30 border-e-0 bg-royal-navy/60 px-6 py-4 font-primary text-sand placeholder:text-sand/40 backdrop-blur-sm transition-colors focus:border-gold focus:bg-royal-navy/75 focus:text-sand focus:outline-none focus:ring-0 focus-visible:outline-none! focus-visible:ring-0! disabled:opacity-60"
-          />
+          <div className="focus-beam-wrap relative min-w-0 flex-1">
+            <input
+              id="newsletter-email"
+              name="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder={t("placeholder")}
+              value={email}
+              onChange={(event) => {
+                setEmail(event.target.value)
+                if (status !== "idle") {
+                  setStatus("idle")
+                  setMessage("")
+                }
+              }}
+              disabled={isSubmitting}
+              aria-invalid={status === "error"}
+              aria-describedby="newsletter-message"
+              className="w-full border border-sand/30 border-e-0 bg-royal-navy/60 px-6 py-4 font-primary text-sand placeholder:text-sand/40 backdrop-blur-sm transition-colors focus:border-gold focus:bg-royal-navy/75 focus:text-sand focus:outline-none focus:ring-0 focus-visible:outline-none! focus-visible:ring-0! disabled:opacity-60"
+            />
+            <span aria-hidden="true" className="focus-beam" />
+          </div>
 
           <button
             type="submit"
@@ -131,7 +139,7 @@ export function NewsletterSection() {
             className="shrink-0 cursor-pointer bg-gold px-6 py-4 font-primary text-lg font-bold text-royal-navy transition-colors hover:bg-sand disabled:cursor-not-allowed disabled:opacity-60 sm:px-8"
           >
             <span className="sr-only">
-              {isSubmitting ? "جارٍ الاشتراك" : "اشترك في النشرة البريدية"}
+              {isSubmitting ? t("submitting") : t("submit")}
             </span>
             <span aria-hidden="true">{isSubmitting ? "…" : "←"}</span>
           </button>

@@ -120,21 +120,26 @@ export function concentrationLabel(value: string | null | undefined) {
   return labels[value.toLowerCase()] ?? value
 }
 
-export function stockLabel(variant: {
-  in_stock: boolean
-  available_serial_units?: number | null
-  is_serialized?: boolean
-}) {
+export function stockLabel(
+  variant: {
+    in_stock: boolean
+    available_serial_units?: number | null
+    is_serialized?: boolean
+  },
+  locale: StoreLocale = "ar"
+) {
   if (!variant.in_stock) {
-    return "نفدت الكمية"
+    return locale === "ar" ? "نفدت الكمية" : "Sold out"
   }
 
   if (
     variant.is_serialized &&
     typeof variant.available_serial_units === "number"
   ) {
-    return `متاح ${variant.available_serial_units} قطعة مرقّمة`
+    return locale === "ar"
+      ? `متاح ${variant.available_serial_units} قطعة مرقّمة`
+      : `${variant.available_serial_units} numbered pieces available`
   }
 
-  return "متاح"
+  return locale === "ar" ? "متاح" : "Available"
 }

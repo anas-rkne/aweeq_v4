@@ -1,4 +1,6 @@
 import Image from "next/image"
+import { getLocale, getTranslations } from "next-intl/server"
+import { TextReveal } from "@/shared/ui/text-reveal"
 
 function PerfumeIcon() {
   return (
@@ -126,25 +128,18 @@ function CuratedIcon() {
 }
 
 const ICON_ITEMS = [
-  { id: "perfumes", label: "العطور", labelEn: "Perfumes", Icon: PerfumeIcon },
-  { id: "incense", label: "الدخون", labelEn: "Incense", Icon: IncenseIcon },
-  { id: "smokers", label: "المداخن", labelEn: "Smokers", Icon: SmokersIcon },
-  { id: "textiles", label: "الأقمشة", labelEn: "Textiles", Icon: TextilesIcon },
-  {
-    id: "leather",
-    label: "المنتجات الجلدية",
-    labelEn: "Leather",
-    Icon: LeatherIcon,
-  },
-  {
-    id: "curated",
-    label: "مختارات ثقافية",
-    labelEn: "Curated",
-    Icon: CuratedIcon,
-  },
+  { id: "perfumes", Icon: PerfumeIcon },
+  { id: "incense", Icon: IncenseIcon },
+  { id: "smokers", Icon: SmokersIcon },
+  { id: "textiles", Icon: TextilesIcon },
+  { id: "leather", Icon: LeatherIcon },
+  { id: "curated", Icon: CuratedIcon },
 ] as const
 
-export function BeyondSection() {
+export async function BeyondSection() {
+  const t = await getTranslations("Beyond")
+  const locale = await getLocale()
+  const isArabic = locale === "ar"
   return (
     <section
       id="beyond"
@@ -162,7 +157,7 @@ export function BeyondSection() {
 
       <Image
         src="/images/beyond/beyound_bg.webp"
-        alt="بوتيك 3WEEQ — أسلوب حياة مستوحى من الحضارات"
+        alt={t("imageAlt")}
         fill
         quality={90}
         sizes="100vw"
@@ -184,21 +179,22 @@ export function BeyondSection() {
 
       {/* words and icons, on the right side of the room */}
       <div
-        dir="rtl"
-        className="relative z-10 flex min-h-screen flex-col items-center justify-center px-8 py-16 text-center md:h-screen md:items-start md:px-16 md:py-12 md:text-right lg:px-24"
+        className={`relative z-10 flex min-h-screen flex-col items-center justify-center px-8 py-16 text-center md:h-screen md:px-16 md:py-12 md:text-start lg:px-24 ${
+          isArabic ? "md:items-start" : "md:items-end"
+        }`}
       >
         <h2 className="max-w-2xl font-primary text-4xl leading-[1.2] text-gold md:text-5xl lg:text-6xl">
-          بوتيك مستوحى من الحضارات
+          <TextReveal preset="words" blur>
+            {t("title")}
+          </TextReveal>
         </h2>
 
         <p className="mt-6 max-w-xl font-primary text-base leading-[1.9] text-sand/80 md:text-lg">
-          تجربة شاملة تشمل العطور، الدخون، المداخن، الأقمشة، المنتجات الجلدية،
-          ومختارات ثقافية من ثقافات مختلفة. نحن لا نصنع العطور فقط، بل نصنع
-          أسلوب حياة يليق بكم.
+          <TextReveal preset="block">{t("body")}</TextReveal>
         </p>
 
         <div className="mt-12 grid w-full max-w-md grid-cols-3 gap-8">
-          {ICON_ITEMS.map(({ id, label, labelEn, Icon }) => (
+          {ICON_ITEMS.map(({ id, Icon }) => (
             <div
               key={id}
               className="group flex flex-col items-center gap-2.5 text-center"
@@ -207,10 +203,7 @@ export function BeyondSection() {
                 <Icon />
               </span>
               <span className="font-primary text-xs leading-tight text-sand/80 md:text-sm">
-                {label}
-              </span>
-              <span className="hidden font-secondary text-[9px] tracking-[0.18em] text-sand/40 md:block">
-                {labelEn}
+                {t(`items.${id}`)}
               </span>
             </div>
           ))}

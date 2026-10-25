@@ -1,31 +1,36 @@
 "use client"
 
 import Image from "next/image"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 import gsap from "gsap"
 import { useCart } from "./store/cart-provider"
+import { usePathname, useRouter } from "@/i18n/navigation"
+import { RollingText } from "@/shared/ui/rolling-text"
 import { SearchModal } from "./search-modal"
 
 const STORE_PREFIXES = ["/products", "/collections", "/cart", "/checkout"]
 
 const NAV_LINKS = [
-  { href: "#hero", label: "الرئيسية", current: true },
-  { href: "/products", label: "المتجر", current: false },
-  { href: "/story", label: "قصتنا", current: false },
-  { href: "#civilizations", label: "الحضارات", current: false },
-  { href: "#journal", label: "المجلة", current: false },
+  { href: "#hero", key: "home", current: true },
+  { href: "/products", key: "store", current: false },
+  { href: "/story", key: "story", current: false },
+  { href: "#civilizations", key: "civilizations", current: false },
+  { href: "/journal", key: "journal", current: false },
 ] as const
 
-function navHref(href: string, pathname: string) {
-  const isHome = pathname === "/"
-  return href.startsWith("#") ? (isHome ? href : `/${href}`) : href
+function navHref(href: string, pathname: string, locale: string) {
+  if (href.startsWith("#")) {
+    return pathname === "/" ? href : `/${locale}${href}`
+  }
+  return `/${locale}${href}`
 }
 
 function isLinkCurrent(link: (typeof NAV_LINKS)[number], pathname: string) {
   if (link.href === "#hero") return pathname === "/"
   if (link.href === "/story") return pathname === "/story"
+  if (link.href === "/products") return pathname.startsWith("/products")
+  if (link.href === "/journal") return pathname.startsWith("/journal")
   return link.current
 }
 
@@ -89,6 +94,8 @@ function MobileNav({
   onClose: () => void
 }) {
   const pathname = usePathname()
+  const locale = useLocale()
+  const t = useTranslations("Navbar")
   const shellRef = useRef<HTMLDivElement>(null)
   const pictureRef = useRef<HTMLDivElement>(null)
   const linksRef = useRef<(HTMLAnchorElement | null)[]>([])
@@ -140,7 +147,7 @@ function MobileNav({
       ref={shellRef}
       role="dialog"
       aria-modal="true"
-      aria-label="قائمة التنقل"
+      aria-label={t("menu")}
       className="fixed inset-0 z-[100] overflow-y-auto bg-royal-navy"
     >
       <div ref={pictureRef} className="absolute inset-0" aria-hidden="true">
@@ -168,8 +175,8 @@ function MobileNav({
       <button
         type="button"
         onClick={onClose}
-        aria-label="إغلاق القائمة"
-        className="absolute left-6 top-6 z-10 text-sand/50 transition-colors duration-300 ease-out hover:text-gold"
+        aria-label={t("close")}
+        className="absolute end-6 top-6 z-10 text-sand/50 transition-colors duration-300 ease-out hover:text-gold"
       >
         <svg
           viewBox="0 0 24 24"
@@ -194,7 +201,7 @@ function MobileNav({
                   ref={(element) => {
                     linksRef.current[index] = element
                   }}
-                  href={navHref(link.href, pathname)}
+                  href={navHref(link.href, pathname, locale)}
                   onClick={onClose}
                   aria-current={
                     isLinkCurrent(link, pathname) ? "page" : undefined
@@ -205,7 +212,7 @@ function MobileNav({
                       : "text-sand/50 hover:text-gold hover:drop-shadow-[0_0_15px_rgba(205,158,97,0.5)]"
                   }`}
                 >
-                  {link.label}
+                  {t(link.key)}
                 </a>
               </li>
             ))}
@@ -218,9 +225,19 @@ function MobileNav({
 
 export function SiteHeader() {
   const pathname = usePathname()
+  const locale = useLocale()
+  const t = useTranslations("Navbar")
+  const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const { itemCount, openCart } = useCart()
+
+  const switchLocale = () => {
+    const nextLocale = locale === "ar" ? "en" : "ar"
+    router.replace(`${pathname}${window.location.search}`, {
+      locale: nextLocale,
+    })
+  }
 
   const isStoreRoute = STORE_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
@@ -241,7 +258,7 @@ export function SiteHeader() {
             <button
               type="button"
               onClick={() => setIsMenuOpen((prev) => !prev)}
-              aria-label="فتح القائمة"
+              aria-label={t("menu")}
               aria-expanded={isMenuOpen}
               className="p-1 text-sand/70 transition-colors duration-200 ease-out hover:text-gold md:hidden"
             >
@@ -250,19 +267,23 @@ export function SiteHeader() {
 
             <button
               type="button"
-              aria-label="تبديل اللغة — قريباً"
-              aria-disabled="true"
-              title="النسخة الإنجليزية قريباً"
+              onClick={switchLocale}
+              aria-label={t("language")}
               className="whitespace-nowrap font-secondary text-[11px] tracking-[0.12em] text-sand/80 transition-colors duration-200 ease-out hover:text-gold sm:text-[12px] sm:tracking-[0.2em]"
             >
-              AR<span className="mx-0.5 text-sand/30 sm:mx-1">/</span>
-              <span className="text-sand/40">EN</span>
+              <span className={locale === "ar" ? "text-gold" : "text-sand/40"}>
+                AR
+              </span>
+              <span className="mx-0.5 text-sand/30 sm:mx-1">/</span>
+              <span className={locale === "en" ? "text-gold" : "text-sand/40"}>
+                EN
+              </span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsSearchOpen(true)}
-              aria-label="بحث"
+              aria-label={t("search")}
               aria-haspopup="dialog"
               className="shrink-0 p-1 text-sand/70 transition-colors duration-200 ease-out hover:text-gold"
             >
@@ -272,7 +293,11 @@ export function SiteHeader() {
             <button
               type="button"
               onClick={openCart}
-              aria-label={itemCount > 0 ? `السلة، ${itemCount} قطعة` : "السلة"}
+              aria-label={
+                itemCount > 0
+                  ? t("cartItems", { count: itemCount })
+                  : t("cart")
+              }
               aria-haspopup="dialog"
               className="relative shrink-0 p-1 text-sand/70 transition-colors duration-200 ease-out hover:text-gold"
             >
@@ -287,13 +312,13 @@ export function SiteHeader() {
 
           {/* the five rooms, in the middle of the bar */}
           <nav
-            aria-label="التنقل الرئيسي"
+            aria-label={t("mainNav")}
             className="hidden min-w-0 items-center justify-center gap-5 md:flex lg:gap-7"
           >
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
-                href={navHref(link.href, pathname)}
+                href={navHref(link.href, pathname, locale)}
                 aria-current={
                   isLinkCurrent(link, pathname) ? "page" : undefined
                 }
@@ -303,15 +328,13 @@ export function SiteHeader() {
                     : "text-sand/75 hover:text-gold"
                 }`}
               >
-                {link.label}
-                <span
-                  aria-hidden="true"
-                  className={`absolute inset-x-0 -bottom-2 h-px origin-right bg-gold transition-transform duration-300 ${
-                    isLinkCurrent(link, pathname)
-                      ? "scale-x-100"
-                      : "scale-x-0 group-hover:scale-x-100"
-                  }`}
-                />
+                <RollingText>{t(link.key)}</RollingText>
+                {isLinkCurrent(link, pathname) && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-x-0 -bottom-2 h-px bg-gold"
+                  />
+                )}
               </a>
             ))}
           </nav>
@@ -319,8 +342,8 @@ export function SiteHeader() {
           {/* the mark, on the left side */}
           <div className="flex shrink-0 justify-end">
             <a
-              href={isHome ? "#hero" : "/"}
-              aria-label="3WEEQ — الرئيسية"
+              href={isHome ? "#hero" : `/${locale}`}
+              aria-label={t("logoLabel")}
               className="inline-flex w-fit items-center"
             >
               <Image

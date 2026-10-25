@@ -1,7 +1,8 @@
 "use client"
 
 import Image from "next/image"
-import Link from "next/link"
+import { useLocale, useTranslations } from "next-intl"
+import { Link } from "@/i18n/navigation"
 import { useEffect, useRef } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
@@ -9,6 +10,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 gsap.registerPlugin(ScrollTrigger)
 
 export function PackagingSection() {
+  const t = useTranslations("Packaging")
+  const locale = useLocale()
+  const isArabic = locale === "ar"
   const sectionRef = useRef<HTMLElement>(null)
   const bgRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
@@ -65,7 +69,7 @@ export function PackagingSection() {
       >
         <Image
           src="/images/packaging_images/main_bg_packaing.webp"
-          alt="تغليف عطر رافد"
+          alt={t("imageAlt")}
           fill
           quality={90}
           sizes="100vw"
@@ -74,7 +78,7 @@ export function PackagingSection() {
 
         <img
           src="/images/packaging_images/main_bg_packaing_mobile.webp"
-          alt="تغليف عطر رافد"
+          alt={t("imageAlt")}
           className="block h-full w-full object-cover md:hidden"
           loading="lazy"
         />
@@ -125,44 +129,30 @@ export function PackagingSection() {
 
       <div
         ref={textRef}
-        className="relative z-20 mx-auto flex w-full max-w-[84rem] flex-col items-start justify-center px-5 pb-16 pt-8 text-right sm:px-8 md:h-full md:px-16 md:pb-0 md:pt-0"
+        className={`relative z-20 mx-auto flex w-full max-w-[84rem] flex-col justify-center px-5 pb-16 pt-8 text-start sm:px-8 md:h-full md:px-16 md:pb-0 md:pt-0 ${
+          isArabic ? "items-start" : "items-end"
+        }`}
       >
         <div className="w-full max-w-xl">
           <p className="font-secondary text-[12px] tracking-[0.34em] text-gold">
-            THE ART OF UNBOXING
+            {t("eyebrow")}
           </p>
 
           <h2 className="mt-5 font-secondary text-[clamp(2rem,4.2vw,4rem)] leading-[1.08] tracking-[-0.015em] text-sand">
-            إرثٌ يُغلّف بين بيديك
-            <span className="mt-2 block text-[clamp(1.6rem,3vw,3rem)] text-sand/90">
-              A Legacy in Your Hands
-            </span>
+            {t("title")}
           </h2>
 
           <p className="mt-6 max-w-[32rem] font-primary text-[clamp(1rem,1.2vw,1.2rem)] leading-[1.9] text-sand/90">
-            في 3WEEQ، لا نكتفي بصناعة العطر، بل نصنع التجربة. كل صندوق هو قطعة
-            فنية مستوحاة من نقوش بابل، مصنوع من أجود المواد ليعكس فخامة الحضارات
-            العريقة. من لحظة فتح الغلاف، تبدأ رحلتك في عالم من التفاصيل الملكية.
-          </p>
-
-          <p className="mt-5 max-w-[32rem] font-primary text-[clamp(0.98rem,1vw,1.1rem)] leading-[1.9] text-sand/70">
-            At 3WEEQ, we don&apos;t just craft fragrances; we craft experiences.
-            Every box is a work of art inspired by Babylonian engravings, made
-            with the finest materials to reflect the luxury of ancient
-            civilizations. From the moment you unbox it, your journey into a
-            world of royal details begins.
+            {t("body")}
           </p>
 
           <div className="mt-10">
             <Link
-              href="/products"
+              href="/products/rafid"
               className="group relative inline-flex h-10 items-center overflow-hidden whitespace-nowrap bg-gold px-6 font-primary text-[13px] text-royal-navy transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] md:h-[44px] md:px-7 md:text-[14px]"
             >
               <span aria-hidden="true" className="cta-sheen" />
-              <span className="relative">اكتشف فن التغليف</span>
-              <span className="relative ms-2 text-[12px] opacity-70 md:ms-3">
-                Explore the Art of Packaging
-              </span>
+              <span className="relative">{t("cta")}</span>
               <svg
                 viewBox="0 0 24 24"
                 fill="none"

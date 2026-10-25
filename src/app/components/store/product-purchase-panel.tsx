@@ -1,19 +1,19 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useLocale, useTranslations } from "next-intl"
 import type { Product, ProductVariant } from "@/types"
 import { concentrationLabel, formatPrice, stockLabel } from "@/lib/format"
 import { useCart } from "./cart-provider"
 
 interface ProductPurchasePanelProps {
   product: Product
-  locale?: "ar" | "en"
 }
 
-export function ProductPurchasePanel({
-  product,
-  locale = "ar",
-}: ProductPurchasePanelProps) {
+export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
+  const t = useTranslations("Product")
+  const locale = useLocale()
+  const storeLocale = locale === "ar" ? "ar" : "en"
   const initialVariant =
     product.default_variant &&
     product.variants.some(
@@ -65,9 +65,7 @@ export function ProductPurchasePanel({
       setQuantity(1)
     } catch (error) {
       setAddError(
-        error instanceof Error
-          ? error.message
-          : "تعذر إضافة القطعة إلى السلة. حاول مرة أخرى."
+        error instanceof Error ? error.message : t("addError")
       )
     }
   }
@@ -82,7 +80,7 @@ export function ProductPurchasePanel({
           {formatPrice(
             selectedVariant?.price?.amount ?? product.price_range?.min,
             selectedVariant?.price?.currency_code ?? "sar",
-            locale
+            storeLocale
           )}
         </p>
 
@@ -92,7 +90,7 @@ export function ProductPurchasePanel({
               selectedVariant.in_stock ? "text-sand/60" : "text-gold/70"
             }`}
           >
-            {stockLabel(selectedVariant)}
+            {stockLabel(selectedVariant, storeLocale)}
           </p>
         )}
       </div>
@@ -100,7 +98,7 @@ export function ProductPurchasePanel({
       {product.variants.length > 0 && (
         <fieldset className="space-y-3">
           <legend className="mb-3 font-primary text-sm text-sand/70">
-            الحجم / الخيار
+            {t("variant")}
           </legend>
           <div className="flex flex-wrap gap-2">
             {product.variants.map((variant) => (
@@ -108,7 +106,7 @@ export function ProductPurchasePanel({
                 key={variant.id}
                 variant={variant}
                 selected={variant.id === selectedVariant?.id}
-                locale={locale}
+                locale={storeLocale}
                 onSelect={() => {
                   setSelectedVariantId(variant.id)
                   setQuantity(1)
@@ -124,13 +122,13 @@ export function ProductPurchasePanel({
         <dl className="grid grid-cols-2 gap-x-6 gap-y-3 font-primary text-sm">
           {selectedVariant.size_ml != null && (
             <>
-              <dt className="text-sand/45">الحجم</dt>
+              <dt className="text-sand/45">{t("size")}</dt>
               <dd className="text-sand/80">{selectedVariant.size_ml} ml</dd>
             </>
           )}
           {selectedVariant.concentration && (
             <>
-              <dt className="text-sand/45">التركيز</dt>
+              <dt className="text-sand/45">{t("concentration")}</dt>
               <dd className="text-sand/80">
                 {concentrationLabel(selectedVariant.concentration)}
               </dd>
@@ -138,25 +136,27 @@ export function ProductPurchasePanel({
           )}
           {selectedVariant.sku && (
             <>
-              <dt className="text-sand/45">الرمز</dt>
+              <dt className="text-sand/45">{t("sku")}</dt>
               <dd className="text-sand/80">{selectedVariant.sku}</dd>
             </>
           )}
           {isSerialized && (
             <>
-              <dt className="text-sand/45">الإصدار</dt>
+              <dt className="text-sand/45">{t("edition")}</dt>
               <dd className="text-sand/80">
                 {product.edition_size
-                  ? `${product.edition_size} قطعة مرقّمة`
-                  : "مرقّم يدوياً"}
+                  ? t("numberedPieces", { count: product.edition_size })
+                  : t("handNumbered")}
               </dd>
             </>
           )}
           {product.max_per_customer != null && (
             <>
-              <dt className="text-sand/45">حد الشراء</dt>
+              <dt className="text-sand/45">{t("purchaseLimit")}</dt>
               <dd className="text-sand/80">
-                {product.max_per_customer} قطع لكل عميل
+                {t("piecesPerCustomer", {
+                  count: product.max_per_customer,
+                })}
               </dd>
             </>
           )}
@@ -170,7 +170,7 @@ export function ProductPurchasePanel({
               type="button"
               onClick={() => setQuantity((value) => Math.max(1, value - 1))}
               disabled={quantity <= 1 || isAdding}
-              aria-label="تقليل الكمية"
+              aria-label={t("decrease")}
               className="grid h-full w-11 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
             >
               −
@@ -184,7 +184,7 @@ export function ProductPurchasePanel({
                 setQuantity((value) => Math.min(purchaseLimit, value + 1))
               }
               disabled={quantity >= purchaseLimit || isAdding}
-              aria-label="زيادة الكمية"
+              aria-label={t("increase")}
               className="grid h-full w-11 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
             >
               +
@@ -198,10 +198,10 @@ export function ProductPurchasePanel({
             className="flex-1 border border-gold bg-gold px-6 py-4 font-primary text-base font-bold text-royal-navy transition-colors duration-300 hover:bg-gold/85 disabled:cursor-not-allowed disabled:border-gold/35 disabled:bg-gold/10 disabled:text-gold/60 sm:text-lg"
           >
             {!selectedVariant || !selectedVariant.in_stock
-              ? "غير متوفر"
+              ? t("unavailable")
               : isAdding
-                ? "جارٍ الإضافة..."
-                : "أضف إلى السلة"}
+                ? t("adding")
+                : t("addToCart")}
           </button>
         </div>
 
@@ -216,8 +216,8 @@ export function ProductPurchasePanel({
 
         <p className="text-center font-primary text-xs leading-6 text-sand/40">
           {product.max_per_customer != null
-            ? `يمكن شراء ${product.max_per_customer} قطع كحد أقصى لكل عميل.`
-            : "الشحن والضرائب تُحسب عند إتمام الطلب."}
+            ? t("maxPurchase", { count: product.max_per_customer })
+            : t("shippingTaxesNote")}
         </p>
       </div>
     </div>
@@ -240,7 +240,7 @@ function VariantButton({
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`min-w-28 border px-4 py-3 text-right transition-all duration-300 ${
+      className={`min-w-28 border px-4 py-3 text-start transition-all duration-300 ${
         selected
           ? "border-gold bg-gold/10 text-gold"
           : "border-sand/20 text-sand/65 hover:border-gold/50 hover:text-sand"

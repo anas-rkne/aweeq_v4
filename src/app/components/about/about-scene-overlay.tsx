@@ -1,6 +1,7 @@
 "use client"
 
 import React, { forwardRef } from "react"
+import { useLocale } from "next-intl"
 import { CIVILIZATION_SCENES } from "./about-data"
 
 interface AboutSceneOverlayProps {
@@ -11,14 +12,14 @@ export const AboutSceneOverlay = forwardRef<
   HTMLDivElement,
   AboutSceneOverlayProps
 >(function AboutSceneOverlay({ currentSceneIndex }, ref) {
+  const locale = useLocale()
   const scene = CIVILIZATION_SCENES[currentSceneIndex]
   if (!scene) return null
+  const title = locale === "ar" ? scene.titleAr : scene.title
+  const body = locale === "ar" ? scene.body : scene.bodyEn
 
   return (
-    <div
-      dir="rtl"
-      className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-6 sm:px-10 md:px-16"
-    >
+    <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-6 sm:px-10 md:px-16">
       <div ref={ref} className="relative w-full max-w-2xl text-center">
         {/* a soft pool of night behind the words, just enough contrast */}
         <div
@@ -31,11 +32,11 @@ export const AboutSceneOverlay = forwardRef<
         />
 
         <h2 className="mb-5 font-secondary text-[clamp(2rem,4vw,3.5rem)] leading-[1.1] text-gold">
-          {scene.title}
+          {title}
         </h2>
 
         <p className="mx-auto max-w-xl font-primary text-base leading-relaxed text-sand/90 md:text-lg">
-          {scene.body}
+          {body}
         </p>
       </div>
     </div>

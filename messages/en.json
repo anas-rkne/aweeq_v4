@@ -1,0 +1,301 @@
+{
+  "Metadata": {
+    "title": "3WEEQ — A World Where Civilizations Are Told in Scent",
+    "description": "3WEEQ — where civilizations become fragrances and stories."
+  },
+  "Navbar": {
+    "home": "Home",
+    "store": "Shop",
+    "story": "Our Story",
+    "civilizations": "Civilizations",
+    "journal": "Journal",
+    "menu": "Navigation menu",
+    "close": "Close menu",
+    "search": "Search",
+    "cart": "Cart",
+    "cartItems": "Cart, {count} items",
+    "language": "Change language",
+    "switchTo": "العربية",
+    "logoLabel": "3WEEQ — Home",
+    "mainNav": "Main navigation"
+  },
+  "Search": {
+    "title": "Search 3WEEQ",
+    "placeholder": "Search for a fragrance or incense...",
+    "label": "Search term",
+    "submit": "Search",
+    "suggested": "SUGGESTED",
+    "close": "Close search",
+    "suggestions": {
+      "fragrances": "Fragrances",
+      "incense": "Incense",
+      "all": "All fragrances",
+      "collections": "Collections"
+    }
+  },
+  "Hero": {
+    "titleLine1": "Civilizations",
+    "titleLine2": "Told in Scent",
+    "description": "Your gateway to the treasures of civilizations: from Babylon to Egypt, China, Greece, and the Gulf",
+    "discoverRafid": "Discover RAFID",
+    "exploreCivilizations": "Explore upcoming civilizations",
+    "imageAlt": "The pyramids, Babylon, Greece, and China in one city"
+  },
+  "About": {
+    "readOurStory": "READ OUR STORY",
+    "gulf": {
+      "label": "THE GULF · الخليج",
+      "title": "The Golden Coast",
+      "body": "From the shores of the Arabian Gulf, where frankincense and pearls meet, the story of 3WEEQ begins. From this seafaring cradle we draw fragrances carrying the clarity of the horizon, the warmth of the sand, and the spirit of the trade routes that connected civilizations.",
+      "alt": "The shores of the Arabian Gulf — frankincense and pearls"
+    },
+    "babylon": {
+      "label": "BABYLON · بابل",
+      "title": "The Lamassu",
+      "body": "From the Ishtar Gate, where stories are told through cuneiform. From Babylon, the cradle of civilizations, we draw fragrances that carry the scent of history and preserve secrets for millennia.",
+      "alt": "The Lamassu of Babylon — guardian of the Ishtar Gate"
+    },
+    "egypt": {
+      "label": "EGYPT · مصر",
+      "title": "The Sphinx",
+      "body": "The Sphinx, the silent guardian of the Valley of the Kings. From Egypt, where gold meets eternal secrets, we craft royal fragrances embodying the luxury of the Pharaohs and the immortality of the Nile.",
+      "alt": "The Sphinx, silent guardian of the Valley of the Kings"
+    },
+    "greece": {
+      "label": "GREECE · اليونان",
+      "title": "Marble Memory",
+      "body": "From the marble of Athens and the myths of Olympus, where tales of gods and heroes are woven. We present classic fragrances that blend Greek elegance with timeless modernity.",
+      "alt": "The marble of Athens and the myths of Olympus"
+    },
+    "china": {
+      "label": "CHINA · الصين",
+      "title": "Silk & Stone",
+      "body": "From the Great Wall of China and the silk of empires, where power meets elegance. We present captivating fragrances embodying the wisdom of the East and the details of ancient Chinese civilization.",
+      "alt": "The silk of empires and the Great Wall of China"
+    }
+  },
+  "FirstChapter": {
+    "eyebrow": "THE FIRST CHAPTER",
+    "title": "MESOPOTAMIA",
+    "subtitle": "Babylon — Cradle of Civilizations",
+    "body": "From the banks of the Tigris and Euphrates, tales were born to live forever... A fragrance that mirrors the soul of Babylon, answering history's call with luxury.",
+    "cta": "Explore the Babylon collection",
+    "imageAlt": "The Ishtar Gate — Babylon"
+  },
+  "Featured": {
+    "title": "RAFID — The First Chapter",
+    "body": "A fragrance carrying the soul of Mesopotamia. Inspired by the depth of history and the strength of place, it tells the tales of Babylon in every spray.",
+    "discover": "Discover RAFID",
+    "collection": "The Babylon Collection"
+  },
+  "Packaging": {
+    "eyebrow": "THE ART OF UNBOXING",
+    "title": "A Legacy in Your Hands",
+    "body": "At 3WEEQ, we don't just craft fragrances; we craft experiences. Every box is a work of art inspired by Babylonian engravings, made with the finest materials to reflect the luxury of ancient civilizations. From the moment you unbox it, your journey into a world of royal details begins.",
+    "cta": "Explore the Art of Packaging",
+    "imageAlt": "RAFID packaging"
+  },
+  "Civilizations": {
+    "china": {
+      "chapter": "CIVILIZATION I",
+      "title": "China — The Silk Empire",
+      "body": "From the Great Wall of China to the silk of empires, where power meets refinement. Discover captivating fragrances embodying the wisdom of the East and the details of ancient Chinese civilization.",
+      "cta": "Join the China waitlist"
+    },
+    "greece": {
+      "chapter": "CIVILIZATION II",
+      "title": "Greece — Dawn of Wisdom",
+      "body": "From the marble of Athens and the myths of Olympus, where tales of gods and heroes are woven. A classic olfactory journey blending Greek elegance with timeless modernity.",
+      "cta": "Join the Greece waitlist"
+    },
+    "egypt": {
+      "chapter": "CIVILIZATION III",
+      "title": "Egypt — The Land of the Nile",
+      "body": "The Sphinx, the silent guardian of the Valley of the Kings. From Egypt, where gold meets eternal secrets, we craft royal fragrances embodying the grandeur of the Pharaohs and the immortality of the Nile.",
+      "cta": "Join the Egypt waitlist"
+    }
+  },
+  "Beyond": {
+    "title": "A Boutique Inspired by Civilizations",
+    "body": "A complete experience spanning fragrances, incense, smokers, textiles, leather goods, and curated pieces from different cultures. We don't just make perfume; we craft a lifestyle worthy of you.",
+    "imageAlt": "The 3WEEQ boutique — a lifestyle inspired by civilizations",
+    "items": {
+      "perfumes": "Perfumes",
+      "incense": "Incense",
+      "smokers": "Smokers",
+      "textiles": "Textiles",
+      "leather": "Leather",
+      "curated": "Curated"
+    }
+  },
+  "Journal": {
+    "title": "Stories & Inspiration",
+    "subtitle": "Explore the stories, symbols, and arts of civilizations.",
+    "viewAll": "VIEW ALL",
+    "shopCollection": "Shop the Babylon Collection",
+    "readArticle": "Read article",
+    "backToArticles": "All articles",
+    "exploreStore": "Explore the store"
+  },
+  "Newsletter": {
+    "title": "Be Part of the Journey",
+    "subtitle": "Be part of our journey. Be the first to know about upcoming releases.",
+    "emailLabel": "Your email address",
+    "placeholder": "Your email address",
+    "submit": "Subscribe to the newsletter",
+    "submitting": "Subscribing",
+    "invalidEmail": "Please enter a valid email address.",
+    "error": "We couldn't complete your subscription. Please try again.",
+    "network": "Couldn't reach the server. Check your connection and try again.",
+    "success": "Thank you. You are now part of the journey."
+  },
+  "Footer": {
+    "quickTitle": "Quick links",
+    "helpTitle": "Help",
+    "followTitle": "Follow us",
+    "rights": "© 2026 Created By Brain Media",
+    "tagline": "A JOURNEY ACROSS CIVILIZATIONS",
+    "logoLabel": "3WEEQ — Home",
+    "quick": {
+      "home": "Home",
+      "store": "Shop",
+      "rafid": "RAFID",
+      "story": "Our Story",
+      "journal": "Journal",
+      "newsletter": "Newsletter"
+    },
+    "help": {
+      "faq": "FAQ",
+      "shipping": "Shipping",
+      "returns": "Returns",
+      "terms": "Terms & Conditions",
+      "privacy": "Privacy Policy"
+    }
+  },
+  "Story": {
+    "title": "Our Story | 3WEEQ",
+    "description": "The 3WEEQ journey through five civilizations — the Gulf, Babylon, Egypt, Greece, and China — in a sequence of cinematic scenes."
+  },
+  "Store": {
+    "home": "Home",
+    "shop": "Shop",
+    "collections": "Collections",
+    "story": "Our Story",
+    "logoLabel": "3WEEQ — Home",
+    "search": "Search",
+    "cart": "Cart",
+    "cartItems": "Cart, {count} items",
+    "mainNav": "Store navigation",
+    "mobileNav": "Store mobile navigation",
+    "breadcrumb": "Breadcrumb",
+    "collectionEyebrow": "COLLECTIONS",
+    "collectionsIntro": "Every collection is a gateway to a civilization: a story, a scent, and limited pieces bearing its symbols.",
+    "noCollections": "No collections available right now",
+    "noCollectionsHint": "Make sure the Medusa server is running, then reload the page.",
+    "pieces": "{count} pieces",
+    "filters": {
+      "civilization": "Civilization",
+      "collection": "Collection",
+      "type": "Type"
+    },
+    "all": "All",
+    "currentFilters": "Current filters:",
+    "clearAll": "Clear all",
+    "searchPlaceholder": "Search for a fragrance or piece...",
+    "searchLabel": "Search the store",
+    "results": "Showing {start}–{end} of {total} pieces",
+    "page": "Page {current} of {total}",
+    "noResults": "No results",
+    "noResultsTitle": "No pieces match your selection",
+    "noResultsHint": "Try removing some filters or searching with another word.",
+    "errorTitle": "Couldn't reach the store right now",
+    "errorHint": "Make sure the Medusa server is running, then reload the page.",
+    "viewAll": "View all pieces",
+    "prev": "Previous",
+    "next": "Next",
+    "searchResults": "Search: {q}"
+  },
+  "Cart": {
+    "title": "Shopping Cart",
+    "close": "Close cart",
+    "items": "{count} items",
+    "empty": "Cart is empty",
+    "emptyTitle": "Your cart is empty",
+    "emptyMessage": "Discover our limited editions and add your first piece.",
+    "browseStore": "Browse the store",
+    "subtotal": "Subtotal",
+    "shippingNote": "Shipping and taxes are calculated at checkout.",
+    "viewCart": "View cart",
+    "checkoutSoon": "Checkout — coming soon",
+    "remove": "Remove",
+    "decrease": "Decrease quantity",
+    "increase": "Increase quantity",
+    "retry": "Retry",
+    "dismiss": "Dismiss alert",
+    "loading": "Loading cart",
+    "perItem": "each",
+    "continueShopping": "Continue shopping",
+    "orderSummary": "Order summary",
+    "shipping": "Shipping",
+    "taxes": "Taxes",
+    "calculatedAtCheckout": "Calculated at checkout",
+    "total": "Total",
+    "checkoutNote": "Online payment will be enabled soon. You can review your cart now.",
+    "noItems": "No items in your cart",
+    "emptyPage": "You haven't added any pieces yet. Browse our limited editions and pick what suits you."
+  },
+  "Product": {
+    "limited": "Limited edition",
+    "serialized": "Hand-numbered",
+    "discover": "Discover the piece",
+    "outOfStock": "Sold out",
+    "priceOnRequest": "Price on request",
+    "variant": "Size / option",
+    "size": "Size",
+    "concentration": "Concentration",
+    "origin": "Origin",
+    "sku": "SKU",
+    "edition": "Edition",
+    "handNumbered": "Hand-numbered",
+    "numberedPieces": "{count} numbered pieces",
+    "purchaseLimit": "Purchase limit",
+    "piecesPerCustomer": "{count} pieces per customer",
+    "addToCart": "Add to cart",
+    "unavailable": "Unavailable",
+    "adding": "Adding...",
+    "decrease": "Decrease quantity",
+    "increase": "Increase quantity",
+    "addError": "Couldn't add the piece to your cart. Please try again.",
+    "maxPurchase": "You can buy up to {count} pieces per customer.",
+    "shippingTaxesNote": "Shipping and taxes are calculated at checkout.",
+    "available": "Available",
+    "availableSerial": "{count} numbered pieces available",
+    "storyEyebrow": "THE STORY",
+    "story": "The story of the piece",
+    "pyramid": "Olfactory pyramid",
+    "top": "Top",
+    "heart": "Heart",
+    "base": "Base",
+    "description": "Description",
+    "ingredients": "Ingredients",
+    "ritual": "How to use",
+    "details": "Details",
+    "collectionLabel": "Collection",
+    "typeLabel": "Type",
+    "editionSize": "Edition size",
+    "pieces": "pieces",
+    "relatedEyebrow": "CONTINUE EXPLORING",
+    "related": "More pieces",
+    "viewAll": "All pieces",
+    "galleryImage": "View image {index}"
+  },
+  "Common": {
+    "backToStore": "Back to store",
+    "retry": "Retry",
+    "home": "Home",
+    "pageNotFound": "Page not found",
+    "pageNotFoundHint": "This piece may have moved or is no longer part of the current collection.",
+    "unexpectedError": "An unexpected error occurred",
+    "errorHint": "This section couldn't be loaded. Try again, and if the problem persists make sure the store is connected to the server."
+  }
+}

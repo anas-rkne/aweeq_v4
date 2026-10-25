@@ -2,7 +2,8 @@
 
 import { useEffect, useRef } from "react"
 import Image from "next/image"
-import Link from "next/link"
+import { useLocale, useTranslations } from "next-intl"
+import { Link } from "@/i18n/navigation"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
@@ -21,52 +22,22 @@ const CIVILIZATIONS = [
   {
     id: "gulf",
     image: "/images/about/about_arab_2.webp",
-    alt: "شواطئ الخليج العربي — اللؤلؤ واللبان",
-    label: "THE GULF · الخليج",
-    title: "The Golden Coast",
-    body: "من شواطئ الخليج العربي، حيث يلتقي عبق اللبان والبخور بسحر اللآلئ، تبدأ حكاية 3WEEQ. من هذا المهد البحري نستلهم عطوراً تحمل نقاء الأفق ودفء الرمال وروح التجارة التي ربطت الحضارات.",
-    bodyEn:
-      "From the shores of the Arabian Gulf, where frankincense and pearls meet, the story of 3WEEQ begins. From this seafaring cradle we draw fragrances carrying the clarity of the horizon, the warmth of the sand, and the spirit of the trade routes that connected civilizations.",
   },
   {
     id: "babylon",
     image: "/images/about/about_babel_2.jpg",
-    alt: "لاماسو من بابل — حارس بوابة عشتار",
-    label: "BABYLON · بابل",
-    title: "The Lamassu",
-    body: "من بوابة عشتار، حيث تُروى الحكايات بالنقوش المسمارية. من بابل، مهد الحضارات، نستلهم عطوراً تحمل عبق التاريخ، وتُخلّد أسراراً منذ آلاف السنين.",
-    bodyEn:
-      "From the Ishtar Gate, where stories are told through cuneiform. From Babylon, the cradle of civilizations, we draw fragrances that carry the scent of history and preserve secrets for millennia.",
   },
   {
     id: "egypt",
     image: "/images/about/about_egybt_2.jpg",
-    alt: "أبو الهول، الحارس الصامت لوادي الملوك",
-    label: "EGYPT · مصر",
-    title: "The Sphinx",
-    body: "أبو الهول، الحارس الصامت لوادي الملوك. من مصر، حيث يلتقي الذهب بالأسرار الخالدة، نصنع عطوراً ملكية تُجسد فخامة الفراعنة وخلود النيل.",
-    bodyEn:
-      "The Sphinx, the silent guardian of the Valley of the Kings. From Egypt, where gold meets eternal secrets, we craft royal fragrances embodying the luxury of the Pharaohs and the immortality of the Nile.",
   },
   {
     id: "greece",
     image: "/images/about/about_greese_2.jpg",
-    alt: "رخام أثينا وأساطير الأولمب",
-    label: "GREECE · اليونان",
-    title: "Marble Memory",
-    body: "من رخام أثينا وأساطير الأولمب، حيث تُنسج الحكايات عن الآلهة والأبطال. نقدم لكم عطوراً كلاسيكية تجمع بين الأناقة الإغريقية والحداثة الخالدة.",
-    bodyEn:
-      "From the marble of Athens and the myths of Olympus, where tales of gods and heroes are woven. We present classic fragrances that blend Greek elegance with timeless modernity.",
   },
   {
     id: "china",
     image: "/images/about/about_china_2.jpg",
-    alt: "حرير الإمبراطوريات وسور الصين العظيم",
-    label: "CHINA · الصين",
-    title: "Silk & Stone",
-    body: "من سور الصين العظيم، وحرير الإمبراطوريات، حيث تلتقي القوة بالرقي. نقدم عطوراً آسرة تجسد حكمة الشرق وتفاصيل الحضارة الصينية العريقة.",
-    bodyEn:
-      "From the Great Wall of China and the silk of empires, where power meets elegance. We present captivating fragrances embodying the wisdom of the East and the details of ancient Chinese civilization.",
   },
 ] as const
 
@@ -74,6 +45,9 @@ const IMAGE_START_SCALE = 1.05
 const TEXT_START_Y = 20
 
 export function AboutSection() {
+  const t = useTranslations("About")
+  const locale = useLocale()
+  const isArabic = locale === "ar"
   const sectionRef = useRef<HTMLElement>(null)
   const veilRef = useRef<HTMLDivElement>(null)
   const roomRef = useRef<HTMLDivElement>(null)
@@ -151,7 +125,7 @@ export function AboutSection() {
 
     const mm = gsap.matchMedia()
 
-    mm.add("(min-width: 768px)", () => {
+    mm.add("(min-width: 1024px)", () => {
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         if (room) room.style.height = "0px"
         return
@@ -183,7 +157,7 @@ export function AboutSection() {
       }
     })
 
-    mm.add("(max-width: 767px)", () => {
+    mm.add("(max-width: 1023px)", () => {
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         if (room) room.style.height = "0px"
         return
@@ -233,7 +207,11 @@ export function AboutSection() {
       >
         <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
           {/* the pictures — on the left of the page */}
-          <div className="relative order-first h-[46vh] w-full overflow-hidden bg-royal-navy md:order-2 md:h-screen">
+          <div
+            className={`relative order-first h-[46vh] w-full overflow-hidden bg-royal-navy md:h-screen ${
+              isArabic ? "md:order-2" : "md:order-1"
+            }`}
+          >
             {CIVILIZATIONS.map((c, i) => (
               <div
                 key={c.id}
@@ -247,9 +225,9 @@ export function AboutSection() {
                 {/* the picture itself, filling the frame */}
                 <Image
                   src={c.image}
-                  alt={c.alt}
+                  alt={t(`${c.id}.alt`)}
                   fill
-                  sizes="(min-width: 768px) 50vw, 100vw"
+                  sizes="(min-width: 1024px) 50vw, 100vw"
                   priority={i === 0}
                   loading={i === 0 ? undefined : "eager"}
                   className="absolute inset-0 h-full w-full object-cover"
@@ -282,7 +260,11 @@ export function AboutSection() {
           </div>
 
           {/* the words — on the right of the page */}
-          <div className="order-2 relative flex flex-col overflow-hidden bg-royal-navy p-8 md:order-1 md:p-24">
+          <div
+            className={`order-2 relative flex flex-col overflow-hidden bg-royal-navy p-8 md:p-24 ${
+              isArabic ? "md:order-1" : "md:order-2"
+            }`}
+          >
             {/* the night behind the words — barely there */}
             <Image
               src="/images/about/ABOUT_HERO_BG.jpg"
@@ -303,15 +285,6 @@ export function AboutSection() {
               }}
             />
 
-            {/* the little portal, standing in the empty corner */}
-            <Image
-              src="/images/about/top_right_about.png"
-              alt=""
-              width={768}
-              height={1376}
-              aria-hidden="true"
-              className="pointer-events-none absolute right-8 top-8 z-10 hidden w-[5.5rem] md:right-13 md:top-0 md:block"
-            />
 
             <div className="relative flex flex-1 flex-col">
               <div className="relative min-h-[14rem] w-full max-w-[34rem] flex-1 md:min-h-[28rem]">
@@ -331,19 +304,15 @@ export function AboutSection() {
                     {/* the name of the world */}
                     <div className="flex items-center gap-4">
                       <span className="font-secondary text-[12px] tracking-[0.28em] text-gold">
-                        {c.label}
+                        {t(`${c.id}.label`)}
                       </span>
                     </div>
 
                     <h2 className="mt-6 font-secondary text-[clamp(1.75rem,3vw,2.75rem)] leading-[1.2] text-sand">
-                      {c.title}
+                      {t(`${c.id}.title`)}
                     </h2>
 
-                    <p className="mt-5 text-body text-sand/85">{c.body}</p>
-
-                    <p className="mt-4 hidden text-[13px] leading-relaxed text-sand/45 md:block">
-                      {c.bodyEn}
-                    </p>
+                    <p className="mt-5 text-body text-sand/85">{t(`${c.id}.body`)}</p>
                   </div>
                 ))}
               </div>
@@ -369,7 +338,7 @@ export function AboutSection() {
                 </span>
 
                 <span className="font-secondary text-[13px] tracking-[0.22em] text-sand/80 transition-colors duration-300 ease-out group-hover:text-gold">
-                  READ OUR STORY
+                  {t("readOurStory")}
                 </span>
               </Link>
             </div>

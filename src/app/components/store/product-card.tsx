@@ -1,19 +1,24 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
+import { useLocale, useTranslations } from "next-intl"
 import type { Product } from "@/types"
 import { formatPriceRange, normalizeImageUrl } from "@/lib/format"
 
 interface ProductCardProps {
   product: Product
-  locale?: "ar" | "en"
 }
 
-export function ProductCard({ product, locale = "ar" }: ProductCardProps) {
+export function ProductCard({ product }: ProductCardProps) {
+  const t = useTranslations("Product")
+  const locale = useLocale()
+  const storeLocale = locale === "ar" ? "ar" : "en"
   const imageUrl = normalizeImageUrl(product.thumbnail)
   const price = formatPriceRange(
     product.price_range,
     product.variants[0]?.price?.currency_code ?? "sar",
-    locale
+    storeLocale
   )
   const hasStock = product.variants.some((variant) => variant.in_stock)
 
@@ -42,25 +47,25 @@ export function ProductCard({ product, locale = "ar" }: ProductCardProps) {
         <div className="absolute inset-x-0 top-0 flex flex-wrap justify-end gap-1.5 p-3">
           {product.is_limited && (
             <span className="border border-gold/40 bg-royal-navy/75 px-2 py-1 font-primary text-[10px] text-gold backdrop-blur-sm">
-              إصدار محدود
+              {t("limited")}
             </span>
           )}
           {product.is_serialized && (
             <span className="border border-sand/20 bg-royal-navy/75 px-2 py-1 font-primary text-[10px] text-sand/80 backdrop-blur-sm">
-              مرقّم يدوياً
+              {t("serialized")}
             </span>
           )}
         </div>
 
         <div className="absolute inset-x-0 bottom-0 translate-y-2 p-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
           <span className="inline-flex items-center gap-2 font-primary text-sm text-gold">
-            اكتشف القطعة
+            {t("discover")}
             <span aria-hidden="true">←</span>
           </span>
         </div>
       </div>
 
-      <div className="space-y-1.5 pt-4" dir="rtl">
+      <div className="space-y-1.5 pt-4">
         <div className="flex items-start justify-between gap-3">
           <h3 className="font-primary text-lg leading-snug text-sand transition-colors duration-300 group-hover:text-gold">
             {product.title}
@@ -85,12 +90,12 @@ export function ProductCard({ product, locale = "ar" }: ProductCardProps) {
           </p>
           {!hasStock && (
             <span className="font-primary text-[11px] text-sand/40">
-              نفدت الكمية
+              {t("outOfStock")}
             </span>
           )}
           {hasStock && !price && (
             <span className="font-primary text-[11px] text-sand/40">
-              السعر عند الطلب
+              {t("priceOnRequest")}
             </span>
           )}
         </div>

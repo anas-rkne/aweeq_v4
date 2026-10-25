@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { useMemo, useState } from "react"
+import { useTranslations } from "next-intl"
 import type { Product } from "@/types"
 import { normalizeImageUrl } from "@/lib/format"
 
@@ -10,6 +11,7 @@ interface ProductGalleryProps {
 }
 
 export function ProductGallery({ product }: ProductGalleryProps) {
+  const t = useTranslations("Product")
   const images = useMemo(() => {
     const seen = new Set<string>()
     const list: Array<{ id: string; url: string; alt: string }> = []
@@ -68,7 +70,7 @@ export function ProductGallery({ product }: ProductGalleryProps) {
               key={image.id}
               type="button"
               onClick={() => setActiveIndex(index)}
-              aria-label={`عرض الصورة ${index + 1}`}
+              aria-label={t("galleryImage", { index: index + 1 })}
               aria-pressed={index === activeIndex}
               className={`relative aspect-square overflow-hidden bg-navy-800 transition-all duration-300 ${
                 index === activeIndex

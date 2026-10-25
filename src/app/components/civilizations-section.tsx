@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
@@ -30,33 +31,9 @@ const FRAME_TIMES = Array.from({ length: TOTAL_FRAMES }, (_, index) =>
 )
 
 const CIVILIZATIONS = [
-  {
-    id: "china",
-    chapter: "CIVILIZATION I",
-    titleAr: "الصين — إمبراطورية الحرير",
-    titleEn: "China — The Silk Empire",
-    body: "من سور الصين العظيم إلى حرير الإمبراطوريات، حيث تلتقي القوة بالرقي. استعد لاكتشاف عطور آسرة تجسد حكمة الشرق وتفاصيل الحضارة الصينية العريقة.",
-    ctaAr: "اكتشف الصين",
-    ctaEn: "Discover China",
-  },
-  {
-    id: "greece",
-    chapter: "CIVILIZATION II",
-    titleAr: "اليونان — فجر الحكمة",
-    titleEn: "Greece — Dawn of Wisdom",
-    body: "من رخام أثينا وأساطير الأولمب، حيث تُنسج الحكايات عن الآلهة والأبطال. رحلة عطرية كلاسيكية تجمع بين الأناقة الإغريقية والحداثة الخالدة.",
-    ctaAr: "اكتشف اليونان",
-    ctaEn: "Discover Greece",
-  },
-  {
-    id: "egypt",
-    chapter: "CIVILIZATION III",
-    titleAr: "مصر — أرض النيل",
-    titleEn: "Egypt — The Land of the Nile",
-    body: "أبو الهول، الحارس الصامت لوادي الملوك. من مصر، حيث يلتقي الذهب بالأسرار الخالدة، نصنع عطوراً ملكية تُجسد فخامة الفراعنة وخلود النيل.",
-    ctaAr: "اكتشف مصر",
-    ctaEn: "Discover Egypt",
-  },
+  { id: "china" },
+  { id: "greece" },
+  { id: "egypt" },
 ] as const
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)"
@@ -81,6 +58,7 @@ function frameSources(index: number) {
 }
 
 export function CivilizationsSection() {
+  const t = useTranslations("Civilizations")
   const sectionRef = useRef<HTMLElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const textRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -432,34 +410,27 @@ export function CivilizationsSection() {
               <span aria-hidden="true" className="block h-px w-16 bg-gold/70" />
 
               <p className="mt-6 font-secondary text-[11px] tracking-[0.42em] text-gold/90">
-                {civilization.chapter}
+                {t(`${civilization.id}.chapter`)}
               </p>
 
               <h2 className="mt-4 max-w-4xl font-primary text-[clamp(1.9rem,4.4vw,3.9rem)] leading-[1.15] text-sand">
-                {civilization.titleAr}
+                {t(`${civilization.id}.title`)}
               </h2>
 
-              <p className="mt-3 font-secondary text-[clamp(0.78rem,1.25vw,1.05rem)] tracking-[0.3em] text-sand/65">
-                {civilization.titleEn}
-              </p>
-
               <p className="mt-6 max-w-[38rem] font-primary text-[clamp(0.98rem,1.15vw,1.16rem)] leading-[1.95] text-sand/85">
-                {civilization.body}
+                {t(`${civilization.id}.body`)}
               </p>
 
               <Link
-                href="/products"
+                href="#newsletter"
                 tabIndex={interactive ? 0 : -1}
-                aria-label={`${civilization.ctaAr} — ${civilization.ctaEn}`}
+                aria-label={t(`${civilization.id}.cta`)}
                 className={`group relative mt-9 inline-flex h-11 items-center justify-center overflow-hidden whitespace-nowrap bg-brand-gold px-7 font-primary text-[14px] leading-none text-royal-navy transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] sm:h-[46px] sm:px-9 ${
                   interactive ? "pointer-events-auto" : "pointer-events-none"
                 }`}
               >
                 <span aria-hidden="true" className="cta-sheen" />
-                <span className="relative">{civilization.ctaAr}</span>
-                <span className="relative ms-2 hidden text-[10px] tracking-[0.06em] opacity-70 sm:inline">
-                  {civilization.ctaEn}
-                </span>
+                <span className="relative">{t(`${civilization.id}.cta`)}</span>
               </Link>
             </div>
           )

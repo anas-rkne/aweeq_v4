@@ -1,22 +1,25 @@
 "use client"
 
 import Image from "next/image"
-import Link from "next/link"
+import { useLocale, useTranslations } from "next-intl"
+import { Link } from "@/i18n/navigation"
 import { useEffect, useRef } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { SpotlightCard } from "@/shared/ui/spotlight-card"
+import { TextReveal } from "@/shared/ui/text-reveal"
 import { JOURNAL_POSTS } from "./journal-posts"
 
 export function JournalSection() {
+  const t = useTranslations("Journal")
+  const locale = useLocale()
   const sectionRef = useRef<HTMLElement>(null)
-  const headerRef = useRef<HTMLDivElement>(null)
   const cardsRef = useRef<(HTMLElement | null)[]>([])
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
     const section = sectionRef.current
-    const header = headerRef.current
     if (!section) return
 
     gsap.registerPlugin(ScrollTrigger)
@@ -26,39 +29,19 @@ export function JournalSection() {
     )
 
     const ctx = gsap.context(() => {
-      if (header) {
-        gsap.set(header, { opacity: 0, y: 24 })
-      }
       gsap.set(cards, { opacity: 0, y: 30 })
-
-      const tl = gsap.timeline({
+      gsap.to(cards, {
+        opacity: 1,
+        y: 0,
+        duration: 0.9,
+        stagger: 0.12,
+        ease: "power3.out",
         scrollTrigger: {
           trigger: section,
           start: "top 72%",
           once: true,
         },
       })
-
-      if (header) {
-        tl.to(header, {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out",
-        })
-      }
-
-      tl.to(
-        cards,
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.9,
-          stagger: 0.12,
-          ease: "power3.out",
-        },
-        header ? "-=0.45" : 0
-      )
     }, section)
 
     return () => ctx.revert()
@@ -97,30 +80,46 @@ export function JournalSection() {
       <div className="relative z-10 mx-auto w-full max-w-[84rem] px-5 py-24 sm:px-8 md:px-16 md:py-28 lg:py-32">
         {/* ===== the header: the words on the right, the way out on the left ===== */}
         <div
-          ref={headerRef}
           className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between"
         >
-          <div className="text-right">
+          <div className="text-start">
             <h2 className="font-secondary text-[clamp(2rem,3.8vw,3.4rem)] leading-[1.05] tracking-[-0.01em] text-gold">
-              Stories &amp; Inspiration
+              <TextReveal preset="words" blur>
+                {t("title")}
+              </TextReveal>
             </h2>
             <p className="mt-4 font-primary text-[clamp(1rem,1.3vw,1.2rem)] leading-[1.8] text-sand/80">
-              استكشف قصص الحضارات، رموزها، وفنونها.
+              <TextReveal preset="block">{t("subtitle")}</TextReveal>
             </p>
           </div>
 
-          <Link
-            href="/journal"
-            className="group inline-flex shrink-0 items-center gap-3 self-start font-secondary text-[11px] tracking-[0.28em] text-sand/70 transition-colors duration-300 hover:text-gold md:self-auto"
-          >
-            VIEW ALL
-            <span
-              aria-hidden="true"
-              className="inline-block transition-transform duration-300 ease-out-expo group-hover:-translate-x-1"
+          <div className="flex shrink-0 flex-wrap items-center gap-6 self-start md:self-auto">
+            <Link
+              href="/products?collection=rafid"
+              className="group inline-flex items-center gap-2 font-secondary text-[11px] tracking-[0.28em] text-gold transition-colors duration-300 hover:text-sand"
             >
-              →
-            </span>
-          </Link>
+              {t("shopCollection")}
+              <span
+                aria-hidden="true"
+                className="inline-block transition-transform duration-300 ease-out-expo group-hover:-translate-x-1"
+              >
+                ←
+              </span>
+            </Link>
+
+            <Link
+              href="/journal"
+              className="group inline-flex items-center gap-3 font-secondary text-[11px] tracking-[0.28em] text-sand/70 transition-colors duration-300 hover:text-gold"
+            >
+              {t("viewAll")}
+              <span
+                aria-hidden="true"
+                className="inline-block transition-transform duration-300 ease-out-expo group-hover:-translate-x-1"
+              >
+                →
+              </span>
+            </Link>
+          </div>
         </div>
 
         {/* ===== the gallery ===== */}
@@ -133,10 +132,10 @@ export function JournalSection() {
               }}
               className="group"
             >
-              <div className="relative aspect-[4/5] overflow-hidden border border-sand/10 transition-all duration-500 hover:border-gold/50 hover:shadow-[0_0_45px_-12px_rgba(205,158,97,0.55)]">
+              <SpotlightCard className="aspect-[4/5] border border-sand/10 transition-colors duration-500 hover:border-gold/50">
                 <Image
                   src={post.image}
-                  alt={post.alt}
+                  alt={locale === "ar" ? post.titleAr : post.titleEn}
                   fill
                   quality={90}
                   sizes="(min-width: 64rem) 30vw, (min-width: 48rem) 45vw, 100vw"
@@ -152,21 +151,23 @@ export function JournalSection() {
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-x-5 bottom-5 h-px bg-gold/30 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                 />
-              </div>
+              </SpotlightCard>
 
               <div className="mt-5 flex items-start justify-between gap-5">
-                <div className="min-w-0 text-right">
+                <div className="min-w-0 text-start">
                   <h3 className="font-secondary text-[clamp(1.1rem,1.5vw,1.4rem)] leading-tight tracking-[-0.005em] text-sand">
-                    {post.titleEn}
+                    {locale === "ar" ? post.titleAr : post.titleEn}
                   </h3>
                   <p className="mt-2 font-primary text-[13px] leading-none text-gold">
-                    {post.titleAr}
+                    {locale === "ar" ? post.titleEn : post.titleAr}
                   </p>
                 </div>
 
                 <Link
                   href={`/journal/${post.slug}`}
-                  aria-label={`اقرأ: ${post.titleAr}`}
+                  aria-label={`${t("readArticle")}: ${
+                    locale === "ar" ? post.titleAr : post.titleEn
+                  }`}
                   className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold text-gold transition-colors duration-300 hover:bg-gold hover:text-royal-navy"
                 >
                   <svg

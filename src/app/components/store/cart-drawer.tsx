@@ -2,7 +2,9 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useSyncExternalStore } from "react"
+import { createPortal } from "react-dom"
+import { useLocale, useTranslations } from "next-intl"
 import { formatPrice, normalizeImageUrl } from "@/lib/format"
 import { cartItemLimit } from "@/lib/cart"
 import type { CartItem } from "@/types"
@@ -44,6 +46,9 @@ function BagIcon() {
 }
 
 export function CartDrawer() {
+  const t = useTranslations("Cart")
+  const locale = useLocale()
+  const isRtl = locale === "ar"
   const {
     cart,
     status,
@@ -61,6 +66,11 @@ export function CartDrawer() {
   } = useCart()
   const panelRef = useRef<HTMLElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
 
   useEffect(() => {
     if (!isOpen) {
@@ -136,15 +146,15 @@ export function CartDrawer() {
     } catch {}
   }
 
-  return (
+  const drawer = (
     <div
-      className={`fixed inset-0 z-[110] transition-[pointer-events] ${
+      className={`fixed inset-0 z-[9999] transition-[pointer-events] ${
         isOpen ? "" : "pointer-events-none"
       }`}
     >
       <button
         type="button"
-        aria-label="إغلاق السلة"
+        aria-label={t("close")}
         aria-hidden={!isOpen}
         tabIndex={isOpen ? 0 : -1}
         onClick={closeCart}
@@ -160,8 +170,12 @@ export function CartDrawer() {
         aria-labelledby="cart-drawer-title"
         aria-hidden={!isOpen}
         inert={!isOpen}
-        className={`absolute inset-y-0 end-0 flex h-full w-full max-w-md flex-col border-s border-sand/15 bg-navy-950 shadow-[-24px_0_80px_rgba(0,0,0,0.45)] transition-transform duration-300 ease-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`absolute inset-y-0 end-0 flex h-full w-full max-w-md flex-col border-s border-sand/15 bg-navy-950 transition-transform duration-300 ease-out ${
+          isOpen
+            ? "translate-x-0"
+            : isRtl
+              ? "-translate-x-full"
+              : "translate-x-full"
         }`}
       >
         <div className="flex items-center justify-between border-b border-sand/10 px-5 py-5 sm:px-7">
@@ -170,13 +184,13 @@ export function CartDrawer() {
               id="cart-drawer-title"
               className="font-primary text-xl text-sand"
             >
-              سلة التسوق
+              {t("title")}
             </h2>
             <p
               className="mt-1 font-secondary text-[11px] tracking-[0.14em] text-sand/45"
               aria-live="polite"
             >
-              {itemCount > 0 ? `${itemCount} قطعة` : "السلة فارغة"}
+              {itemCount > 0 ? t("items", { count: itemCount }) : t("empty")}
             </p>
           </div>
 
@@ -184,7 +198,7 @@ export function CartDrawer() {
             ref={closeButtonRef}
             type="button"
             onClick={closeCart}
-            aria-label="إغلاق السلة"
+            aria-label={t("close")}
             className="p-2 text-sand/55 transition-colors duration-200 hover:text-gold"
           >
             <CloseIcon />
@@ -201,7 +215,7 @@ export function CartDrawer() {
               <button
                 type="button"
                 onClick={clearActionError}
-                aria-label="إخفاء التنبيه"
+                aria-label={t("dismiss")}
                 className="shrink-0 text-red-200/60 transition-colors hover:text-red-100"
               >
                 <CloseIcon />
@@ -210,7 +224,7 @@ export function CartDrawer() {
           )}
 
           {status === "loading" && (
-            <div className="space-y-4" aria-label="جارٍ تحميل السلة">
+            <div className="space-y-4" aria-label={t("loading")}>
               {[0, 1, 2].map((row) => (
                 <div key={row} className="flex animate-pulse gap-4">
                   <div className="h-24 w-20 shrink-0 bg-sand/5" />
@@ -234,7 +248,7 @@ export function CartDrawer() {
                 onClick={() => void refreshCart()}
                 className="mt-5 border border-gold/40 px-5 py-2.5 font-primary text-sm text-gold transition-colors hover:bg-gold hover:text-royal-navy"
               >
-                إعادة المحاولة
+                {t("retry")}
               </button>
             </div>
           )}
@@ -245,17 +259,17 @@ export function CartDrawer() {
                 <BagIcon />
               </span>
               <h3 className="mt-5 font-primary text-lg text-sand">
-                سلتك فارغة
+                {t("emptyTitle")}
               </h3>
               <p className="mt-2 max-w-xs font-primary text-sm leading-7 text-sand/45">
-                اكتشف إصداراتنا المحدودة وأضف قطعتك الأولى.
+                {t("emptyMessage")}
               </p>
               <Link
                 href="/products"
                 onClick={closeCart}
                 className="mt-6 border border-gold/40 px-6 py-3 font-primary text-sm text-gold transition-colors duration-300 hover:bg-gold hover:text-royal-navy"
               >
-                تصفح المتجر
+                {t("browseStore")}
               </Link>
             </div>
           )}
@@ -333,7 +347,7 @@ export function CartDrawer() {
                               void changeQuantity(item, item.quantity - 1)
                             }
                             disabled={pending || item.quantity <= 1}
-                            aria-label="تقليل الكمية"
+                            aria-label={t("decrease")}
                             className="grid h-8 w-8 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
                           >
                             −
@@ -347,7 +361,7 @@ export function CartDrawer() {
                               void changeQuantity(item, item.quantity + 1)
                             }
                             disabled={pending || item.quantity >= limit}
-                            aria-label="زيادة الكمية"
+                            aria-label={t("increase")}
                             className="grid h-8 w-8 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
                           >
                             +
@@ -360,7 +374,7 @@ export function CartDrawer() {
                           disabled={pending}
                           className="font-primary text-[11px] text-sand/35 underline-offset-4 transition-colors hover:text-red-300 hover:underline disabled:opacity-40"
                         >
-                          إزالة
+                          {t("remove")}
                         </button>
                       </div>
                     </div>
@@ -375,14 +389,14 @@ export function CartDrawer() {
           <div className="border-t border-sand/10 bg-navy-975 px-5 py-5 sm:px-7">
             <div className="flex items-baseline justify-between">
               <span className="font-primary text-sm text-sand/55">
-                المجموع الفرعي
+                {t("subtotal")}
               </span>
               <span className="font-secondary text-lg text-gold">
                 {formatPrice(subtotal, currencyCode)}
               </span>
             </div>
             <p className="mt-2 font-primary text-[11px] leading-5 text-sand/35">
-              الشحن والضرائب تُحسب عند إتمام الطلب.
+              {t("shippingNote")}
             </p>
 
             <div className="mt-4 grid gap-2">
@@ -391,14 +405,14 @@ export function CartDrawer() {
                 onClick={closeCart}
                 className="block w-full border border-gold bg-gold px-6 py-3.5 text-center font-primary text-sm font-bold text-royal-navy transition-colors duration-300 hover:bg-gold/85"
               >
-                عرض السلة
+                {t("viewCart")}
               </Link>
               <button
                 type="button"
                 disabled
                 className="w-full cursor-not-allowed border border-sand/10 px-6 py-3 font-primary text-sm text-sand/35"
               >
-                إتمام الشراء — قريباً
+                {t("checkoutSoon")}
               </button>
             </div>
           </div>
@@ -406,4 +420,10 @@ export function CartDrawer() {
       </aside>
     </div>
   )
+
+  if (!mounted) {
+    return null
+  }
+
+  return createPortal(drawer, document.body)
 }

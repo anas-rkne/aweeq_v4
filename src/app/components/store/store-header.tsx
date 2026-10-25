@@ -1,17 +1,19 @@
 "use client"
 
 import Image from "next/image"
-import Link from "next/link"
+import { useTranslations } from "next-intl"
+import { Link } from "@/i18n/navigation"
 import { useCart } from "./cart-provider"
 
 const NAV_LINKS = [
-  { href: "/", label: "الرئيسية" },
-  { href: "/products", label: "المتجر" },
-  { href: "/collections", label: "المجموعات" },
-  { href: "/#story", label: "قصتنا" },
+  { href: "/", key: "home" },
+  { href: "/products", key: "shop" },
+  { href: "/collections", key: "collections" },
+  { href: "/story", key: "story" },
 ] as const
 
 export function StoreHeader() {
+  const t = useTranslations("Store")
   const { itemCount, openCart } = useCart()
 
   return (
@@ -19,7 +21,7 @@ export function StoreHeader() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-5 md:h-24 md:px-10">
         <Link
           href="/"
-          aria-label="3WEEQ — الرئيسية"
+          aria-label={t("logoLabel")}
           className="inline-flex shrink-0 items-center"
         >
           <Image
@@ -34,7 +36,7 @@ export function StoreHeader() {
           />
         </Link>
 
-        <nav aria-label="تنقل المتجر" className="hidden md:block">
+        <nav aria-label={t("mainNav")} className="hidden md:block">
           <ul className="flex items-center gap-8">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
@@ -42,7 +44,7 @@ export function StoreHeader() {
                   href={link.href}
                   className="font-primary text-sm text-sand/65 transition-colors duration-300 hover:text-gold"
                 >
-                  {link.label}
+                  {t(link.key)}
                 </Link>
               </li>
             ))}
@@ -52,7 +54,7 @@ export function StoreHeader() {
         <div className="flex items-center gap-4">
           <Link
             href="/products"
-            aria-label="ابحث في المتجر"
+            aria-label={t("search")}
             className="p-1 text-sand/70 transition-colors duration-300 hover:text-gold"
           >
             <svg
@@ -72,7 +74,9 @@ export function StoreHeader() {
           <button
             type="button"
             onClick={openCart}
-            aria-label={itemCount > 0 ? `السلة، ${itemCount} قطعة` : "السلة"}
+            aria-label={
+              itemCount > 0 ? t("cartItems", { count: itemCount }) : t("cart")
+            }
             className="relative p-1 text-sand/70 transition-colors duration-300 hover:text-gold"
           >
             <svg
@@ -98,7 +102,7 @@ export function StoreHeader() {
       </div>
 
       <nav
-        aria-label="تنقل المتجر للجوال"
+        aria-label={t("mobileNav")}
         className="border-t border-sand/10 px-5 py-3 md:hidden"
       >
         <ul className="flex items-center justify-between gap-4">
@@ -108,7 +112,7 @@ export function StoreHeader() {
                 href={link.href}
                 className="font-primary text-xs text-sand/65 transition-colors duration-300 hover:text-gold"
               >
-                {link.label}
+                {t(link.key)}
               </Link>
             </li>
           ))}
