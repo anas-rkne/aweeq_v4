@@ -82,7 +82,7 @@ export default async function ProductDetailPage({
   const currencyCode =
     product.default_variant?.price?.currency_code ??
     product.variants[0]?.price?.currency_code ??
-    "sar"
+    "aed"
 
   const packagingMedia = (product.media ?? []).filter(
     (media) => media.role === "packaging" || media.role === "detail"
@@ -120,7 +120,7 @@ export default async function ProductDetailPage({
     offers: structuredPrice
       ? {
           "@type": "Offer",
-          price: (structuredPrice / 100).toFixed(2),
+          price: structuredPrice.toFixed(2),
           priceCurrency: currencyCode.toUpperCase(),
           availability: product.variants.some((variant) => variant.in_stock)
             ? "https://schema.org/InStock"

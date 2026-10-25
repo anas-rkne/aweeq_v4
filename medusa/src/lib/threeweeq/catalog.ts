@@ -59,7 +59,7 @@ export function resolveLocale(req: MedusaRequest): Locale {
 
 export function resolveCurrencyCode(
   req: MedusaRequest,
-  fallback = "sar"
+  fallback = "aed"
 ): string {
   const queryCurrency =
     typeof req.query.currency_code === "string"

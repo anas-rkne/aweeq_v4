@@ -494,7 +494,7 @@ const rafidVariantSeeds = [
     key: "50",
     title: "50 ml",
     sku: "RAFID-50",
-    amount: 85000,
+    amount: 850,
     size_ml: 50,
     packaging: "bottle-50",
   },
@@ -502,7 +502,7 @@ const rafidVariantSeeds = [
     key: "100",
     title: "100 ml",
     sku: "RAFID-100",
-    amount: 120000,
+    amount: 1200,
     size_ml: 100,
     packaging: "bottle-100",
   },
@@ -510,7 +510,7 @@ const rafidVariantSeeds = [
     key: "discovery",
     title: "Discovery Set",
     sku: "RAFID-DISCOVERY",
-    amount: 35000,
+    amount: 350,
     size_ml: 3,
     packaging: "discovery-box",
   },
@@ -565,7 +565,7 @@ export default async function seed({ container }: ExecArgs) {
   const { data: existingRegions } = await query.graph({
     entity: "region",
     fields: ["id", "name", "currency_code"],
-    filters: { currency_code: "sar" },
+    filters: { currency_code: "aed" },
     pagination: { skip: 0, take: 1 },
   })
   let region = existingRegions?.[0] ?? null
@@ -575,9 +575,9 @@ export default async function seed({ container }: ExecArgs) {
       input: {
         regions: [
           {
-            name: "GCC",
-            currency_code: "sar",
-            countries: ["sa", "ae", "kw", "qa", "bh", "om"],
+            name: "UAE",
+            currency_code: "aed",
+            countries: ["ae"],
           },
         ],
       },
@@ -756,7 +756,7 @@ export default async function seed({ container }: ExecArgs) {
       input: {
         data: [
           {
-            name: "GCC",
+            name: "UAE",
             fulfillment_set_id: resolvedSet.id,
             geo_zones: ["sa", "ae", "kw", "qa", "bh", "om"].map(
               (countryCode) => ({
@@ -833,7 +833,7 @@ export default async function seed({ container }: ExecArgs) {
             code: "standard",
           },
           price_type: "flat",
-          prices: [{ amount: 0, currency_code: "sar" }],
+          prices: [{ amount: 0, currency_code: "aed" }],
         },
       ],
     })
@@ -875,7 +875,7 @@ export default async function seed({ container }: ExecArgs) {
               prices: [
                 {
                   amount: variant.amount,
-                  currency_code: "sar",
+                  currency_code: "aed",
                 },
               ],
             })),

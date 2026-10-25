@@ -64,6 +64,10 @@ class TapPaymentProviderService extends AbstractPaymentProvider<Options> {
     return Number(new BigNumber(value as any).numeric)
   }
 
+  private toMinorUnits(value: unknown) {
+    return Math.round(this.toNumber(value) * 100)
+  }
+
   private async request<T>(
     path: string,
     method: "GET" | "POST",
@@ -128,7 +132,7 @@ class TapPaymentProviderService extends AbstractPaymentProvider<Options> {
         : this.options_.redirectUrl
 
     const charge = await this.request<TapCharge>("/charges", "POST", {
-      amount: this.toNumber(input.amount),
+      amount: this.toMinorUnits(input.amount),
       currency: input.currency_code.toUpperCase(),
       customer: {
         first_name: customer.first_name,
@@ -222,7 +226,7 @@ class TapPaymentProviderService extends AbstractPaymentProvider<Options> {
     }
 
     await this.request(`/charges/${id}/refund`, "POST", {
-      amount: this.toNumber(input.amount),
+      amount: this.toMinorUnits(input.amount),
       reason: "requested_by_customer",
     })
 

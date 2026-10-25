@@ -158,10 +158,10 @@ const POLICIES: Policy[] = [
         headingAr: "الأسعار",
         headingEn: "Prices",
         bodyAr: [
-          "جميع الأسعار بالريال السعودي وتشمل القيمة المضافة حيث ينطبق. قد تتغير الأسعار دون إشعار مسبق.",
+          "جميع الأسعار بالدرهم الإماراتي وتشمل القيمة المضافة حيث ينطبق. قد تتغير الأسعار دون إشعار مسبق.",
         ],
         bodyEn: [
-          "All prices are in Saudi Riyals and include VAT where applicable. Prices may change without prior notice.",
+          "All prices are in UAE Dirhams and include VAT where applicable. Prices may change without prior notice.",
         ],
       },
       {

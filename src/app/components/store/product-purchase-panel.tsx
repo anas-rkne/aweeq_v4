@@ -77,7 +77,7 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
         >
           {formatPrice(
             selectedVariant?.price?.amount ?? product.price_range?.min,
-            selectedVariant?.price?.currency_code ?? "sar",
+            selectedVariant?.price?.currency_code ?? "aed",
             storeLocale
           )}
         </p>
@@ -248,7 +248,7 @@ function VariantButton({
       <span className="mt-1 block font-secondary text-xs text-sand/55">
         {formatPrice(
           variant.price?.amount,
-          variant.price?.currency_code ?? "sar",
+          variant.price?.currency_code ?? "aed",
           locale
         )}
       </span>

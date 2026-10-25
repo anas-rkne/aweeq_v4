@@ -268,13 +268,20 @@ export async function resolveRegionId(
     return requestedRegionId
   }
 
+  const { data: aedRegions } = await query.graph({
+    entity: "region",
+    fields: ["id", "name", "currency_code"],
+    filters: { currency_code: "aed" },
+    pagination: { skip: 0, take: 1 },
+  })
+
   const { data } = await query.graph({
     entity: "region",
     fields: ["id", "name", "currency_code"],
     pagination: { skip: 0, take: 1 },
   })
 
-  const region = data?.[0]
+  const region = aedRegions?.[0] ?? data?.[0]
   if (!region?.id) {
     throw new MedusaError(
       MedusaError.Types.INVALID_DATA,

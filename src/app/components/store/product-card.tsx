@@ -17,7 +17,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const imageUrl = normalizeImageUrl(product.thumbnail)
   const price = formatPriceRange(
     product.price_range,
-    product.variants[0]?.price?.currency_code ?? "sar",
+    product.variants[0]?.price?.currency_code ?? "aed",
     storeLocale
   )
   const hasStock = product.variants.some((variant) => variant.in_stock)

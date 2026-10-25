@@ -11,7 +11,7 @@ Create `.env.local` in the project root. Only variables prefixed with
 | `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` | yes | Public key used for `/store/*` requests |
 | `NEXT_PUBLIC_SITE_URL` | recommended | Canonical site URL used by metadata |
 | `NEXT_PUBLIC_SITE_NAME` | optional | Brand name fallback |
-| `NEXT_PUBLIC_DEFAULT_CURRENCY` | optional | Default currency code (default `sar`) |
+| `NEXT_PUBLIC_DEFAULT_CURRENCY` | optional | Default currency code (default `aed`) |
 | `NEXT_PUBLIC_DEFAULT_LOCALE` | optional | Default locale (default `ar`) |
 | `NEXT_PUBLIC_DEFAULT_REGION` | optional | Default region label |
 

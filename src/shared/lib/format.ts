@@ -2,16 +2,16 @@ export type StoreLocale = "ar" | "en"
 
 export function formatPrice(
   amount: number | null | undefined,
-  currencyCode: string = "sar",
+  currencyCode: string = "aed",
   locale: StoreLocale = "ar"
 ) {
   if (amount == null || !Number.isFinite(amount)) {
     return ""
   }
 
-  const value = amount / 100
+  const value = amount
   const hasFraction = Math.round(value * 100) % 100 !== 0
-  const numberLocale = locale === "en" ? "en-US" : "ar-SA-u-nu-latn"
+  const numberLocale = locale === "en" ? "en-AE" : "ar-AE"
 
   try {
     return new Intl.NumberFormat(numberLocale, {
@@ -27,7 +27,7 @@ export function formatPrice(
 
 export function formatPriceRange(
   range: { min: number; max: number } | null,
-  currencyCode: string = "sar",
+  currencyCode: string = "aed",
   locale: StoreLocale = "ar"
 ) {
   if (!range) {
