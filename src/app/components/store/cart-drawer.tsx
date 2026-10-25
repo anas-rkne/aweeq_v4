@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 import { useEffect, useRef, useSyncExternalStore } from "react"
 import { createPortal } from "react-dom"
 import { useLocale, useTranslations } from "next-intl"
@@ -334,7 +334,8 @@ export function CartDrawer() {
                           {formatPrice(
                             item.total ??
                               (item.unit_price ?? 0) * item.quantity,
-                            currencyCode
+                            currencyCode,
+                            isRtl ? "ar" : "en"
                           )}
                         </p>
                       </div>
@@ -392,7 +393,7 @@ export function CartDrawer() {
                 {t("subtotal")}
               </span>
               <span className="font-secondary text-lg text-gold">
-                {formatPrice(subtotal, currencyCode)}
+                {formatPrice(subtotal, currencyCode, isRtl ? "ar" : "en")}
               </span>
             </div>
             <p className="mt-2 font-primary text-[11px] leading-5 text-sand/35">

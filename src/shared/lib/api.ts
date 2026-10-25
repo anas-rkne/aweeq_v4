@@ -74,7 +74,8 @@ export async function getCivilizations(
 
 export async function getRelatedProducts(
   product: Product,
-  limit = 4
+  limit = 4,
+  locale: StoreLocale = "ar"
 ): Promise<Product[]> {
   const filters = product.collection?.handle
     ? { collection: product.collection.handle }
@@ -82,6 +83,10 @@ export async function getRelatedProducts(
       ? { civilization: product.civilization.id }
       : {}
 
-  const data = await getProducts({ ...filters, limit: limit + 1 })
+  const data = await getProducts({
+    ...filters,
+    limit: limit + 1,
+    locale,
+  })
   return data.products.filter((item) => item.id !== product.id).slice(0, limit)
 }

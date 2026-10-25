@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { useTranslations } from "next-intl"
-import Link from "next/link"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
@@ -421,7 +420,7 @@ export function CivilizationsSection() {
                 {t(`${civilization.id}.body`)}
               </p>
 
-              <Link
+              <a
                 href="#newsletter"
                 tabIndex={interactive ? 0 : -1}
                 aria-label={t(`${civilization.id}.cta`)}
@@ -431,7 +430,7 @@ export function CivilizationsSection() {
               >
                 <span aria-hidden="true" className="cta-sheen" />
                 <span className="relative">{t(`${civilization.id}.cta`)}</span>
-              </Link>
+              </a>
             </div>
           )
         })}

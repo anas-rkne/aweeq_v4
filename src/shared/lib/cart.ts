@@ -1,8 +1,10 @@
 import { DEFAULT_LOCALE } from "./config"
 import { MedusaApiError, medusaFetch } from "./medusa-fetch"
+import type { StoreLocale } from "./format"
 import type { Cart, CartResponse } from "@/types"
 
 const CART_STORAGE_KEY = "threeweeq_cart_id"
+const DEFAULT_STORE_LOCALE: StoreLocale = DEFAULT_LOCALE === "en" ? "en" : "ar"
 
 export function readStoredCartId() {
   if (typeof window === "undefined") {
@@ -36,8 +38,11 @@ export function forgetCartId() {
   } catch {}
 }
 
-function cartQuery(cartId?: string | null) {
-  const params = new URLSearchParams({ locale: DEFAULT_LOCALE })
+function cartQuery(
+  cartId?: string | null,
+  locale: StoreLocale = DEFAULT_STORE_LOCALE
+) {
+  const params = new URLSearchParams({ locale })
 
   if (cartId) {
     params.set("cart_id", cartId)
@@ -46,39 +51,57 @@ function cartQuery(cartId?: string | null) {
   return params.toString()
 }
 
-export async function fetchCart(cartId?: string | null) {
-  return medusaFetch<CartResponse>(`/store/threeweeq/cart?${cartQuery(cartId)}`)
+export async function fetchCart(
+  cartId?: string | null,
+  locale: StoreLocale = DEFAULT_STORE_LOCALE
+) {
+  return medusaFetch<CartResponse>(
+    `/store/threeweeq/cart?${cartQuery(cartId, locale)}`
+  )
 }
 
-export async function createCart(cartId?: string | null) {
-  return medusaFetch<CartResponse>("/store/threeweeq/cart", {
-    method: "POST",
-    body: JSON.stringify(cartId ? { cart_id: cartId } : {}),
-  })
+export async function createCart(
+  cartId?: string | null,
+  locale: StoreLocale = DEFAULT_STORE_LOCALE
+) {
+  return medusaFetch<CartResponse>(
+    `/store/threeweeq/cart?locale=${encodeURIComponent(locale)}`,
+    {
+      method: "POST",
+      body: JSON.stringify(cartId ? { cart_id: cartId } : {}),
+    }
+  )
 }
 
 export async function addCartItem(
   cartId: string,
   variantId: string,
-  quantity: number
+  quantity: number,
+  locale: StoreLocale = DEFAULT_STORE_LOCALE
 ) {
-  return medusaFetch<CartResponse>("/store/threeweeq/cart/items", {
-    method: "POST",
-    body: JSON.stringify({
-      cart_id: cartId,
-      variant_id: variantId,
-      quantity,
-    }),
-  })
+  return medusaFetch<CartResponse>(
+    `/store/threeweeq/cart/items?locale=${encodeURIComponent(locale)}`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        cart_id: cartId,
+        variant_id: variantId,
+        quantity,
+      }),
+    }
+  )
 }
 
 export async function updateCartItem(
   cartId: string,
   itemId: string,
-  quantity: number
+  quantity: number,
+  locale: StoreLocale = DEFAULT_STORE_LOCALE
 ) {
   return medusaFetch<CartResponse>(
-    `/store/threeweeq/cart/items/${encodeURIComponent(itemId)}`,
+    `/store/threeweeq/cart/items/${encodeURIComponent(
+      itemId
+    )}?locale=${encodeURIComponent(locale)}`,
     {
       method: "PATCH",
       body: JSON.stringify({ cart_id: cartId, quantity }),
@@ -86,11 +109,17 @@ export async function updateCartItem(
   )
 }
 
-export async function removeCartItem(cartId: string, itemId: string) {
+export async function removeCartItem(
+  cartId: string,
+  itemId: string,
+  locale: StoreLocale = DEFAULT_STORE_LOCALE
+) {
   return medusaFetch<CartResponse>(
     `/store/threeweeq/cart/items/${encodeURIComponent(
       itemId
-    )}?cart_id=${encodeURIComponent(cartId)}&locale=${DEFAULT_LOCALE}`,
+    )}?cart_id=${encodeURIComponent(cartId)}&locale=${encodeURIComponent(
+      locale
+    )}`,
     { method: "DELETE" }
   )
 }

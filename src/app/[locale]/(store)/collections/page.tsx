@@ -1,5 +1,5 @@
 import Image from "next/image"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 import { getTranslations } from "next-intl/server"
 import { getCollections } from "@/lib/api"
 import { normalizeImageUrl } from "@/lib/format"
@@ -27,7 +27,7 @@ export default async function CollectionsPage({
 }) {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: "Store" })
-  const collections = await getCollections()
+  const collections = await getCollections(locale === "en" ? "en" : "ar")
 
   return (
     <main className="min-h-screen bg-royal-navy">

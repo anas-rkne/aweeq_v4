@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import { useLocale } from "next-intl"
 import {
   addCartItem,
   cartErrorMessage,
@@ -63,6 +64,8 @@ function isMissingCartError(error: unknown) {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const locale = useLocale()
+  const storeLocale = locale === "en" ? "en" : "ar"
   const [cart, setCart] = useState<Cart | null>(null)
   const [status, setStatus] = useState<CartStatus>("loading")
   const [error, setError] = useState<string | null>(null)
@@ -84,14 +87,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const resolveCart = useCallback(async () => {
     const storedId = readStoredCartId()
-    let response = await fetchCart(storedId)
+    let response = await fetchCart(storedId, storeLocale)
 
     if (!response.cart && storedId) {
-      response = await fetchCart()
+      response = await fetchCart(null, storeLocale)
     }
 
     return response
-  }, [])
+  }, [storeLocale])
 
   const applyLoadedCart = useCallback(
     (response: CartResponse) => {
@@ -144,16 +147,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return createPromiseRef.current
     }
 
-    const promise = createCart(readStoredCartId()).then((response) => {
-      if (!response.cart) {
-        throw new Error("Cart creation returned no cart")
-      }
+    const promise = createCart(readStoredCartId(), storeLocale).then(
+      (response) => {
+        if (!response.cart) {
+          throw new Error("Cart creation returned no cart")
+        }
 
-      applyCart(response)
-      setStatus("ready")
-      setError(null)
-      return response.cart
-    })
+        applyCart(response)
+        setStatus("ready")
+        setError(null)
+        return response.cart
+      }
+    )
 
     createPromiseRef.current = promise
 
@@ -162,7 +167,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } finally {
       createPromiseRef.current = null
     }
-  }, [applyCart, cart])
+  }, [applyCart, cart, storeLocale])
 
   const addItem = useCallback(
     async (variantId: string, quantity = 1) => {
@@ -174,7 +179,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         let response: CartResponse
 
         try {
-          response = await addCartItem(activeCart.id, variantId, quantity)
+          response = await addCartItem(
+            activeCart.id,
+            variantId,
+            quantity,
+            storeLocale
+          )
         } catch (addError) {
           if (!isMissingCartError(addError)) {
             throw addError
@@ -182,7 +192,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
           forgetCartId()
           setCart(null)
-          activeCart = await createCart().then((created) => {
+          activeCart = await createCart(null, storeLocale).then((created) => {
             if (!created.cart) {
               throw new Error("Cart creation returned no cart")
             }
@@ -190,7 +200,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
             applyCart(created)
             return created.cart
           })
-          response = await addCartItem(activeCart.id, variantId, quantity)
+          response = await addCartItem(
+            activeCart.id,
+            variantId,
+            quantity,
+            storeLocale
+          )
         }
 
         applyCart(response)
@@ -203,7 +218,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setIsAdding(false)
       }
     },
-    [applyCart, ensureCart]
+    [applyCart, ensureCart, storeLocale]
   )
 
   const updateItem = useCallback(
@@ -218,8 +233,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
         const response =
           quantity <= 0
-            ? await removeCartItem(cart.id, itemId)
-            : await updateCartItem(cart.id, itemId, quantity)
+            ? await removeCartItem(cart.id, itemId, storeLocale)
+            : await updateCartItem(cart.id, itemId, quantity, storeLocale)
 
         applyCart(response)
       } catch (updateError) {
@@ -230,7 +245,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setPendingItemId(null)
       }
     },
-    [applyCart, cart]
+    [applyCart, cart, storeLocale]
   )
 
   const removeItem = useCallback(
@@ -243,7 +258,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setActionError(null)
 
       try {
-        const response = await removeCartItem(cart.id, itemId)
+        const response = await removeCartItem(cart.id, itemId, storeLocale)
         applyCart(response)
       } catch (removeError) {
         const message = cartErrorMessage(removeError)
@@ -253,7 +268,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setPendingItemId(null)
       }
     },
-    [applyCart, cart]
+    [applyCart, cart, storeLocale]
   )
 
   const openCart = useCallback(() => {

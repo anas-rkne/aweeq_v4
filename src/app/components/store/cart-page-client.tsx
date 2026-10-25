@@ -1,8 +1,8 @@
 "use client"
 
 import Image from "next/image"
-import Link from "next/link"
-import { useTranslations } from "next-intl"
+import { Link } from "@/i18n/navigation"
+import { useLocale, useTranslations } from "next-intl"
 import { formatPrice, normalizeImageUrl } from "@/lib/format"
 import { cartItemLimit } from "@/lib/cart"
 import type { CartItem } from "@/types"
@@ -45,6 +45,8 @@ function BagIcon() {
 
 export function CartPageClient() {
   const t = useTranslations("Cart")
+  const locale = useLocale()
+  const storeLocale = locale === "en" ? "en" : "ar"
   const {
     cart,
     status,
@@ -237,7 +239,11 @@ export function CartPageClient() {
                         )}
                         {item.unit_price != null && (
                           <p className="mt-1 font-secondary text-xs text-sand/35">
-                            {formatPrice(item.unit_price, currencyCode)}{" "}
+                            {formatPrice(
+                              item.unit_price,
+                              currencyCode,
+                              storeLocale
+                            )}{" "}
                             {t("perItem")}
                           </p>
                         )}
@@ -246,7 +252,8 @@ export function CartPageClient() {
                       <p className="shrink-0 font-secondary text-base text-gold sm:text-lg">
                         {formatPrice(
                           item.total ?? (item.unit_price ?? 0) * item.quantity,
-                          currencyCode
+                          currencyCode,
+                          storeLocale
                         )}
                       </p>
                     </div>
@@ -304,7 +311,7 @@ export function CartPageClient() {
               <div className="flex items-center justify-between gap-4">
                 <dt className="text-sand/50">{t("subtotal")}</dt>
                 <dd className="text-sand/85">
-                  {formatPrice(subtotal, currencyCode)}
+                  {formatPrice(subtotal, currencyCode, storeLocale)}
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-4">
@@ -322,7 +329,7 @@ export function CartPageClient() {
                 {t("total")}
               </span>
               <span className="font-secondary text-xl text-gold">
-                {formatPrice(total, currencyCode)}
+                {formatPrice(total, currencyCode, storeLocale)}
               </span>
             </div>
 

@@ -1,5 +1,5 @@
 import Image from "next/image"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 import { notFound } from "next/navigation"
 import { cache } from "react"
 import { getTranslations } from "next-intl/server"
@@ -17,8 +17,10 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: string; handle: string }>
 }) {
-  const { handle } = await params
-  const product = await getProduct(handle)
+  const { locale, handle } = await params
+  const product = await getProduct(handle, {
+    locale: locale === "en" ? "en" : "ar",
+  })
 
   if (!product) {
     notFound()
@@ -60,13 +62,14 @@ export default async function ProductDetailPage({
   const { locale, handle } = await params
   const t = await getTranslations({ locale, namespace: "Product" })
   const storeT = await getTranslations({ locale, namespace: "Store" })
-  const product = await getProduct(handle)
+  const storeLocale = locale === "en" ? "en" : "ar"
+  const product = await getProduct(handle, { locale: storeLocale })
 
   if (!product) {
     notFound()
   }
 
-  const related = await getRelatedProducts(product)
+  const related = await getRelatedProducts(product, 4, storeLocale)
   const pyramid = parseJsonField<OlfactoryPyramid>(
     product.olfactory_pyramid,
     {}

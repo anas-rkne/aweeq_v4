@@ -1,5 +1,5 @@
-import Link from "next/link"
-import { redirect } from "next/navigation"
+import { Link } from "@/i18n/navigation"
+import { redirect } from "@/i18n/navigation"
 import { getTranslations } from "next-intl/server"
 import { ProductCard } from "@/components/store/product-card"
 import {
@@ -8,7 +8,12 @@ import {
   STORE_PAGE_SIZE,
   STORE_PRODUCT_TYPES,
 } from "@/lib/catalog"
-import { getCivilizations, getCollections, getProducts } from "@/lib/api"
+import {
+  getCivilizations,
+  getCollections,
+  getProducts,
+  type StoreLocale,
+} from "@/lib/api"
 
 type ProductsSearchParams = {
   q?: string | string[]
@@ -44,6 +49,7 @@ export default async function ProductsPage({
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: "Store" })
   const isArabic = locale === "ar"
+  const storeLocale: StoreLocale = isArabic ? "ar" : "en"
   const query = await searchParams
   const q = asString(query.q).trim()
   const civilization = asString(query.civilization).trim()
@@ -60,9 +66,10 @@ export default async function ProductsPage({
         product_type: productType || undefined,
         limit: STORE_PAGE_SIZE,
         offset,
+        locale: storeLocale,
       }),
-      getCivilizations(),
-      getCollections(),
+      getCivilizations(storeLocale),
+      getCollections(storeLocale),
     ])
 
   const activeFilters = {
@@ -91,7 +98,10 @@ export default async function ProductsPage({
       count > 0
         ? Math.floor((count - 1) / STORE_PAGE_SIZE) * STORE_PAGE_SIZE
         : 0
-    redirect(buildHref({ offset: lastOffset > 0 ? String(lastOffset) : "" }))
+    redirect({
+      href: buildHref({ offset: lastOffset > 0 ? String(lastOffset) : "" }),
+      locale,
+    })
   }
 
   const selectedCivilization = civilizations.find(

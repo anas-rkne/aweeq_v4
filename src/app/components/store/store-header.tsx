@@ -1,8 +1,8 @@
 "use client"
 
 import Image from "next/image"
-import { useTranslations } from "next-intl"
-import { Link } from "@/i18n/navigation"
+import { useLocale, useTranslations } from "next-intl"
+import { Link, usePathname, useRouter } from "@/i18n/navigation"
 import { useCart } from "./cart-provider"
 
 const NAV_LINKS = [
@@ -14,7 +14,18 @@ const NAV_LINKS = [
 
 export function StoreHeader() {
   const t = useTranslations("Store")
+  const navT = useTranslations("Navbar")
+  const locale = useLocale()
+  const pathname = usePathname()
+  const router = useRouter()
   const { itemCount, openCart } = useCart()
+
+  const switchLocale = () => {
+    const nextLocale = locale === "ar" ? "en" : "ar"
+    router.replace(`${pathname}${window.location.search}`, {
+      locale: nextLocale,
+    })
+  }
 
   return (
     <header className="fixed inset-x-0 top-0 z-40 border-b border-sand/10 bg-royal-navy/90 backdrop-blur-md">
@@ -51,7 +62,22 @@ export function StoreHeader() {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <button
+            type="button"
+            onClick={switchLocale}
+            aria-label={navT("language")}
+            className="whitespace-nowrap font-secondary text-[11px] tracking-[0.12em] text-sand/80 transition-colors duration-200 ease-out hover:text-gold"
+          >
+            <span className={locale === "ar" ? "text-gold" : "text-sand/40"}>
+              AR
+            </span>
+            <span className="mx-0.5 text-sand/30">/</span>
+            <span className={locale === "en" ? "text-gold" : "text-sand/40"}>
+              EN
+            </span>
+          </button>
+
           <Link
             href="/products"
             aria-label={t("search")}

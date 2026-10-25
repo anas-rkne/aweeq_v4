@@ -1,13 +1,8 @@
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 import { getTranslations } from "next-intl/server"
 
-export default async function StoreNotFound({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}) {
-  const { locale } = await params
-  const t = await getTranslations({ locale, namespace: "Common" })
+export default async function StoreNotFound() {
+  const t = await getTranslations("Common")
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
