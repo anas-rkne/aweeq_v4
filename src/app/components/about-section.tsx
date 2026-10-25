@@ -228,8 +228,7 @@ export function AboutSection() {
                   alt={t(`${c.id}.alt`)}
                   fill
                   sizes="(min-width: 1024px) 50vw, 100vw"
-                  priority={i === 0}
-                  loading={i === 0 ? undefined : "eager"}
+                  preload={i === 0}
                   className="absolute inset-0 h-full w-full object-cover"
                 />
               </div>

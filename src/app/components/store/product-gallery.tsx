@@ -57,7 +57,7 @@ export function ProductGallery({ product }: ProductGalleryProps) {
           src={active.url}
           alt={active.alt}
           fill
-          priority
+          preload
           className="object-cover"
           sizes="(max-width: 1024px) 100vw, 50vw"
         />

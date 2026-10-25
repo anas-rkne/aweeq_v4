@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useState, type FormEvent } from "react"
 import { TextReveal } from "@/shared/ui/text-reveal"
 
@@ -9,6 +9,7 @@ type FormStatus = "idle" | "submitting" | "success" | "error"
 
 export function NewsletterSection() {
   const t = useTranslations("Newsletter")
+  const locale = useLocale()
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<FormStatus>("idle")
   const [message, setMessage] = useState("")
@@ -32,7 +33,7 @@ export function NewsletterSection() {
       const response = await fetch("/api/newsletter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: value }),
+        body: JSON.stringify({ email: value, locale }),
       })
 
       if (!response.ok) {

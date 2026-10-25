@@ -3,10 +3,42 @@ import path from "node:path"
 import { NextResponse } from "next/server"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const isProduction = process.env.NODE_ENV === "production"
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
+const RATE_LIMIT_MAX = 5
 
 type Subscriber = { email: string; at: string }
+type RateEntry = { count: number; resetAt: number }
+
+const rateLimit = new Map<string, RateEntry>()
+
+function isRateLimited(key: string) {
+  const now = Date.now()
+  const entry = rateLimit.get(key)
+
+  if (!entry || entry.resetAt <= now) {
+    rateLimit.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return false
+  }
+
+  entry.count += 1
+  return entry.count > RATE_LIMIT_MAX
+}
+
+function resolveLocale(value: unknown): "ar" | "en" {
+  return typeof value === "string" && value.toLowerCase().startsWith("en")
+    ? "en"
+    : "ar"
+}
 
 export async function POST(request: Request) {
+  const forwardedFor = request.headers.get("x-forwarded-for")
+  const clientKey = forwardedFor?.split(",")[0]?.trim() || "unknown"
+
+  if (isRateLimited(clientKey)) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 })
+  }
+
   let payload: unknown
 
   try {
@@ -15,10 +47,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 })
   }
 
-  const email =
-    typeof payload === "object" && payload !== null && "email" in payload
-      ? String((payload as { email: unknown }).email ?? "").trim()
-      : ""
+  const record =
+    typeof payload === "object" && payload !== null
+      ? (payload as { email?: unknown; locale?: unknown })
+      : {}
+
+  const email = typeof record.email === "string" ? record.email.trim() : ""
+  const locale = resolveLocale(record.locale)
 
   if (!EMAIL_PATTERN.test(email)) {
     return NextResponse.json({ error: "invalid_email" }, { status: 400 })
@@ -42,7 +77,7 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           email,
           civilization_id: civilizationId,
-          locale: "ar",
+          locale,
           source: "newsletter",
         }),
         cache: "no-store",
@@ -54,9 +89,28 @@ export async function POST(request: Request) {
           { status: 201 }
         )
       }
+
+      if (isProduction) {
+        return NextResponse.json(
+          { error: "newsletter_unavailable" },
+          { status: 502 }
+        )
+      }
     } catch {
-      // fall through to the local queue below
+      if (isProduction) {
+        return NextResponse.json(
+          { error: "newsletter_unavailable" },
+          { status: 502 }
+        )
+      }
     }
+  }
+
+  if (isProduction) {
+    return NextResponse.json(
+      { error: "newsletter_not_configured" },
+      { status: 503 }
+    )
   }
 
   try {
@@ -83,6 +137,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, queued: true })
   } catch {
     console.warn("newsletter: could not persist subscriber locally")
-    return NextResponse.json({ ok: true, queued: true })
+    return NextResponse.json(
+      { error: "newsletter_unavailable" },
+      { status: 503 }
+    )
   }
 }

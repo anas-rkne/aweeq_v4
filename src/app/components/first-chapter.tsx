@@ -113,7 +113,6 @@ export function FirstChapter() {
               src="/images/first_chapter/main_first_chapter.webp"
               alt={t("imageAlt")}
               fill
-              priority
               quality={90}
               sizes="100vw"
               className="hidden object-cover md:block"

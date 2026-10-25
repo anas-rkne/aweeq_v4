@@ -42,7 +42,7 @@ export function StoreHeader() {
             height={841}
             quality={90}
             sizes="(min-width: 64rem) 7rem, 5rem"
-            priority
+            preload
             className="h-6 w-auto md:h-8"
           />
         </Link>

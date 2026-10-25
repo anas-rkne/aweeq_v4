@@ -341,7 +341,7 @@ export function Hero() {
                   src="/images/hero/hero_img.webp"
                   alt={t("imageAlt")}
                   fill
-                  priority
+                  preload
                   quality={90}
                   sizes="100vw"
                   className="hidden object-cover md:block"

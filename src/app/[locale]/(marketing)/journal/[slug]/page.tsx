@@ -81,7 +81,7 @@ export default async function JournalPostPage({
             src={post.image}
             alt={alt}
             fill
-            priority
+            preload
             quality={90}
             sizes="(min-width: 64rem) 60rem, 100vw"
             className="object-cover object-center"
