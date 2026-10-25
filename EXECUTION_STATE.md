@@ -1,64 +1,91 @@
 # EXECUTION STATE — 3WEEQ Launch
 
-> Living checkpoint for unattended work. Updated after every work package.
-> Source of truth for "what is done, what is verified, what is blocked".
-> Last updated: 2026-10-25 06:35 (local)
+> Living checkpoint for the launch work. Updated 2026-10-25 09:45 (local).
+> Branch: `launch/phase-0-baseline` (not pushed, not merged, not deployed).
+> Read this first, then `LAUNCH_PLAN.md` and `PROJECT_AUDIT.md`.
 
-## Honest guarantee
+## Honest status
 
-A single agent session cannot guarantee completing a 5–7 week launch plan unattended. It can guarantee that every step taken is **atomic, verified, committed and logged**, and that work stops at hard blockers instead of guessing. The items below cannot be completed without the owner:
+A single session cannot complete a 5–7 week launch plan unattended. What was
+guaranteed here is that every change is **atomic, verified, committed and
+logged**, and that work stopped at real blockers instead of guessing.
 
-- Stripe/Tap live or sandbox credentials, webhook secrets, provider account settings.
-- Hosting/DNS/database/object-storage access and production environment variables.
-- Final shipping countries/rates, VAT treatment, legal copy approval.
-- Final product prices, copy, images, edition sizes.
-- Human review of visual/UX and checkout behavior before launch.
+**Done and verified tonight:** baseline, critical 404 crash, locale data/links/
+prices, AED pricing convention, caching, static home, sitemap/robots,
+revalidation endpoint, frame retry guard, reduced-motion film, Next.js security
+upgrade, newsletter fail-closed behavior.
 
-## Execution protocol
+**Not done (hard blockers):** checkout/payment UI (needs provider decision and
+keys), content studio (4–7 days of work, needs media-storage decision),
+deployment (hosting/DNS/DB/live keys), final legal/shipping/VAT approval,
+complete QA matrix.
 
-1. One work package at a time. No unrelated edits.
-2. Before: `git status` clean or only the current package's files.
-3. After: `npm run typecheck && npm run lint && npm run format:check && npm test && npm run build`.
-4. Commit locally on a `launch/*` branch. No push, no deploy, no production database writes.
-5. Update this file with status, commit hash, commands, results, blockers.
-6. If a step needs missing information, mark it BLOCKED and move to the next independent step.
+## Commits
 
-## Status board
+| Commit | Scope |
+|---|---|
+| `509ad03` | Phase 0: freeze, formatting, launch plan, execution ledger |
+| `809678d` | Phase 1: 404/error boundaries, locale-aware data/cart/links/prices |
+| `bd71c3f` | Phase 1.5: AED major units, Stripe/Tap alignment, seed/policies |
+| `c526240` | Phase 3/4: ISR caching, static home, sitemap/robots, revalidation, frame guards, reduced motion, Next 16.4.3 |
+| `9cbe6d1` | Phase 4/5: lazy slides, `preload` migration, newsletter fail-closed + rate limit |
 
-| Phase | Status | Commit | Notes |
-|---|---|---|---|
-| 0. Baseline / CI | IN PROGRESS | — | Freeze, format, checks, baseline commit |
-| 1. Critical fixes + i18n | PENDING | — | 404, locale data/links/prices |
-| 1.5. AED + price unit | PENDING | — | Major units, Stripe/Tap alignment |
-| 2. Checkout | BLOCKED | — | Needs provider decision + credentials |
-| 2.5. Content Studio | PENDING | — | Needs media storage decision |
-| 3. Data/cache/SEO | PENDING | — | No external credentials |
-| 4. Performance/media | PENDING | — | No external credentials |
-| 5. Newsletter/legal | PARTIAL/BLOCKED | — | Needs ESP + legal approval |
-| 6. QA | PENDING | — | Some E2E need a live Medusa |
-| 7. Launch | BLOCKED | — | Needs hosting/DNS/DB/live keys |
+## Verification (last run)
 
-## Verification log
+| Check | Result |
+|---|---|
+| `npm run typecheck` | PASS |
+| `npm run lint` | PASS, 0 errors / 4 warnings |
+| `npm run format:check` | PASS |
+| `npm test` | PASS, 3 tests |
+| `npm run build` | PASS, Next.js 16.4.3, `/ar` + `/en` static |
+| `npm audit --omit=dev` | 0 vulnerabilities |
+| 404 runtime | No `TypeError`; streamed not-found UI; HTTP 200 + `noindex` (Next streaming behavior) |
+| `/ar/journal/nope`, `/ar/nope` | HTTP 404 |
+| `/robots.txt` | 200 |
+| `/sitemap.xml` | 200 with `hreflang` alternates |
 
-| Time | Command | Result |
-|---|---|---|
-| 06:30 | `npm run typecheck` | PASS |
-| 06:30 | `npm run lint` | PASS (0 errors, 4 warnings) |
-| 06:30 | `npm run format:check` | FAIL (12 files) |
-| — | `npm test` | pending |
-| — | `npm run build` | pending |
+## Important assumptions made (confirm on wake)
 
-## Decisions locked
+1. **AED prices:** RAFID = `850 / 1200 / 350 AED` (same displayed values as before).
+2. **Region:** UAE, country `ae`. Change if shipping is GCC-wide.
+3. **VAT:** policies still say “VAT included where applicable”; not legally verified.
+4. **Existing database:** the price convention changed from minor to major units.
+   A database seeded before this change still has `85000` prices and a SAR
+   region. It **must be recreated/reseeded** (or migrated) before local checkout
+   testing. Do not run a destructive reset on production.
+5. `.env.local` was switched to `aed` / `UAE` locally and is git-ignored.
+6. 404 responses are 200 when streamed by Next; `noindex` is emitted. A true 404
+   status would require a non-streamed route strategy.
 
-- Content management: Medusa Admin Extension ("3WEEQ Catalog Studio").
-- Currency: AED.
-- Price convention: Medusa major units (`850.00`), minor units only at payment provider boundary.
-- Existing displayed RAFID values assumed to become `850 / 1200 / 350 AED` until owner confirms.
+## Blocked work
 
-## Open decisions
+### Phase 2 — Checkout (BLOCKED)
+Needed from owner:
+- Primary provider: Stripe or Tap (both backend modules exist).
+- Test keys, webhook secrets, return/callback URL.
+- Shipping countries/options, VAT treatment.
+- Confirmation to build/test the UI.
 
-- Shipping scope: UAE only vs GCC.
-- VAT: inclusive vs calculated at checkout.
-- Media storage: S3/Cloudinary vs Medusa File.
-- Journal/marketing CMS vs code for v1.
-- Primary payment provider order (Stripe vs Tap).
+### Phase 2.5 — Content Studio (BLOCKED/PENDING)
+Chosen: Medusa Admin Extension. Needs:
+- Media storage decision (S3/Cloudinary vs Medusa File).
+- 4–7 working days; not safely compressible into this session.
+- Admin API + UI + validation + serialize/edition generation.
+
+### Phase 7 — Launch (BLOCKED)
+Needs hosting, DNS, production DB, object storage, live payment keys, legal
+approval, and a staging rehearsal.
+
+## What to do when you wake
+
+1. Read the diff/commits on `launch/phase-0-baseline`; do not merge until reviewed.
+2. Provide provider/keys, confirm prices/shipping/VAT, and choose media storage.
+3. Recreate/reseed the dev database (backup first) because prices moved from
+   `85000` to `850.00` major units.
+4. Then we continue with Phase 2 (checkout) and Phase 2.5 (content studio).
+
+## Resume prompt
+
+> Continue from `EXECUTION_STATE.md`. Read the latest commits. Start Phase 2
+> checkout with the provider keys I provide, then Phase 2.5 content studio.

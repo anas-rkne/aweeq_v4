@@ -22,7 +22,9 @@ Create `.env.local` in the project root. Only variables prefixed with
 | `MEDUSA_WAITLIST_CIVILIZATION_ID` | optional | When set, newsletter signups are forwarded to `POST /store/waitlist` for this civilization |
 | `MEDUSA_BACKEND_URL` | optional | Server-side Medusa URL (falls back to `NEXT_PUBLIC_MEDUSA_BACKEND_URL`) |
 | `MEDUSA_PUBLISHABLE_KEY` | optional | Server-side publishable key (falls back to the public one) |
+| `REVALIDATE_SECRET` | yes in production | Bearer secret for `POST /api/revalidate` (catalog cache invalidation) |
 
-Without the waitlist variables the newsletter route queues the email locally in
-`.data/newsletter-subscribers.json` (git-ignored). Replace this with your ESP of
-choice before launch.
+In development, without the waitlist variables the newsletter route queues the
+email locally in `.data/newsletter-subscribers.json` (git-ignored). In
+production the route **fails closed** (`503`) unless the Medusa waitlist or an
+ESP is configured. Configure it before launch.
