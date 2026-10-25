@@ -2,8 +2,6 @@ import { StoreHeader } from "@/app/components/store/store-header"
 import { CartProvider } from "@/app/components/store/cart-provider"
 import { CartDrawer } from "@/app/components/store/cart-drawer"
 
-export const dynamic = "force-dynamic"
-
 export default function StoreLayout({
   children,
 }: {

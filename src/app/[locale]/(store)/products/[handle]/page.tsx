@@ -27,6 +27,9 @@ export async function generateMetadata({
   }
 
   const image = normalizeImageUrl(product.thumbnail)
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  ).replace(/\/$/, "")
 
   return {
     title: product.seo_title ?? `${product.title} | 3WEEQ`,
@@ -35,12 +38,21 @@ export async function generateMetadata({
       product.short_description ??
       product.description ??
       undefined,
+    alternates: {
+      canonical: `/${locale}/products/${handle}`,
+      languages: {
+        ar: `${siteUrl}/ar/products/${handle}`,
+        en: `${siteUrl}/en/products/${handle}`,
+      },
+    },
     openGraph: {
       title: product.seo_title ?? product.title,
       description:
         product.seo_description ?? product.short_description ?? undefined,
       images: image ? [{ url: image }] : undefined,
       type: "website",
+      url: `${siteUrl}/${locale}/products/${handle}`,
+      locale: locale === "ar" ? "ar_AE" : "en_AE",
     },
   }
 }

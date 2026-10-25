@@ -153,6 +153,11 @@ export function FeaturedFragrance({
     resize()
     window.addEventListener("resize", resize)
 
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      render(0)
+      return () => window.removeEventListener("resize", resize)
+    }
+
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: section,

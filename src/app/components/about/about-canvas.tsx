@@ -29,6 +29,8 @@ const SCENE_BOUNDS = CIVILIZATION_SCENES.map((scene) => {
 const sceneFrames = new Map<string, (HTMLImageElement | undefined)[]>()
 const scenePromises = new Map<string, Promise<void>>()
 const completeScenes = new Set<string>()
+const sceneAttempts = new Map<string, number>()
+const MAX_SCENE_ATTEMPTS = 2
 
 function loadFrame(folder: string, index: number) {
   return new Promise<HTMLImageElement | null>((resolve) => {
@@ -59,17 +61,37 @@ function ensureScene(index: number) {
   const folder = scene.folder
   if (completeScenes.has(folder) || scenePromises.has(folder)) return
 
-  const frames: (HTMLImageElement | undefined)[] = new Array(scene.frameCount)
+  const attempts = sceneAttempts.get(folder) ?? 0
+  if (attempts >= MAX_SCENE_ATTEMPTS) return
+
+  const frames =
+    sceneFrames.get(folder) ??
+    new Array<HTMLImageElement | undefined>(scene.frameCount)
   sceneFrames.set(folder, frames)
 
+  const missing: number[] = []
+  for (let i = 0; i < scene.frameCount; i++) {
+    if (!frames[i]) missing.push(i)
+  }
+
+  if (missing.length === 0) {
+    completeScenes.add(folder)
+    return
+  }
+
+  sceneAttempts.set(folder, attempts + 1)
+
   const promise = Promise.all(
-    Array.from({ length: scene.frameCount }, (_, frameIndex) =>
+    missing.map((frameIndex) =>
       loadFrame(folder, frameIndex).then((img) => {
         if (img) frames[frameIndex] = img
       })
     )
   ).then(() => {
-    completeScenes.add(folder)
+    const loaded = frames.reduce((count, frame) => count + (frame ? 1 : 0), 0)
+    if (loaded === scene.frameCount) {
+      completeScenes.add(folder)
+    }
     scenePromises.delete(folder)
   })
 
@@ -208,10 +230,13 @@ export const AboutCanvas = forwardRef<AboutCanvasHandle>(
       // paint the first frame as soon as it lands, so the section is never a
       // blank rectangle while it scrolls into view
       let raf = 0
+      const startedAt = performance.now()
       const tick = () => {
         draw(lastProgressRef.current)
         const firstScene = sceneFrames.get(CIVILIZATION_SCENES[0].folder)
-        if (!firstScene?.[0]) raf = requestAnimationFrame(tick)
+        const stillWaiting =
+          !firstScene?.[0] && performance.now() - startedAt < 8000
+        if (stillWaiting) raf = requestAnimationFrame(tick)
       }
       raf = requestAnimationFrame(tick)
 

@@ -1,3 +1,4 @@
+import { setRequestLocale } from "next-intl/server"
 import { AboutSection } from "@/components/about-section"
 import { BeyondSection } from "@/components/beyond-section"
 import { CivilizationsSection } from "@/components/civilizations-section"
@@ -11,7 +12,14 @@ import { PackagingSection } from "@/components/packaging-section"
 import { PortalTransition } from "@/components/portal-transition"
 import { ScrollOver } from "@/components/scroll-over"
 
-export default function Home() {
+export default async function Home({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  setRequestLocale(locale)
+
   return (
     <main className="flex min-h-svh flex-1 flex-col">
       <ScrollOver hero={<Hero />} about={<AboutSection />} />
@@ -29,7 +37,7 @@ export default function Home() {
       <div className="relative">
         <CivilizationsSection />
       </div>
-      <BeyondSection />
+      <BeyondSection locale={locale} />
       <JournalSection />
       <NewsletterSection />
       <Footer />

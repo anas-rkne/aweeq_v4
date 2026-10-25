@@ -14,20 +14,23 @@ export class MedusaApiError extends Error {
 
 export async function medusaFetch<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit & {
+    next?: { tags?: string[]; revalidate?: number }
+  } = {}
 ): Promise<T> {
+  const { next, ...rest } = options
   const url = `${MEDUSA_BACKEND_URL}${endpoint}`
   const headers = {
     "Content-Type": "application/json",
     "x-publishable-api-key": MEDUSA_PUBLISHABLE_KEY,
-    ...(options.headers || {}),
+    ...(rest.headers || {}),
   }
 
   const res = await fetch(url, {
-    ...options,
+    ...rest,
     headers,
     credentials: "include",
-    cache: "no-store",
+    ...(next ? { next } : { cache: "no-store" as const }),
   })
 
   if (!res.ok) {

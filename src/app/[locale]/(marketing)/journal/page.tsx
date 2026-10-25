@@ -65,7 +65,7 @@ export default async function JournalIndexPage({
                     src={post.image}
                     alt={isArabic ? post.altAr : post.altEn}
                     fill
-                    quality={85}
+                    quality={80}
                     sizes="(min-width: 64rem) 30vw, (min-width: 48rem) 45vw, 100vw"
                     className="object-cover object-center transition-transform duration-[900ms] ease-out-expo group-hover:scale-[1.035]"
                   />

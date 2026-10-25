@@ -22,13 +22,34 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: "Metadata" })
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  ).replace(/\/$/, "")
 
   return {
-    metadataBase: new URL(
-      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-    ),
+    metadataBase: new URL(siteUrl),
     title: t("title"),
     description: t("description"),
+    alternates: {
+      canonical: `/${locale}`,
+      languages: {
+        ar: `${siteUrl}/ar`,
+        en: `${siteUrl}/en`,
+      },
+    },
+    openGraph: {
+      type: "website",
+      siteName: "3WEEQ",
+      locale: locale === "ar" ? "ar_AE" : "en_AE",
+      title: t("title"),
+      description: t("description"),
+      url: `${siteUrl}/${locale}`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("title"),
+      description: t("description"),
+    },
   }
 }
 

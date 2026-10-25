@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { getLocale, getTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 import { TextReveal } from "@/shared/ui/text-reveal"
 
 function PerfumeIcon() {
@@ -136,9 +136,8 @@ const ICON_ITEMS = [
   { id: "curated", Icon: CuratedIcon },
 ] as const
 
-export async function BeyondSection() {
-  const t = await getTranslations("Beyond")
-  const locale = await getLocale()
+export async function BeyondSection({ locale }: { locale: string }) {
+  const t = await getTranslations({ locale, namespace: "Beyond" })
   const isArabic = locale === "ar"
   return (
     <section
