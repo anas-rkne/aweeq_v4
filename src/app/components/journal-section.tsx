@@ -79,9 +79,7 @@ export function JournalSection() {
 
       <div className="relative z-10 mx-auto w-full max-w-[84rem] px-5 py-24 sm:px-8 md:px-16 md:py-28 lg:py-32">
         {/* ===== the header: the words on the right, the way out on the left ===== */}
-        <div
-          className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between"
-        >
+        <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <div className="text-start">
             <h2 className="font-secondary text-[clamp(2rem,3.8vw,3.4rem)] leading-[1.05] tracking-[-0.01em] text-gold">
               <TextReveal preset="words" blur>

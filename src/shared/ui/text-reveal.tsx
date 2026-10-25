@@ -45,7 +45,8 @@ export function TextReveal({
   const reducedMotion = useReducedMotion()
   const locale = useLocale()
 
-  const reveal: Preset = preset === "words" && locale === "ar" ? "lines" : preset
+  const reveal: Preset =
+    preset === "words" && locale === "ar" ? "lines" : preset
   const shouldBlur = blur && locale !== "ar"
 
   const lines: string[] = children.split("\n")

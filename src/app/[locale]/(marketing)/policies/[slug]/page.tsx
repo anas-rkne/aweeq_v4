@@ -102,7 +102,8 @@ const POLICIES: Policy[] = [
     titleAr: "الاسترجاع والاستبدال",
     titleEn: "Returns & Exchanges",
     introAr: "رضاك شرط أساسي، مع مراعاة طبيعة منتجات العطور.",
-    introEn: "Your satisfaction is essential, mindful of the nature of fragrance products.",
+    introEn:
+      "Your satisfaction is essential, mindful of the nature of fragrance products.",
     sections: [
       {
         headingAr: "مدة الاسترجاع",

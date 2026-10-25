@@ -28,8 +28,14 @@ export function useSpotlight<T extends HTMLElement = HTMLDivElement>() {
     const layer = layerRef.current
     if (!container || !layer) return
 
-    const xTo = gsap.quickTo(layer, "x", { duration: 0.45, ease: EASING.outQuint })
-    const yTo = gsap.quickTo(layer, "y", { duration: 0.45, ease: EASING.outQuint })
+    const xTo = gsap.quickTo(layer, "x", {
+      duration: 0.45,
+      ease: EASING.outQuint,
+    })
+    const yTo = gsap.quickTo(layer, "y", {
+      duration: 0.45,
+      ease: EASING.outQuint,
+    })
 
     const move = (event: PointerEvent) => {
       const rect = container.getBoundingClientRect()

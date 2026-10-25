@@ -42,9 +42,7 @@ export function NewsletterSection() {
 
         setStatus("error")
         setMessage(
-          data?.error === "invalid_email"
-            ? t("invalidEmail")
-            : t("error")
+          data?.error === "invalid_email" ? t("invalidEmail") : t("error")
         )
         return
       }

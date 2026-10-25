@@ -53,8 +53,9 @@ export function Footer() {
               height={841}
               quality={90}
               sizes="(min-width: 64rem) 12rem, 8rem"
- className="pointer-events-none h-full w-full select-none object-cover mix-blend-screen"
-  style={{ objectPosition: "50% 20%" }}            />
+              className="pointer-events-none h-full w-full select-none object-cover mix-blend-screen"
+              style={{ objectPosition: "50% 20%" }}
+            />
           </a>
         </div>
 

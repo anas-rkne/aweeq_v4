@@ -43,12 +43,14 @@ export async function generateMetadata({
   }
 }
 
-const SPECIFICATION_KEYS: Array<{ key: keyof ProductSpecifications; label: string }> =
-  [
-    { key: "concentration", label: "concentration" },
-    { key: "origin", label: "origin" },
-    { key: "edition", label: "edition" },
-  ]
+const SPECIFICATION_KEYS: Array<{
+  key: keyof ProductSpecifications
+  label: string
+}> = [
+  { key: "concentration", label: "concentration" },
+  { key: "origin", label: "origin" },
+  { key: "edition", label: "edition" },
+]
 
 export default async function ProductDetailPage({
   params,

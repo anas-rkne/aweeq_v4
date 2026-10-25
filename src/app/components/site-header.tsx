@@ -294,9 +294,7 @@ export function SiteHeader() {
               type="button"
               onClick={openCart}
               aria-label={
-                itemCount > 0
-                  ? t("cartItems", { count: itemCount })
-                  : t("cart")
+                itemCount > 0 ? t("cartItems", { count: itemCount }) : t("cart")
               }
               aria-haspopup="dialog"
               className="relative shrink-0 p-1 text-sand/70 transition-colors duration-200 ease-out hover:text-gold"

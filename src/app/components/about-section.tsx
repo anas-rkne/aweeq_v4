@@ -285,7 +285,6 @@ export function AboutSection() {
               }}
             />
 
-
             <div className="relative flex flex-1 flex-col">
               <div className="relative min-h-[14rem] w-full max-w-[34rem] flex-1 md:min-h-[28rem]">
                 {CIVILIZATIONS.map((c, i) => (
@@ -312,7 +311,9 @@ export function AboutSection() {
                       {t(`${c.id}.title`)}
                     </h2>
 
-                    <p className="mt-5 text-body text-sand/85">{t(`${c.id}.body`)}</p>
+                    <p className="mt-5 text-body text-sand/85">
+                      {t(`${c.id}.body`)}
+                    </p>
                   </div>
                 ))}
               </div>

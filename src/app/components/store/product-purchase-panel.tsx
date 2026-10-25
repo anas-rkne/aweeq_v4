@@ -64,9 +64,7 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
       await addItem(selectedVariant.id, quantity)
       setQuantity(1)
     } catch (error) {
-      setAddError(
-        error instanceof Error ? error.message : t("addError")
-      )
+      setAddError(error instanceof Error ? error.message : t("addError"))
     }
   }
 

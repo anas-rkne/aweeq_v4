@@ -77,7 +77,10 @@ export function CartPageClient() {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-5 pb-24 pt-8 md:px-10 md:pt-12">
-      <nav aria-label={t("title")} className="font-primary text-xs text-sand/40">
+      <nav
+        aria-label={t("title")}
+        className="font-primary text-xs text-sand/40"
+      >
         <Link href="/" className="transition-colors hover:text-gold">
           {t("continueShopping")}
         </Link>

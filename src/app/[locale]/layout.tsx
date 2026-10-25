@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next"
 import { hasLocale, NextIntlClientProvider } from "next-intl"
-import { getMessages, getTranslations, setRequestLocale } from "next-intl/server"
+import {
+  getMessages,
+  getTranslations,
+  setRequestLocale,
+} from "next-intl/server"
 import { notFound } from "next/navigation"
 import { BRAND_COLORS } from "@/shared/config/brand"
 import { routing } from "@/i18n/routing"
