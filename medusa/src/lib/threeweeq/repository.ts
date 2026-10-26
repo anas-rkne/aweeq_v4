@@ -945,11 +945,11 @@ export class ThreeweeqRepository {
         )
         .leftJoin("catalog.product_type as ptype", "ptype.id", "p.product_type_id")
         .leftJoin("catalog.collection_profile as cp", "cp.id", "p.collection_id")
-        .leftJoinRaw(
+        .joinRaw(
           "left join catalog.collection_translation ctr on ctr.collection_id = cp.id and ctr.locale = ?",
           [input.locale]
         )
-        .leftJoinRaw(
+        .joinRaw(
           "left join catalog.civilization_translation civt on civt.civilization_id = p.civilization_id and civt.locale = ?",
           [input.locale]
         )
@@ -1056,11 +1056,11 @@ export class ThreeweeqRepository {
 
   async getCatalogCollections(locale: Locale) {
     const items = await this.db("catalog.collection_profile as cp")
-      .leftJoinRaw(
+      .joinRaw(
         "left join catalog.collection_translation ctr on ctr.collection_id = cp.id and ctr.locale = ?",
         [locale]
       )
-      .leftJoinRaw(
+      .joinRaw(
         "left join catalog.civilization_translation civt on civt.civilization_id = cp.civilization_id and civt.locale = ?",
         [locale]
       )
