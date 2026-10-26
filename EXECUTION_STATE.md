@@ -66,11 +66,11 @@ Element) → callback → guest order confirmation. Cart CTAs enabled.
 Needed from owner: Stripe test keys (`sk_test_*` for Medusa, `pk_test_*` for
 the storefront) to run a real test; then live keys at launch.
 
-### Phase 2.5 — Content Studio (BLOCKED/PENDING)
-Chosen: Medusa Admin Extension. Needs:
-- Media storage decision (S3/Cloudinary vs Medusa File).
-- 4–7 working days; not safely compressible into this session.
-- Admin API + UI + validation + serialize/edition generation.
+### Phase 2.5 — Content Studio (IN PROGRESS — commits `b191d64`, `b80591a`)
+Admin API + admin UI built: products CRUD with bilingual fields, publish
+checklist, media roles, serial generation, civilizations/collections/types
+editors. Remaining: verify admin-route auth after build, variant/pricing
+editing via core admin, E2E test, and media upload wiring (file provider).
 
 ### Phase 7 — Launch (BLOCKED)
 Needs hosting, DNS, production DB, object storage, live payment keys, legal

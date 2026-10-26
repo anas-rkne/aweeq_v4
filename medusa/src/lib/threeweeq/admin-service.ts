@@ -145,6 +145,8 @@ export class CatalogAdminService {
        from catalog.product_profile p
        left join catalog.product_translation pt
          on pt.product_id = p.product_id and pt.locale = 'ar'
+       left join catalog.product_translation ptr
+         on ptr.product_id = p.product_id and ptr.locale = 'en'
        where ${whereSql}`,
       bindings
     )
