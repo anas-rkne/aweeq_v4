@@ -196,14 +196,15 @@ sudo -u deploy pm2 save
 ## 5. Nginx وSSL
 
 ```bash
-sudo cp deploy/nginx/threeweeq-web.conf /etc/nginx/sites-available/threeweeq-web
-sudo cp deploy/nginx/threeweeq-api.conf /etc/nginx/sites-available/threeweeq-api
+sudo cp deploy/nginx/threeweeq-web.conf /etc/nginx/sites-available/threeweeq-web.conf
+sudo cp deploy/nginx/threeweeq-api.conf /etc/nginx/sites-available/threeweeq-api.conf
 
-sudo sed -i 's/YOUR_DOMAIN/example.com/g' /etc/nginx/sites-available/threeweeq-web
-sudo sed -i 's/API_DOMAIN/api.example.com/g' /etc/nginx/sites-available/threeweeq-api
+sudo sed -i 's/YOUR_DOMAIN/example.com/g' /etc/nginx/sites-available/threeweeq-web.conf
+sudo sed -i 's/API_DOMAIN/api.example.com/g' /etc/nginx/sites-available/threeweeq-api.conf
 
-sudo ln -s /etc/nginx/sites-available/threeweeq-web /etc/nginx/sites-enabled/threeweeq-web
-sudo ln -s /etc/nginx/sites-available/threeweeq-api /etc/nginx/sites-enabled/threeweeq-api
+sudo rm -f /etc/nginx/sites-enabled/threeweeq-web /etc/nginx/sites-enabled/threeweeq-api
+sudo ln -s /etc/nginx/sites-available/threeweeq-web.conf /etc/nginx/sites-enabled/threeweeq-web.conf
+sudo ln -s /etc/nginx/sites-available/threeweeq-api.conf /etc/nginx/sites-enabled/threeweeq-api.conf
 sudo rm -f /etc/nginx/sites-enabled/default
 
 sudo nginx -t
