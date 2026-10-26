@@ -1,6 +1,7 @@
 import { ExecArgs } from "@medusajs/framework/types"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import {
+  batchLinksWorkflow,
   createApiKeysWorkflow,
   createLocationFulfillmentSetWorkflow,
   createProductsWorkflow,
@@ -810,6 +811,32 @@ export default async function seed({ container }: ExecArgs) {
 
   if (!fulfillmentProvider?.id) {
     throw new Error("No fulfillment provider is available")
+  }
+
+  // Enable the manual fulfillment provider for this stock location before
+  // creating any shipping option. Without this link, Medusa rejects the
+  // shipping option with "Providers (...) are not enabled for the service
+  // location".
+  try {
+    await batchLinksWorkflow(container).run({
+      input: {
+        create: [
+          {
+            [Modules.STOCK_LOCATION]: {
+              stock_location_id: stockLocation.id,
+            },
+            [Modules.FULFILLMENT]: {
+              fulfillment_provider_id: fulfillmentProvider.id,
+            },
+          },
+        ],
+      },
+    })
+  } catch (error) {
+    // The link may already exist from a previous seed run; that is harmless.
+    logger.info(
+      `Fulfillment provider link skipped: ${(error as Error).message}`
+    )
   }
 
   const { data: existingShippingOptions } = await query.graph({

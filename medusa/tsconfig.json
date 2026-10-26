@@ -12,5 +12,8 @@
     "types": ["node"]
   },
   "include": ["**/*.ts", ".medusa/types/**/*.ts"],
-  "exclude": ["node_modules", "dist", ".medusa"]
+  "exclude": ["node_modules", "dist", ".medusa"],
+  "ts-node": {
+    "transpileOnly": true
+  }
 }
