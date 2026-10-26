@@ -61,6 +61,7 @@ next-env.d.ts
 /medusa/static/uploads
 /medusa/.env
 /medusa/.env.*
+/medusa/package-lock.json
 !/medusa/.env.template
 
 # local logs
