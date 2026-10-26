@@ -14,6 +14,7 @@ Create `.env.local` in the project root. Only variables prefixed with
 | `NEXT_PUBLIC_DEFAULT_CURRENCY` | optional | Default currency code (default `aed`) |
 | `NEXT_PUBLIC_DEFAULT_LOCALE` | optional | Default locale (default `ar`) |
 | `NEXT_PUBLIC_DEFAULT_REGION` | optional | Default region label |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | yes for checkout | Stripe publishable key used by the checkout UI |
 
 ## Newsletter (server-only)
 

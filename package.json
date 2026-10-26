@@ -24,6 +24,8 @@
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@medusajs/js-sdk": "^2.22.0",
+    "@stripe/react-stripe-js": "^7.0.1",
+    "@stripe/stripe-js": "^10.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "gsap": "^3.15.0",

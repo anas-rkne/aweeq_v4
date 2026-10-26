@@ -333,13 +333,12 @@ export function CartPageClient() {
               </span>
             </div>
 
-            <button
-              type="button"
-              disabled
-              className="mt-6 w-full cursor-not-allowed border border-sand/10 px-6 py-4 font-primary text-sm text-sand/35"
+            <Link
+              href="/checkout"
+              className="mt-6 block w-full border border-gold bg-gold px-6 py-4 text-center font-primary text-sm font-bold text-royal-navy transition-colors duration-300 hover:bg-gold/85"
             >
-              {t("checkoutSoon")}
-            </button>
+              {t("checkout")}
+            </Link>
             <p className="mt-3 text-center font-primary text-[11px] leading-5 text-sand/35">
               {t("checkoutNote")}
             </p>

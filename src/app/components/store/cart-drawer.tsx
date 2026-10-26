@@ -408,13 +408,13 @@ export function CartDrawer() {
               >
                 {t("viewCart")}
               </Link>
-              <button
-                type="button"
-                disabled
-                className="w-full cursor-not-allowed border border-sand/10 px-6 py-3 font-primary text-sm text-sand/35"
+              <Link
+                href="/checkout"
+                onClick={closeCart}
+                className="block w-full border border-sand/20 px-6 py-3 text-center font-primary text-sm text-sand transition-colors duration-300 hover:border-gold/60 hover:text-gold"
               >
-                {t("checkoutSoon")}
-              </button>
+                {t("checkout")}
+              </Link>
             </div>
           </div>
         )}
