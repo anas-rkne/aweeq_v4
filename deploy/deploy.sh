@@ -22,8 +22,8 @@ git checkout "$BRANCH"
 git pull --ff-only
 
 echo "==> Installing dependencies"
-npm ci
-npm --prefix medusa ci
+npm install --no-audit --no-fund
+npm --prefix medusa install --no-audit --no-fund
 
 echo "==> Building storefront"
 npm run build
