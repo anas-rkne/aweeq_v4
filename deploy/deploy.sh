@@ -34,6 +34,10 @@ npm run medusa:build
 echo "==> Applying Medusa migrations"
 npm run medusa:migrate
 
+echo "==> Linking admin assets (medusa start serves public/admin from the project root)"
+rm -rf medusa/public
+ln -s .medusa/server/public medusa/public
+
 echo "==> Reloading processes"
 pm2 startOrReload deploy/ecosystem.config.cjs --update-env
 pm2 save
