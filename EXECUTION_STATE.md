@@ -60,12 +60,11 @@ complete QA matrix.
 
 ## Blocked work
 
-### Phase 2 — Checkout (BLOCKED)
-Needed from owner:
-- Primary provider: Stripe or Tap (both backend modules exist).
-- Test keys, webhook secrets, return/callback URL.
-- Shipping countries/options, VAT treatment.
-- Confirmation to build/test the UI.
+### Phase 2 — Checkout (IN PROGRESS — commit `83c1e5e`)
+Stripe-first checkout implemented: details → shipping → payment (Payment
+Element) → callback → guest order confirmation. Cart CTAs enabled.
+Needed from owner: Stripe test keys (`sk_test_*` for Medusa, `pk_test_*` for
+the storefront) to run a real test; then live keys at launch.
 
 ### Phase 2.5 — Content Studio (BLOCKED/PENDING)
 Chosen: Medusa Admin Extension. Needs:
