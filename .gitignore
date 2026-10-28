@@ -61,6 +61,8 @@ next-env.d.ts
 # uploaded catalog media (file-local provider writes here at runtime)
 /medusa/static/
 /medusa/static-private/
+# symlink to the built admin assets, created by deploy/deploy.sh
+/medusa/public
 /medusa/.env
 /medusa/.env.*
 /medusa/package-lock.json

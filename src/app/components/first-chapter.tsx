@@ -89,7 +89,7 @@ export function FirstChapter() {
         className="absolute inset-0 z-0 origin-center will-change-transform"
       >
         <Image
-          src="/images/first_chapter/main_first_chapter.webp"
+          src="/images/first_chapter/main_first_chapter_2.webp"
           alt={t("imageAlt")}
           fill
           quality={90}
@@ -98,7 +98,7 @@ export function FirstChapter() {
         />
 
         <img
-          src="/images/first_chapter/main_first_chapter_mobile.webp"
+          src="/images/first_chapter/main_first_chapter_mobile_2.webp"
           alt={t("imageAlt")}
           className="block h-full w-full object-cover md:hidden"
           loading="eager"
