@@ -21,6 +21,9 @@ git fetch --all --prune
 git checkout "$BRANCH"
 git pull --ff-only
 
+echo "==> Checking environment"
+node deploy/check-env.mjs
+
 echo "==> Installing dependencies"
 npm install --no-audit --no-fund
 npm --prefix medusa install --no-audit --no-fund
@@ -43,6 +46,5 @@ pm2 startOrReload deploy/ecosystem.config.cjs --update-env
 pm2 save
 
 echo "==> Health checks"
-curl -fsS http://127.0.0.1:3000/ar >/dev/null
-curl -fsS http://127.0.0.1:9000/health >/dev/null
+bash deploy/healthcheck.sh
 echo "Deploy complete."

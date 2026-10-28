@@ -1,15 +1,41 @@
 import { useEffect, useState } from "react"
 import { studioFetch, studioStyles } from "./api"
+import { MediaTab } from "./media-tab"
+import { VariantsTab } from "./variants-tab"
 
 type Translation = Record<string, any>
 type MediaRow = Record<string, any>
 type VariantRow = Record<string, any>
+
+type CoreVariant = {
+  id: string
+  title?: string | null
+  sku?: string | null
+  prices?: Array<{ id?: string; amount?: number; currency_code?: string }>
+}
 
 type ProductAdmin = {
   profile: Record<string, any>
   translations: Translation[]
   variantProfiles: VariantRow[]
   media: MediaRow[]
+  core?: {
+    id: string
+    title?: string
+    handle?: string
+    status?: string
+    thumbnail?: string | null
+    variants?: CoreVariant[]
+    options?: Array<{ id: string; title: string; values?: Array<{ value: string }> }>
+  } | null
+}
+
+type MediaAsset = {
+  id: string
+  url: string
+  mime_type?: string
+  alt_ar?: string | null
+  alt_en?: string | null
 }
 
 type Lookup = { id: string; name_ar?: string; name_en?: string; title_ar?: string; title_en?: string }
@@ -24,7 +50,7 @@ export function ProductEditor({
   const [product, setProduct] = useState<ProductAdmin | null>(null)
   const [form, setForm] = useState<Record<string, any>>({})
   const [tab, setTab] = useState<
-    "basic" | "ar" | "en" | "edition" | "media" | "serials"
+    "basic" | "ar" | "en" | "edition" | "variants" | "media" | "serials"
   >("basic")
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -139,46 +165,6 @@ export function ProductEditor({
     }
   }
 
-  async function handleAddMedia(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const data = new FormData(event.currentTarget)
-    setBusy(true)
-    setError(null)
-    try {
-      await studioFetch("/admin/threeweeq/media", {
-        method: "POST",
-        body: JSON.stringify({
-          product_id: productId,
-          url: String(data.get("url") ?? ""),
-          role: String(data.get("role") ?? "gallery"),
-          alt_ar: String(data.get("alt_ar") ?? ""),
-          alt_en: String(data.get("alt_en") ?? ""),
-        }),
-      })
-      await load()
-    } catch (mediaError) {
-      setError(mediaError instanceof Error ? mediaError.message : "media failed")
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function handleSetHero(mediaId: string) {
-    setBusy(true)
-    setError(null)
-    try {
-      await studioFetch(`/admin/threeweeq/products/${productId}`, {
-        method: "PUT",
-        body: JSON.stringify({ hero_media_id: mediaId }),
-      })
-      await load()
-    } catch (heroError) {
-      setError(heroError instanceof Error ? heroError.message : "hero failed")
-    } finally {
-      setBusy(false)
-    }
-  }
-
   if (!product) {
     return (
       <div style={{ padding: 24 }}>
@@ -224,6 +210,7 @@ export function ProductEditor({
             ["ar", "عربي"],
             ["en", "English"],
             ["edition", "الإصدار"],
+            ["variants", "الأسعار"],
             ["media", "الوسائط"],
             ["serials", "الأرقام"],
           ] as const
@@ -440,56 +427,23 @@ export function ProductEditor({
         </div>
       )}
 
-      {tab === "media" && (
-        <div style={studioStyles.card}>
-          <h3 style={{ marginTop: 0 }}>الوسائط الحالية</h3>
-          <table style={{ width: "100%", fontSize: 13, marginBottom: 16 }}>
-            <thead>
-              <tr style={{ textAlign: "left" }}>
-                <th style={{ padding: 6 }}>الدور</th>
-                <th style={{ padding: 6 }}>الرابط</th>
-                <th style={{ padding: 6 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {(product.media ?? []).map((media) => (
-                <tr key={media.id} style={{ borderTop: "1px solid #eee" }}>
-                  <td style={{ padding: 6 }}>{media.role}</td>
-                  <td style={{ padding: 6, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {media.url}
-                  </td>
-                  <td style={{ padding: 6 }}>
-                    {form.hero_media_id === media.id ? (
-                      <span style={{ color: "#059669" }}>Hero</span>
-                    ) : (
-                      <button type="button" onClick={() => handleSetHero(media.id)} style={studioStyles.buttonGray}>
-                        اجعله Hero
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {tab === "variants" && (
+        <VariantsTab
+          productId={productId}
+          variants={product.core?.variants ?? []}
+          onChanged={load}
+          onError={setError}
+        />
+      )}
 
-          <h3>إضافة وسيط</h3>
-          <form onSubmit={handleAddMedia} style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-            <input name="url" placeholder="رابط الصورة" style={studioStyles.input} />
-            <select name="role" defaultValue="gallery" style={studioStyles.input}>
-              <option value="hero">hero</option>
-              <option value="gallery">gallery</option>
-              <option value="detail">detail</option>
-              <option value="packaging">packaging</option>
-              <option value="editorial">editorial</option>
-              <option value="video">video</option>
-            </select>
-            <input name="alt_ar" placeholder="alt عربي" style={studioStyles.input} />
-            <input name="alt_en" placeholder="alt English" style={studioStyles.input} />
-            <button type="submit" disabled={busy} style={studioStyles.button}>
-              إضافة
-            </button>
-          </form>
-        </div>
+      {tab === "media" && (
+        <MediaTab
+          productId={productId}
+          product={product}
+          heroMediaId={form.hero_media_id ?? null}
+          onChanged={load}
+          onError={setError}
+        />
       )}
 
       {tab === "serials" && (

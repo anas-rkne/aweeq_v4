@@ -44,6 +44,7 @@ export type CheckoutCompleteInput = {
   payment_session_id: string
   provider_id?: string
   locale?: string
+  idempotency_key?: string
 }
 
 export type CheckoutCompleteResponse = {
@@ -91,6 +92,41 @@ export async function fetchShippingOptions(
   return response.shipping_options ?? []
 }
 
+export type CheckoutPrepareInput = {
+  cart_id: string
+  email: string
+  shipping_address: {
+    first_name: string
+    last_name: string
+    address_1: string
+    city: string
+    country_code: string
+    postal_code?: string
+    phone?: string
+  }
+  billing_address?: Record<string, unknown>
+  locale?: string
+}
+
+export type CheckoutPrepareResponse = {
+  cart_id: string
+  locale: string
+  shipping_options: ShippingOption[]
+  cart: unknown
+}
+
+export async function prepareCheckout(
+  input: CheckoutPrepareInput
+): Promise<CheckoutPrepareResponse> {
+  return medusaFetch<CheckoutPrepareResponse>(
+    "/store/threeweeq/checkout/prepare",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    }
+  )
+}
+
 export async function initCheckout(
   input: CheckoutInitInput
 ): Promise<CheckoutInitResponse> {
@@ -106,6 +142,9 @@ export async function completeCheckout(
   return medusaFetch<CheckoutCompleteResponse>("/store/checkout/complete", {
     method: "POST",
     body: JSON.stringify(input),
+    headers: input.idempotency_key
+      ? { "x-idempotency-key": input.idempotency_key }
+      : undefined,
   })
 }
 

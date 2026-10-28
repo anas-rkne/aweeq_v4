@@ -144,7 +144,20 @@ TAP_SECRET_KEY=sk_test_ضع_المفتاح
 TAP_WEBHOOK_SECRET=ضع_السر
 TAP_BASE_URL=https://api.tap.company/v2
 TAP_REDIRECT_URL=https://example.com/checkout/callback
+
+# وسائط الاستوديو (رفع الصور من لوحة التحكم)
+MEDIA_UPLOAD_DIR=static
+MEDIA_PRIVATE_UPLOAD_DIR=static-private
+
+# بريد تأكيد الطلب (بدون مفتاح: الرسائل تبقى pending ولا تُفقد)
+RESEND_API_KEY=re_ضع_المفتاح
+EMAIL_FROM=3WEEQ <care@3weeq.ae>
+EMAIL_REPLY_TO=care@3weeq.ae
 ```
+
+> `MEDIA_UPLOAD_DIR` نسبي إلى `medusa/`. الصور تُخدم من `MEDUSA_BACKEND_URL/static/...`
+> ويجب أن يكون المجلد قابلاً للكتابة من مستخدم `deploy`.
+> `deploy/backup.sh` ينسخ هذا المجلد مع القاعدة.
 
 > `STOREFRONT_URL` مهم قبل `seed`: البذرة تخزّن روابط الصور بناءً عليه. إذا غيّرته لاحقاً، أعد تشغيل `seed` لتحديث روابط الوسائط.
 
@@ -193,6 +206,91 @@ sudo -u deploy pm2 save
 
 ---
 
+## 4.1 النسخ الاحتياطي والمراقبة (إلزامي قبل الإطلاق)
+
+### نسخ احتياطي يومي
+
+```bash
+sudo cp deploy/backup.sh /usr/local/bin/threeweeq-backup
+sudo chmod +x /usr/local/bin/threeweeq-backup
+
+# جرّبه مرة واحدة يدوياً قبل جدولته
+sudo /usr/local/bin/threeweeq-backup
+
+sudo crontab -e
+# أضف:
+15 3 * * * /usr/local/bin/threeweeq-backup >> /var/log/threeweeq-backup.log 2>&1
+```
+
+- يقرأ `DATABASE_URL` من `medusa/.env` (لا أسرار داخل cron).
+- ينسخ القاعدة + مجلد الوسائط `MEDIA_UPLOAD_DIR` (افتراضياً `medusa/static`).
+- يحتفظ 14 يوماً. لا يحذف نسخة قديمة قبل نجاح النسخة الجديدة.
+- **تمرين استعادة مرة واحدة على قاعدة مؤقتة:**
+  ```bash
+  createdb threeweeq_restore
+  gunzip -c /var/backups/threeweeq/db-*.sql.gz | psql threeweeq_restore
+  dropdb threeweeq_restore
+  ```
+
+### فحص الصحة
+
+```bash
+WEB_URL=https://3weeq.ae API_URL=https://api.3weeq.ae \
+MEDUSA_PUBLISHABLE_KEY=pk_... ./deploy/healthcheck.sh
+```
+
+يفحص: الواجهة (ar/en/products/sitemap/robots)، Medusa (`/health`, `/app`)،
+حالة PM2، مساحة القرص، والأحداث العالقة في `ops.outbox_event` أكثر من ساعة.
+يعيد رمز خروج غير صفري عند أول فشل — استخدمه في cron أو بعد كل نشر.
+
+```bash
+# cron كل 10 دقائق، تنبيه فقط عند الفشل
+*/10 * * * * cd /var/www/threeweeq && WEB_URL=https://3weeq.ae API_URL=https://api.3weeq.ae ./deploy/healthcheck.sh >/dev/null || echo "3WEEQ health check failed" | mail -s "ALERT" you@example.com
+```
+
+### فحص متغيرات البيئة قبل كل نشر
+
+```bash
+npm run check:env            # يقرأ .env.production + medusa/.env
+```
+
+يفشل عند: مفتاح ناقص، قيمة Placeholder، اختلاف `MEDUSA_BACKEND_URL` بين
+الملفين، اختلاف `REVALIDATE_SECRET` (سيؤدي لرفض إعادة التحقق بـ 401)، أو مفتاح
+Publishable لا يبدأ بـ `pk_`. `deploy/deploy.sh` يشغّله تلقائياً بعد `git pull`.
+
+### الجدار الناري وسجلات PM2
+
+```bash
+sudo ufw allow OpenSSH
+sudo ufw allow 'Nginx Full'
+sudo ufw --force enable
+sudo ufw status verbose      # يجب أن يظهر 22 و80 و443 فقط
+
+# سجلات PM2 لا تتضخم
+sudo -u deploy pm2 install pm2-logrotate
+sudo -u deploy pm2 set pm2-logrotate:max_size 20M
+sudo -u deploy pm2 set pm2-logrotate:retain 14
+sudo -u deploy pm2 set pm2-logrotate:compress true
+
+# سجل nginx
+sudo tee /etc/logrotate.d/nginx-threeweeq >/dev/null <<'EOF'
+/var/log/nginx/*.log {
+    daily
+    missingok
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    sharedscripts
+    postrotate
+        [ -f /var/run/nginx.pid ] && kill -USR1 $(cat /var/run/nginx.pid)
+    endscript
+}
+EOF
+```
+
+---
+
 ## 5. Nginx وSSL
 
 ```bash
@@ -213,11 +311,22 @@ sudo systemctl reload nginx
 sudo certbot --nginx -d example.com -d www.example.com -d api.example.com
 ```
 
+> ملفا Nginx في هذا الريبو يتضمنان ترويسات أمان (`X-Content-Type-Options`،
+> `Referrer-Policy`، `Permissions-Policy`)، ضغط gzip، و`location /static/` لخدمة
+> صور المنتجات. بعد إضافة SSL، أضف HSTS داخل بلوك 443:
+> ```nginx
+> add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+> ```
+> ثم `sudo nginx -t && sudo systemctl reload nginx`.
+
 ---
 
 ## 6. التحقق
 
 ```bash
+# فحص شامل (واجهة + API + PM2 + قرص + outbox)
+WEB_URL=https://example.com API_URL=https://api.example.com ./deploy/healthcheck.sh
+
 curl -I https://example.com/ar
 curl -I https://example.com/en
 curl -I https://api.example.com/health
@@ -231,7 +340,7 @@ curl -I https://example.com/sitemap.xml
 - `/ar/products` — يجب أن يظهر RAFID (إن لم يظهر، راجع Medusa).
 - `/ar/products/rafid`.
 - `https://api.example.com/app` — لوحة Medusa.
-- أضف للسلة (بدون دفع، زر الدفع ما زال "قريباً").
+- أضف للسلة ثم أتمم طلباً تجريبياً بمفتاح Stripe تجريبي (يجب أن يصلك بريد تأكيد).
 
 ### أعطال شائعة
 

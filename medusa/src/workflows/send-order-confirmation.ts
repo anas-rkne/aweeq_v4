@@ -16,9 +16,19 @@ type SendOrderConfirmationInput = {
   payment_id?: string
 }
 
+type SendOrderConfirmationOutput = {
+  queued: boolean
+  reason?: string
+  order_id?: string
+  outbox_id?: string
+}
+
 const prepareOrderConfirmationStep = createStep(
   "prepare-order-confirmation",
-  async (input: SendOrderConfirmationInput, { container }) => {
+  async (
+    input: SendOrderConfirmationInput,
+    { container }
+  ): Promise<StepResponse<SendOrderConfirmationOutput>> => {
     const orderId = await resolveOrderId(container as MedusaContainer, {
       orderId: input.order_id,
       paymentId: input.payment_id,

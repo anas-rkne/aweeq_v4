@@ -66,6 +66,48 @@ export async function POST(request: Request) {
     process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
   const civilizationId = process.env.MEDUSA_WAITLIST_CIVILIZATION_ID
 
+  if (backend && publishableKey) {
+    // Preferred path: our own newsletter table (no civilization required).
+    try {
+      const response = await fetch(`${backend}/store/threeweeq/newsletter`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-publishable-api-key": publishableKey,
+        },
+        body: JSON.stringify({
+          email,
+          locale,
+          source: "newsletter",
+        }),
+        cache: "no-store",
+      })
+
+      if (response.ok) {
+        return NextResponse.json(
+          { ok: true, source: "newsletter" },
+          { status: 201 }
+        )
+      }
+
+      if (response.status !== 404 && isProduction) {
+        return NextResponse.json(
+          { error: "newsletter_unavailable" },
+          { status: 502 }
+        )
+      }
+    } catch {
+      if (isProduction) {
+        return NextResponse.json(
+          { error: "newsletter_unavailable" },
+          { status: 502 }
+        )
+      }
+    }
+  }
+
+  // Legacy fallback: waitlist entry tied to a civilization (kept for
+  // deployments that have not run migration 0007 yet).
   if (backend && publishableKey && civilizationId) {
     try {
       const response = await fetch(`${backend}/store/waitlist`, {

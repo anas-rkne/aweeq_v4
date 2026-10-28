@@ -2,10 +2,10 @@ import type {
   MedusaRequest,
   MedusaResponse,
 } from "@medusajs/framework/http"
-import { CatalogAdminService } from "../../../../../lib/threeweeq/admin-service"
+import { catalogAdminService } from "../../../../../../lib/threeweeq/admin-route"
 
 export async function PUT(req: MedusaRequest, res: MedusaResponse) {
-  const service = new CatalogAdminService(req.scope)
+  const service = catalogAdminService(req)
   const productId = String(req.params.id ?? "")
   const body = (req.body ?? {}) as { media?: unknown }
 

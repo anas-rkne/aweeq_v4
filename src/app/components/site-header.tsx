@@ -164,12 +164,8 @@ function MobileNav({
       <div className="absolute inset-0 bg-royal-navy/45" aria-hidden="true" />
 
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 bg-royal-navy/30"
         aria-hidden="true"
-        style={{
-          background:
-            "radial-gradient(58% 44% at 50% 50%, rgba(10, 22, 40, 0.88) 0%, rgba(10, 22, 40, 0) 100%)",
-        }}
       />
 
       <button
@@ -208,8 +204,8 @@ function MobileNav({
                   }
                   className={`inline-block font-primary text-4xl transition-colors duration-300 ease-out sm:text-5xl ${
                     isLinkCurrent(link, pathname)
-                      ? "text-gold drop-shadow-[0_0_15px_rgba(205,158,97,0.5)]"
-                      : "text-sand/50 hover:text-gold hover:drop-shadow-[0_0_15px_rgba(205,158,97,0.5)]"
+                      ? "text-gold"
+                      : "text-sand/50 hover:text-gold"
                   }`}
                 >
                   {t(link.key)}
@@ -251,7 +247,7 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 bg-transparent px-4 pb-4 pt-5 sm:px-5 sm:pt-6 md:px-10 md:pb-5 md:pt-8">
+      <header className="fixed inset-x-0 top-0 z-50 bg-transparent px-4 pb-4 pt-5 sm:px-8 sm:pt-6 md:px-16 md:pb-5 md:pt-8">
         <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-4 md:gap-6">
           {/* the tools, on the right side of the RTL bar */}
           <div className="flex shrink-0 items-center justify-start gap-2 sm:gap-3 md:gap-5">
@@ -269,7 +265,7 @@ export function SiteHeader() {
               type="button"
               onClick={switchLocale}
               aria-label={t("language")}
-              className="whitespace-nowrap font-secondary text-[11px] tracking-[0.12em] text-sand/80 transition-colors duration-200 ease-out hover:text-gold sm:text-[12px] sm:tracking-[0.2em]"
+              className="whitespace-nowrap font-secondary text-[13px] text-sand/80 transition-colors duration-200 ease-out hover:text-gold"
             >
               <span className={locale === "ar" ? "text-gold" : "text-sand/40"}>
                 AR
@@ -327,12 +323,6 @@ export function SiteHeader() {
                 }`}
               >
                 <RollingText>{t(link.key)}</RollingText>
-                {isLinkCurrent(link, pathname) && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-x-0 -bottom-2 h-px bg-gold"
-                  />
-                )}
               </a>
             ))}
           </nav>

@@ -17,9 +17,20 @@ type ManageLoyaltyPointsInput = {
   fulfillment_id?: string
 }
 
+type AwardLoyaltyPointsOutput = {
+  awarded: boolean
+  reason?: string
+  order_id?: string
+  points?: number
+  balance?: number
+}
+
 const awardLoyaltyPointsStep = createStep(
   "award-loyalty-points",
-  async (input: ManageLoyaltyPointsInput, { container }) => {
+  async (
+    input: ManageLoyaltyPointsInput,
+    { container }
+  ): Promise<StepResponse<AwardLoyaltyPointsOutput>> => {
     const orderId = await resolveOrderId(container as MedusaContainer, {
       orderId: input.order_id,
       paymentId: input.payment_id,

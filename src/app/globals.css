@@ -386,6 +386,25 @@ textarea {
   }
 }
 
+/* hero-2: the strip no longer runs on a keyframe. it is driven by
+   store-invitation.tsx — drift, hover settle and drag with a fling — so the
+   transform is written once per frame on the track element itself. only the
+   compositor hint lives here. */
+.store-marquee {
+  will-change: transform;
+}
+
+/* Copy that sits straight on a photograph. It carries a halo of the base navy
+   instead of the flat half-screen scrim it replaces: the picture stays whole,
+   and the letters keep their edge against sky, stone and gilded walls alike.
+   Set `text-shadow: none` on any solid button placed inside it. */
+.on-photo {
+  text-shadow:
+    0 1px 2px rgba(10, 22, 40, 0.9),
+    0 6px 22px rgba(10, 22, 40, 0.8),
+    0 0 48px rgba(10, 22, 40, 0.55);
+}
+
 @keyframes cta-sheen {
   from {
     transform: translateX(-160%) skewX(-12deg);

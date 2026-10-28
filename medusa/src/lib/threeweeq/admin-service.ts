@@ -2,7 +2,10 @@ import { randomUUID } from "crypto"
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import {
+  createProductVariantsWorkflow,
   createProductsWorkflow,
+  deleteProductVariantsWorkflow,
+  updateProductOptionsWorkflow,
   updateProductsWorkflow,
 } from "@medusajs/medusa/core-flows"
 import { ThreeweeqRepository } from "./repository"
@@ -25,6 +28,18 @@ async function rawRows(
   return (result?.rows ?? []) as AnyRow[]
 }
 
+function inferSizeMl(title: unknown): number | null {
+  const match = String(title ?? "").match(/(\d+)\s*ml/i)
+  if (!match) return null
+  const value = Number(match[1])
+  return Number.isFinite(value) && value > 0 ? value : null
+}
+
+function positiveNumber(value: unknown): number | null {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
 /**
  * Admin-side orchestration for the 3WEEQ catalog. Combines Medusa core
  * workflows (products, prices, variants) with the custom `catalog.*` tables
@@ -34,7 +49,10 @@ async function rawRows(
 export class CatalogAdminService {
   private repository: ThreeweeqRepository
 
-  constructor(private readonly container: MedusaContainer) {
+  constructor(
+    private readonly container: MedusaContainer,
+    private readonly actorId: string | null = null
+  ) {
     this.repository = new ThreeweeqRepository(container)
   }
 
@@ -56,7 +74,6 @@ export class CatalogAdminService {
   }
 
   private async audit(
-    actorId: string | null,
     action: string,
     entityType: string,
     entityId: string,
@@ -66,8 +83,8 @@ export class CatalogAdminService {
     try {
       await this.db("ops.audit_log").insert({
         id: randomUUID(),
-        actor_id: actorId,
-        actor_type: actorId ? "admin" : "system",
+        actor_id: this.actorId,
+        actor_type: this.actorId ? "admin" : "system",
         action,
         entity_type: entityType,
         entity_id: entityId,
@@ -78,6 +95,52 @@ export class CatalogAdminService {
     } catch {
       // audit is best-effort, never break the main operation
     }
+  }
+
+  /**
+   * Ask the storefront to drop cached catalog pages. Fire-and-forget: a cache
+   * miss is always recoverable, a failed admin mutation is not. Requires
+   * STOREFRONT_URL (or MEDUSA_STOREFRONT_URL) and REVALIDATE_SECRET.
+   */
+  async revalidateStorefront(tags: string[], paths: string[] = []) {
+    const baseUrl =
+      process.env.STOREFRONT_URL ?? process.env.MEDUSA_STOREFRONT_URL ?? null
+    const secret = process.env.REVALIDATE_SECRET ?? null
+
+    if (!baseUrl || !secret || (!tags.length && !paths.length)) {
+      return { revalidated: false, reason: "not_configured" }
+    }
+
+    try {
+      const response = await fetch(
+        `${baseUrl.replace(/\/+$/, "")}/api/revalidate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${secret}`,
+          },
+          body: JSON.stringify({ tags, paths }),
+          signal: AbortSignal.timeout(5000),
+        }
+      )
+
+      return { revalidated: response.ok, status: response.status }
+    } catch {
+      return { revalidated: false, reason: "request_failed" }
+    }
+  }
+
+  private async revalidateProduct(productId: string, handle?: string | null) {
+    const tags = ["products", `product:${productId}`]
+    const paths = ["/ar/products", "/en/products"]
+
+    if (handle) {
+      tags.push(`product:${handle}`)
+      paths.push(`/ar/products/${handle}`, `/en/products/${handle}`)
+    }
+
+    await this.revalidateStorefront(tags, paths)
   }
 
   /* ============================ products ============================ */
@@ -154,7 +217,13 @@ export class CatalogAdminService {
     return { items, count: Number(countRow[0]?.count ?? 0) }
   }
 
-  async getProductAdmin(productId: string) {
+  async getProductAdmin(productId: string): Promise<{
+    profile: AnyRow
+    translations: AnyRow[]
+    variantProfiles: AnyRow[]
+    media: AnyRow[]
+    core: AnyRow | null
+  }> {
     const profile = await rawRows(
       this.db,
       `select * from catalog.product_profile where product_id = $1 and deleted_at is null limit 1`,
@@ -187,7 +256,56 @@ export class CatalogAdminService {
       [productId]
     )
 
-    return { profile: profile[0], translations, variantProfiles, media }
+    // Core Medusa data: titles, status, variants and AED prices. The custom
+    // tables drive the storefront, but price/variant edits must go through
+    // Medusa, so the editor needs both halves in one response.
+    let core: AnyRow | null = null
+
+    try {
+      const { data } = await this.query.graph({
+        entity: "product",
+        fields: [
+          "id",
+          "title",
+          "handle",
+          "status",
+          "thumbnail",
+          "created_at",
+          "updated_at",
+          "options.id",
+          "options.title",
+          "options.values.id",
+          "options.values.value",
+          "variants.id",
+          "variants.title",
+          "variants.sku",
+          "variants.prices.id",
+          "variants.prices.amount",
+          "variants.prices.currency_code",
+        ],
+        filters: { id: productId },
+      })
+
+      core = data?.[0] ?? null
+    } catch {
+      core = null
+    }
+
+    const coreVariants = (core?.variants ?? []).map((variant: AnyRow) => ({
+      ...variant,
+      prices: (variant.prices ?? []).map((price: AnyRow) => ({
+        ...price,
+        amount: Number(price.amount ?? 0),
+      })),
+    }))
+
+    return {
+      profile: profile[0],
+      translations,
+      variantProfiles,
+      media,
+      core: core ? { ...core, variants: coreVariants } : null,
+    }
   }
 
   async createProduct(input: AnyRow) {
@@ -216,12 +334,29 @@ export class CatalogAdminService {
       )
     }
 
+    const variantTitles = new Set<string>()
+
     for (const variant of variants) {
+      const title = String(variant.title ?? "").trim()
+      if (!title) {
+        throw new MedusaError(
+          MedusaError.Types.INVALID_DATA,
+          "Every variant needs a title (for example \"100 ml\")"
+        )
+      }
+      if (variantTitles.has(title)) {
+        throw new MedusaError(
+          MedusaError.Types.INVALID_DATA,
+          `Duplicate variant title "${title}". Variant titles must be unique.`
+        )
+      }
+      variantTitles.add(title)
+
       const amount = Number(variant.price)
       if (!Number.isFinite(amount) || amount <= 0) {
         throw new MedusaError(
           MedusaError.Types.INVALID_DATA,
-          `Variant "${variant.title}" needs a positive price in AED`
+          `Variant "${title}" needs a positive price in AED`
         )
       }
     }
@@ -272,16 +407,25 @@ export class CatalogAdminService {
         throw new Error("Product creation returned no id")
       }
 
-      const { data: details } = await this.query.graph({
-        entity: "product",
-        fields: ["id", "handle", "variants.id", "variants.title"],
-        filters: { id: createdProductId },
-      })
+      let createdVariants: AnyRow[] = firstResult(result)?.variants ?? []
 
-      const createdVariants = details?.[0]?.variants ?? []
-      const variantIdByTitle = new Map(
-        createdVariants.map((variant: AnyRow) => [variant.title, variant.id])
-      )
+      if (!createdVariants.length) {
+        const { data: details } = await this.query.graph({
+          entity: "product",
+          fields: ["id", "handle", "variants.id", "variants.title"],
+          filters: { id: createdProductId },
+        })
+        createdVariants = details?.[0]?.variants ?? []
+      }
+
+      // Map by option value as well as title: Medusa may normalise the title,
+      // and two variants can share a display title in edge cases.
+      const variantIdByTitle = new Map<string, string>()
+      for (const variant of createdVariants) {
+        const optionValue = variant.options?.[0]?.value
+        if (variant.title) variantIdByTitle.set(String(variant.title), variant.id)
+        if (optionValue) variantIdByTitle.set(String(optionValue), variant.id)
+      }
 
       await this.db.transaction(async (trx: any) => {
         await trx("catalog.product_profile")
@@ -335,11 +479,16 @@ export class CatalogAdminService {
             .insert({
               variant_id: variantId,
               product_id: createdProductId,
-              size_ml: variant.size_ml ?? null,
+              size_ml: variant.size_ml ?? inferSizeMl(variant.title),
               concentration: variant.concentration ?? null,
               packaging: variant.packaging ?? null,
-              is_serialized: Boolean(variant.is_serialized),
-              edition_size: variant.edition_size ?? null,
+              is_serialized:
+                variant.is_serialized === undefined
+                  ? Boolean(input.is_serialized)
+                  : Boolean(variant.is_serialized),
+              edition_size:
+                variant.edition_size ??
+                (input.is_serialized ? input.edition_size ?? null : null),
               metadata: JSON.stringify(variant.metadata ?? {}),
               created_at: trx.fn.now(),
               updated_at: trx.fn.now(),
@@ -350,13 +499,14 @@ export class CatalogAdminService {
       })
 
       await this.audit(
-        null,
         "create",
         "product",
         createdProductId,
         null,
         { handle, title_ar: titleAr, title_en: titleEn }
       )
+
+      await this.revalidateProduct(createdProductId, handle)
 
       return this.getProductAdmin(createdProductId)
     } catch (error) {
@@ -454,48 +604,76 @@ export class CatalogAdminService {
       }
     })
 
-    if (input.title_ar !== undefined) {
+    if (input.title_ar !== undefined || input.handle !== undefined) {
+      const coreUpdate: AnyRow = {}
+      if (input.title_ar !== undefined) {
+        coreUpdate.title = String(input.title_ar)
+      }
+      if (input.handle !== undefined) {
+        const handle = String(input.handle).trim().toLowerCase()
+        if (!/^[a-z0-9-]+$/.test(handle)) {
+          throw new MedusaError(
+            MedusaError.Types.INVALID_DATA,
+            "handle must contain only lowercase letters, numbers and dashes"
+          )
+        }
+        coreUpdate.handle = handle
+      }
+
       try {
         await updateProductsWorkflow(this.container).run({
           input: {
             selector: { id: productId },
-            update: { title: String(input.title_ar) },
+            update: coreUpdate,
           },
         })
       } catch {
-        // core title is cosmetic; custom translations drive the storefront
+        // core title/handle are cosmetic; custom translations drive the storefront
       }
     }
 
-    await this.audit(null, "update", "product", productId, profile[0], input)
+    await this.audit("update", "product", productId, profile[0], input)
+
+    const nextHandle =
+      input.handle !== undefined
+        ? String(input.handle).trim().toLowerCase()
+        : null
+
+    await this.revalidateProduct(productId, nextHandle)
+
     return this.getProductAdmin(productId)
   }
 
   async publishProduct(productId: string) {
-    const { profile, translations, variantProfiles, media } =
+    const { profile, translations, variantProfiles, media, core } =
       await this.getProductAdmin(productId)
 
     const missing: string[] = []
 
-    const locales = new Set(
-      translations.map((translation: AnyRow) => translation.locale)
+    const translationByLocale = new Map(
+      translations.map((translation: AnyRow) => [translation.locale, translation])
     )
-    if (!locales.has("ar")) missing.push("translation_ar")
-    if (!locales.has("en")) missing.push("translation_en")
-    if (!media.some((row: AnyRow) => row.role === "hero")) {
-      missing.push("hero_media")
+
+    for (const locale of ["ar", "en"] as const) {
+      const translation = translationByLocale.get(locale)
+      if (!translation) {
+        missing.push(`translation_${locale}`)
+      } else if (!String(translation.title ?? "").trim()) {
+        missing.push(`title_${locale}`)
+      }
     }
+
+    const hasHero =
+      Boolean(profile.hero_media_id) ||
+      media.some((row: AnyRow) => row.role === "hero")
+    if (!hasHero) missing.push("hero_media")
+
     if (!variantProfiles.length) missing.push("variant_profile")
 
-    const core = await this.query.graph({
-      entity: "product",
-      fields: ["id", "status", "variants.id", "variants.prices.currency_code"],
-      filters: { id: productId },
-    })
-    const coreProduct = core.data?.[0]
-    const hasAedPrice = (coreProduct?.variants ?? []).some((variant: AnyRow) =>
+    const hasAedPrice = (core?.variants ?? []).some((variant: AnyRow) =>
       (variant.prices ?? []).some(
-        (price: AnyRow) => price.currency_code === DEFAULT_CURRENCY
+        (price: AnyRow) =>
+          price.currency_code === DEFAULT_CURRENCY && Number(price.amount) > 0
       )
     )
     if (!hasAedPrice) missing.push("aed_price")
@@ -518,22 +696,31 @@ export class CatalogAdminService {
       .where({ product_id: productId })
       .update({ status: "active", updated_at: this.db.fn.now() })
 
-    if (profile.is_serialized) {
-      for (const variant of variantProfiles.filter(
-        (row: AnyRow) => row.is_serialized
-      )) {
+    for (const variant of variantProfiles) {
+      if (variant.is_serialized && Number(variant.edition_size ?? 0) > 0) {
         await this.generateSerials({
           variant_id: variant.variant_id,
-          edition_size: Number(variant.edition_size ?? 0),
+          edition_size: Number(variant.edition_size),
         })
       }
     }
 
-    await this.audit(null, "publish", "product", productId, { status: "draft" }, { status: "active" })
+    await this.audit(
+      "publish",
+      "product",
+      productId,
+      { status: "draft" },
+      { status: "active" }
+    )
+
+    await this.revalidateProduct(productId, core?.handle ?? null)
+
     return this.getProductAdmin(productId)
   }
 
   async archiveProduct(productId: string) {
+    const { core } = await this.getProductAdmin(productId)
+
     await updateProductsWorkflow(this.container).run({
       input: {
         selector: { id: productId },
@@ -543,7 +730,238 @@ export class CatalogAdminService {
     await this.db("catalog.product_profile")
       .where({ product_id: productId })
       .update({ status: "archived", updated_at: this.db.fn.now() })
-    await this.audit(null, "archive", "product", productId, null, null)
+    await this.audit("archive", "product", productId, null, null)
+    await this.revalidateProduct(productId, core?.handle ?? null)
+    return this.getProductAdmin(productId)
+  }
+
+  /* ============================ variants ============================ */
+
+  async addVariant(productId: string, input: AnyRow) {
+    const { core } = await this.getProductAdmin(productId)
+
+    if (!core?.id) {
+      throw new MedusaError(
+        MedusaError.Types.NOT_FOUND,
+        "Medusa product not found for this profile"
+      )
+    }
+
+    const title = String(input.title ?? "").trim()
+    if (!title) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "Variant title is required (for example \"100 ml\")"
+      )
+    }
+
+    const amount = Number(input.price)
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "Variant price must be a positive number in AED"
+      )
+    }
+
+    const option = core.options?.[0]
+    if (!option?.id) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "This product has no option to attach variants to"
+      )
+    }
+
+    const values = (option.values ?? []).map((value: AnyRow) =>
+      String(value.value)
+    )
+
+    if (!values.includes(title)) {
+      await updateProductOptionsWorkflow(this.container).run({
+        input: {
+          selector: { id: option.id },
+          update: { values: [...values, title] },
+        },
+      })
+    }
+
+    const result = await createProductVariantsWorkflow(this.container).run({
+      input: {
+        product_variants: [
+          {
+            product_id: productId,
+            title,
+            sku: input.sku ? String(input.sku) : undefined,
+            manage_inventory: false,
+            allow_backorder: false,
+            options: { [option.title]: title },
+            prices: [{ amount, currency_code: DEFAULT_CURRENCY }],
+          },
+        ],
+      },
+    })
+
+    const created = firstResult(result)
+    const variantId = created?.id ?? created?.product_variants?.[0]?.id ?? null
+
+    if (!variantId) {
+      throw new MedusaError(
+        MedusaError.Types.UNEXPECTED_STATE,
+        "Variant creation returned no id"
+      )
+    }
+
+    await this.db("catalog.variant_profile")
+      .insert({
+        variant_id: variantId,
+        product_id: productId,
+        size_ml: input.size_ml ?? inferSizeMl(title),
+        concentration: input.concentration ?? null,
+        packaging: input.packaging ?? null,
+        is_serialized: Boolean(input.is_serialized),
+        edition_size: positiveNumber(input.edition_size),
+        metadata: JSON.stringify(input.metadata ?? {}),
+        created_at: this.db.fn.now(),
+        updated_at: this.db.fn.now(),
+      })
+      .onConflict("variant_id")
+      .merge([
+        "product_id",
+        "size_ml",
+        "concentration",
+        "packaging",
+        "is_serialized",
+        "edition_size",
+        "updated_at",
+      ])
+
+    await this.audit("create", "variant", variantId, null, {
+      product_id: productId,
+      title,
+      price: amount,
+    })
+
+    const { core: refreshed } = await this.getProductAdmin(productId)
+    await this.revalidateProduct(productId, refreshed?.handle ?? null)
+
+    return this.getProductAdmin(productId)
+  }
+
+  async updateVariant(productId: string, variantId: string, input: AnyRow) {
+    const { variantProfiles } = await this.getProductAdmin(productId)
+    const profile = variantProfiles.find(
+      (row: AnyRow) => row.variant_id === variantId
+    )
+
+    if (!profile) {
+      throw new MedusaError(
+        MedusaError.Types.NOT_FOUND,
+        "Variant does not belong to this product"
+      )
+    }
+
+    const amount =
+      input.price === undefined || input.price === null
+        ? null
+        : Number(input.price)
+
+    if (amount !== null && (!Number.isFinite(amount) || amount <= 0)) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "Variant price must be a positive number in AED"
+      )
+    }
+
+    const variantUpdate: AnyRow = { id: variantId }
+
+    if (input.title !== undefined) {
+      variantUpdate.title = String(input.title)
+    }
+    if (input.sku !== undefined) {
+      variantUpdate.sku = input.sku ? String(input.sku) : null
+    }
+    if (amount !== null) {
+      variantUpdate.prices = [{ amount, currency_code: DEFAULT_CURRENCY }]
+    }
+
+    if (Object.keys(variantUpdate).length > 1) {
+      try {
+        await updateProductsWorkflow(this.container).run({
+          input: {
+            selector: { id: productId },
+            update: { variants: [variantUpdate] },
+          },
+        })
+      } catch (error) {
+        // Price/title edits are the common path; surface a readable error
+        throw new MedusaError(
+          MedusaError.Types.INVALID_DATA,
+          `Could not update the Medusa variant: ${
+            error instanceof Error ? error.message : "unknown error"
+          }`
+        )
+      }
+    }
+
+    const profileUpdate: AnyRow = { updated_at: this.db.fn.now() }
+
+    for (const key of ["concentration", "packaging"] as const) {
+      if (input[key] !== undefined) profileUpdate[key] = input[key] || null
+    }
+    if (input.size_ml !== undefined) {
+      profileUpdate.size_ml = positiveNumber(input.size_ml)
+    }
+    if (input.is_serialized !== undefined) {
+      profileUpdate.is_serialized = Boolean(input.is_serialized)
+    }
+    if (input.edition_size !== undefined) {
+      profileUpdate.edition_size = positiveNumber(input.edition_size)
+    }
+
+    await this.db("catalog.variant_profile")
+      .where({ variant_id: variantId })
+      .update(profileUpdate)
+
+    await this.audit("update", "variant", variantId, profile, input)
+
+    const { core } = await this.getProductAdmin(productId)
+    await this.revalidateProduct(productId, core?.handle ?? null)
+
+    return this.getProductAdmin(productId)
+  }
+
+  async deleteVariant(productId: string, variantId: string) {
+    const { variantProfiles } = await this.getProductAdmin(productId)
+    const profile = variantProfiles.find(
+      (row: AnyRow) => row.variant_id === variantId
+    )
+
+    if (!profile) {
+      throw new MedusaError(
+        MedusaError.Types.NOT_FOUND,
+        "Variant does not belong to this product"
+      )
+    }
+
+    if (variantProfiles.length <= 1) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "A published product needs at least one variant"
+      )
+    }
+
+    await deleteProductVariantsWorkflow(this.container).run({
+      input: { ids: [variantId] },
+    })
+
+    await this.db("catalog.variant_profile")
+      .where({ variant_id: variantId })
+      .update({ deleted_at: this.db.fn.now(), updated_at: this.db.fn.now() })
+
+    await this.audit("delete", "variant", variantId, profile, null)
+
+    const { core } = await this.getProductAdmin(productId)
+    await this.revalidateProduct(productId, core?.handle ?? null)
+
     return this.getProductAdmin(productId)
   }
 
@@ -623,7 +1041,6 @@ export class CatalogAdminService {
     }
 
     await this.audit(
-      null,
       "generate_serials",
       "variant",
       input.variant_id,
@@ -656,17 +1073,42 @@ export class CatalogAdminService {
     alt_en?: string
     focal_x?: number
     focal_y?: number
+    width?: number
+    height?: number
+    bytes?: number
+    blurhash?: string
+    storage_key?: string
     product_id?: string
     role?: string
     sort_order?: number
   }) {
-    const id = randomUUID()
-    await this.db("catalog.media_asset")
-      .insert({
+    const url = String(input.url ?? "").trim()
+
+    if (!/^https?:\/\//i.test(url) && !url.startsWith("/")) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "url must be an absolute URL or a site-relative path"
+      )
+    }
+
+    const existing = await rawRows(
+      this.db,
+      `select id from catalog.media_asset where url = $1 and deleted_at is null limit 1`,
+      [url]
+    )
+
+    const id = String(existing[0]?.id ?? randomUUID())
+
+    if (!existing[0]) {
+      await this.db("catalog.media_asset").insert({
         id,
-        storage_key: `admin/${id}`,
-        url: input.url,
+        storage_key: input.storage_key ?? `admin/${id}`,
+        url,
         mime_type: input.mime_type ?? "image/webp",
+        width: positiveNumber(input.width),
+        height: positiveNumber(input.height),
+        bytes: positiveNumber(input.bytes),
+        blurhash: input.blurhash ?? null,
         alt_ar: input.alt_ar ?? null,
         alt_en: input.alt_en ?? null,
         focal_x: input.focal_x ?? null,
@@ -675,8 +1117,15 @@ export class CatalogAdminService {
         created_at: this.db.fn.now(),
         updated_at: this.db.fn.now(),
       })
-      .onConflict("id")
-      .ignore()
+    } else if (input.alt_ar || input.alt_en) {
+      await this.db("catalog.media_asset")
+        .where({ id })
+        .update({
+          alt_ar: input.alt_ar ?? null,
+          alt_en: input.alt_en ?? null,
+          updated_at: this.db.fn.now(),
+        })
+    }
 
     if (input.product_id) {
       await this.db("catalog.product_media")
@@ -689,10 +1138,68 @@ export class CatalogAdminService {
         })
         .onConflict(["product_id", "media_id", "role"])
         .ignore()
+
+      if (input.role === "hero") {
+        await this.db("catalog.product_profile")
+          .where({ product_id: input.product_id })
+          .update({ hero_media_id: id, updated_at: this.db.fn.now() })
+      }
     }
 
-    await this.audit(null, "create", "media", id, null, input)
-    return { id, url: input.url }
+    await this.audit("create", "media", id, null, { url, input })
+
+    if (input.product_id) {
+      await this.revalidateProduct(input.product_id, null)
+    }
+
+    return { id, url }
+  }
+
+  async listMediaAdmin(input: { q?: string; limit?: number; offset?: number }) {
+    const limit = Math.min(200, Math.max(1, input.limit ?? 60))
+    const offset = Math.max(0, input.offset ?? 0)
+    const bindings: unknown[] = []
+    let whereSql = "deleted_at is null"
+
+    if (input.q?.trim()) {
+      bindings.push(`%${input.q.trim()}%`)
+      whereSql += ` and (url ilike $1 or coalesce(alt_ar, '') ilike $1 or coalesce(alt_en, '') ilike $1)`
+    }
+
+    const items = await rawRows(
+      this.db,
+      `select id, url, mime_type, width, height, bytes, alt_ar, alt_en,
+              focal_x, focal_y, created_at
+       from catalog.media_asset
+       where ${whereSql}
+       order by created_at desc
+       limit $${bindings.length + 1} offset $${bindings.length + 2}`,
+      [...bindings, limit, offset]
+    )
+
+    return { media: items }
+  }
+
+  async removeProductMedia(productId: string, mediaId: string, role?: string) {
+    const query = this.db("catalog.product_media").where({
+      product_id: productId,
+      media_id: mediaId,
+    })
+
+    if (role) {
+      query.andWhere({ role })
+    }
+
+    const removed = await query.del()
+
+    await this.db("catalog.product_profile")
+      .where({ product_id: productId, hero_media_id: mediaId })
+      .update({ hero_media_id: null, updated_at: this.db.fn.now() })
+
+    await this.audit("delete", "product_media", productId, { media_id: mediaId }, null)
+    await this.revalidateProduct(productId, null)
+
+    return { removed }
   }
 
   async setProductMedia(
@@ -718,8 +1225,91 @@ export class CatalogAdminService {
           .ignore()
       }
     })
-    await this.audit(null, "update", "product_media", productId, null, media)
+    if (media.some((link) => link.role === "hero")) {
+      const hero = media.find((link) => link.role === "hero")
+      await this.db("catalog.product_profile")
+        .where({ product_id: productId })
+        .update({ hero_media_id: hero ? hero.media_id : null, updated_at: this.db.fn.now() })
+    }
+
+    await this.audit( "update", "product_media", productId, null, media)
+    await this.revalidateProduct(productId, null)
     return this.getProductAdmin(productId).then((value) => value.media)
+  }
+
+  async deleteCivilization(id: string) {
+    const used = await rawRows(
+      this.db,
+      `select count(product_id)::text as count from catalog.product_profile
+       where civilization_id = $1 and deleted_at is null`,
+      [id]
+    )
+
+    if (Number(used[0]?.count ?? 0) > 0) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "This civilization still has products. Move or archive them first."
+      )
+    }
+
+    await this.db("catalog.civilization")
+      .where({ id })
+      .update({ deleted_at: this.db.fn.now(), status: "archived", updated_at: this.db.fn.now() })
+
+    await this.audit("delete", "civilization", id, null, null)
+    await this.revalidateStorefront(["civilizations"], ["/ar", "/en"])
+
+    return { id, deleted: true }
+  }
+
+  async deleteCollection(id: string) {
+    const used = await rawRows(
+      this.db,
+      `select count(product_id)::text as count from catalog.product_profile
+       where collection_id = $1 and deleted_at is null`,
+      [id]
+    )
+
+    if (Number(used[0]?.count ?? 0) > 0) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "This collection still has products. Move or archive them first."
+      )
+    }
+
+    await this.db("catalog.collection_profile")
+      .where({ id })
+      .update({ deleted_at: this.db.fn.now(), status: "archived", updated_at: this.db.fn.now() })
+
+    await this.audit("delete", "collection", id, null, null)
+    await this.revalidateStorefront(["collections"], ["/ar/collections", "/en/collections"])
+
+    return { id, deleted: true }
+  }
+
+  async deleteProductType(id: string) {
+    const used = await rawRows(
+      this.db,
+      `select count(product_id)::text as count from catalog.product_profile
+       where product_type_id = $1 and deleted_at is null`,
+      [id]
+    )
+
+    if (Number(used[0]?.count ?? 0) > 0) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "This product type is still used by products."
+      )
+    }
+
+    await this.db("catalog.product_type")
+      .where({ id })
+      .update({ deleted_at: this.db.fn.now(), is_active: false, updated_at: this.db.fn.now() })
+
+    await this.audit("delete", "product_type", id, null, null)
+    await this.revalidateStorefront(["products"], ["/ar/products", "/en/products"])
+
+    return { id, deleted: true }
   }
 
   /* ===================== civilizations & collections ===================== */
@@ -795,7 +1385,8 @@ export class CatalogAdminService {
       }
     })
 
-    await this.audit(null, "upsert", "civilization", id, null, input)
+    await this.audit( "upsert", "civilization", id, null, input)
+    await this.revalidateStorefront(["civilizations"], ["/ar", "/en"])
     return { id }
   }
 
@@ -874,7 +1465,11 @@ export class CatalogAdminService {
       }
     })
 
-    await this.audit(null, "upsert", "collection", id, null, input)
+    await this.audit( "upsert", "collection", id, null, input)
+    await this.revalidateStorefront(
+      ["collections", "products"],
+      ["/ar/collections", "/en/collections"]
+    )
     return { id }
   }
 
@@ -904,7 +1499,8 @@ export class CatalogAdminService {
       .onConflict("id")
       .merge(["code", "name_ar", "name_en", "description_ar", "description_en", "sort_order", "is_active", "updated_at"])
 
-    await this.audit(null, "upsert", "product_type", id, null, input)
+    await this.audit( "upsert", "product_type", id, null, input)
+    await this.revalidateStorefront(["products"], ["/ar/products", "/en/products"])
     return { id }
   }
 }

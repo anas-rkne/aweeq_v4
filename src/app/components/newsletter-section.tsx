@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { useLocale, useTranslations } from "next-intl"
 import { useState, type FormEvent } from "react"
+import { SectionFade } from "@/shared/ui/section-fade"
 import { TextReveal } from "@/shared/ui/text-reveal"
 
 type FormStatus = "idle" | "submitting" | "success" | "error"
@@ -62,8 +63,10 @@ export function NewsletterSection() {
   return (
     <section
       id="newsletter"
-      className="relative isolate flex min-h-screen flex-col justify-center overflow-hidden bg-royal-navy"
+      className="relative isolate flex min-h-svh flex-col justify-center overflow-hidden bg-royal-navy"
     >
+      {/* the fog the journal leaves behind */}
+      <SectionFade edge="top" zIndex={6} />
       <Image
         src="/images/newletter/newsletter_bg.webp"
         alt=""
@@ -76,16 +79,6 @@ export function NewsletterSection() {
       <div
         aria-hidden="true"
         className="absolute inset-0 z-0 bg-royal-navy/50"
-      />
-
-      {/* receives the midnight of the Journal without a seam */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-0 top-0 z-10 h-32 w-full md:h-64"
-        style={{
-          background:
-            "linear-gradient(to bottom, var(--color-royal-navy) 0%, transparent 100%)",
-        }}
       />
 
       <div className="relative z-10 flex min-h-[60vh] flex-col items-center justify-center px-6 py-24 text-center md:py-32">
@@ -127,7 +120,7 @@ export function NewsletterSection() {
               disabled={isSubmitting}
               aria-invalid={status === "error"}
               aria-describedby="newsletter-message"
-              className="w-full border border-sand/30 border-e-0 bg-royal-navy/60 px-6 py-4 font-primary text-sand placeholder:text-sand/40 backdrop-blur-sm transition-colors focus:border-gold focus:bg-royal-navy/75 focus:text-sand focus:outline-none focus:ring-0 focus-visible:outline-none! focus-visible:ring-0! disabled:opacity-60"
+              className="w-full border border-sand/30 border-e-0 bg-royal-navy/60 px-6 py-4 font-primary text-sand placeholder:text-sand/40 transition-colors focus:border-gold focus:bg-royal-navy/75 focus:text-sand focus:outline-none focus:ring-0 focus-visible:outline-none! focus-visible:ring-0! disabled:opacity-60"
             />
             <span aria-hidden="true" className="focus-beam" />
           </div>
@@ -155,15 +148,8 @@ export function NewsletterSection() {
         </p>
       </div>
 
-      {/* hands the journey to the Footer without a seam */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-32 md:h-64"
-        style={{
-          background:
-            "linear-gradient(to top, var(--color-royal-navy) 0%, transparent 100%)",
-        }}
-      />
+      {/* the fog the footer sits in */}
+      <SectionFade edge="bottom" zIndex={6} />
     </section>
   )
 }

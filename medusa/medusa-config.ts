@@ -25,6 +25,28 @@ module.exports = defineConfig({
       resolve: "./src/modules/threeweeq",
     },
     {
+      // Local disk storage for catalog media. `backend_url` is what the admin
+      // and the storefront will see in the returned file URL, so it must be
+      // the public API origin in production (MEDUSA_BACKEND_URL).
+      resolve: "@medusajs/medusa/file",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/file-local",
+            id: "local",
+            options: {
+              upload_dir: process.env.MEDIA_UPLOAD_DIR || "static",
+              private_upload_dir:
+                process.env.MEDIA_PRIVATE_UPLOAD_DIR || "static-private",
+              backend_url:
+                (process.env.MEDUSA_BACKEND_URL || "http://localhost:9000") +
+                "/static",
+            },
+          },
+        ],
+      },
+    },
+    {
       resolve: "@medusajs/medusa/payment",
       options: {
         providers: [

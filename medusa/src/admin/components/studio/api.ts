@@ -16,6 +16,42 @@ export async function studioFetch<T = any>(
   return response.json() as Promise<T>
 }
 
+/**
+ * Multipart upload to Medusa's file module. Never set Content-Type by hand —
+ * the browser has to add the multipart boundary.
+ */
+export async function studioUpload<T = any>(
+  path: string,
+  formData: FormData
+): Promise<T> {
+  const response = await fetch(path, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null)
+    throw new Error(body?.message ?? `Upload failed (${response.status})`)
+  }
+
+  return response.json() as Promise<T>
+}
+
+/** Make a Media-backend URL absolute so the storefront can load it. */
+export function absoluteMediaUrl(url: string) {
+  if (/^https?:\/\//i.test(url)) {
+    return url
+  }
+
+  if (typeof window === "undefined") {
+    return url
+  }
+
+  return new URL(url, window.location.origin).toString()
+}
+
+
 export const studioStyles = {
   input: {
     width: "100%",

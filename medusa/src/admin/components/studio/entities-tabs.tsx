@@ -24,16 +24,67 @@ function useList<T>(path: string) {
   return { items, setItems, error, setError, load }
 }
 
+function useDelete(resource: string) {
+  const [busy, setBusy] = useState(false)
+
+  async function remove(id: string, label: string, onDone: () => void, onError: (message: string) => void) {
+    if (!window.confirm(`حذف "${label}"؟ لا يمكن التراجع.`)) {
+      return
+    }
+
+    setBusy(true)
+    try {
+      await studioFetch(`/admin/threeweeq/${resource}/${id}`, { method: "DELETE" })
+      onDone()
+    } catch (error) {
+      onError(error instanceof Error ? error.message : "تعذّر الحذف")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return { busy, remove }
+}
+
+function pick(data: FormData, names: string[]) {
+  const result: Record<string, unknown> = {}
+  for (const name of names) {
+    const value = data.get(name)
+    result[name] = value === null || value === "" ? null : value
+  }
+  return result
+}
+
 export function CivilizationsTab() {
   const { items, error, setError, load } = useList<Lookup>(
     "/admin/threeweeq/civilizations"
   )
   const [busy, setBusy] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
+  const [editing, setEditing] = useState<Lookup | null>(null)
+  const remove = useDelete("civilizations")
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
+    const payload = pick(data, [
+      "code",
+      "name_ar",
+      "name_en",
+      "subtitle_ar",
+      "subtitle_en",
+      "description_ar",
+      "description_en",
+      "story_ar",
+      "story_en",
+      "seo_title_ar",
+      "seo_title_en",
+      "seo_description_ar",
+      "seo_description_en",
+      "accent_color",
+      "status",
+    ])
+
     setBusy(true)
     setError(null)
     setSuccess(null)
@@ -42,27 +93,14 @@ export function CivilizationsTab() {
       await studioFetch("/admin/threeweeq/civilizations", {
         method: "POST",
         body: JSON.stringify({
-          id: data.get("id") || undefined,
-          code: data.get("code"),
-          name_ar: data.get("name_ar"),
-          name_en: data.get("name_en"),
-          subtitle_ar: data.get("subtitle_ar"),
-          subtitle_en: data.get("subtitle_en"),
-          description_ar: data.get("description_ar"),
-          description_en: data.get("description_en"),
-          story_ar: data.get("story_ar"),
-          story_en: data.get("story_en"),
-          seo_title_ar: data.get("seo_title_ar"),
-          seo_title_en: data.get("seo_title_en"),
-          seo_description_ar: data.get("seo_description_ar"),
-          seo_description_en: data.get("seo_description_en"),
-          accent_color: data.get("accent_color"),
+          ...payload,
+          id: editing?.id ?? (data.get("id") || undefined),
           sort_order: Number(data.get("sort_order") ?? 0),
           status: data.get("status") ?? "draft",
         }),
       })
       setSuccess("تم الحفظ")
-      event.currentTarget.reset()
+      setEditing(null)
       await load()
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "failed")
@@ -77,9 +115,22 @@ export function CivilizationsTab() {
       error={error}
       success={success}
       busy={busy}
+      editing={editing}
+      onEdit={setEditing}
+      onCancelEdit={() => setEditing(null)}
+      onDelete={(item) =>
+        remove.remove(
+          String(item.id),
+          String(item.name_ar ?? item.name_en ?? item.id),
+          () => {
+            if (editing?.id === item.id) setEditing(null)
+            void load()
+          },
+          (message) => setError(message)
+        )
+      }
       onSubmit={handleSubmit}
       fields={[
-        { name: "id", label: "ID (اتركه فارغاً للجديد)", optional: true },
         { name: "code", label: "Code (babylon)" },
         { name: "name_ar", label: "الاسم عربي" },
         { name: "name_en", label: "Name (EN)" },
@@ -109,10 +160,30 @@ export function CollectionsTab() {
   )
   const [busy, setBusy] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
+  const [editing, setEditing] = useState<Lookup | null>(null)
+  const remove = useDelete("collections")
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
+    const payload = pick(data, [
+      "handle",
+      "civilization_id",
+      "title_ar",
+      "title_en",
+      "subtitle_ar",
+      "subtitle_en",
+      "description_ar",
+      "description_en",
+      "story_ar",
+      "story_en",
+      "seo_title_ar",
+      "seo_title_en",
+      "seo_description_ar",
+      "seo_description_en",
+      "status",
+    ])
+
     setBusy(true)
     setError(null)
     setSuccess(null)
@@ -121,27 +192,14 @@ export function CollectionsTab() {
       await studioFetch("/admin/threeweeq/collections", {
         method: "POST",
         body: JSON.stringify({
-          id: data.get("id") || undefined,
-          handle: data.get("handle"),
-          civilization_id: data.get("civilization_id") || null,
-          title_ar: data.get("title_ar"),
-          title_en: data.get("title_en"),
-          subtitle_ar: data.get("subtitle_ar"),
-          subtitle_en: data.get("subtitle_en"),
-          description_ar: data.get("description_ar"),
-          description_en: data.get("description_en"),
-          story_ar: data.get("story_ar"),
-          story_en: data.get("story_en"),
-          seo_title_ar: data.get("seo_title_ar"),
-          seo_title_en: data.get("seo_title_en"),
-          seo_description_ar: data.get("seo_description_ar"),
-          seo_description_en: data.get("seo_description_en"),
+          ...payload,
+          id: editing?.id ?? (data.get("id") || undefined),
           sort_order: Number(data.get("sort_order") ?? 0),
           status: data.get("status") ?? "draft",
         }),
       })
       setSuccess("تم الحفظ")
-      event.currentTarget.reset()
+      setEditing(null)
       await load()
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "failed")
@@ -156,9 +214,22 @@ export function CollectionsTab() {
       error={error}
       success={success}
       busy={busy}
+      editing={editing}
+      onEdit={setEditing}
+      onCancelEdit={() => setEditing(null)}
+      onDelete={(item) =>
+        remove.remove(
+          String(item.id),
+          String(item.title_ar ?? item.title_en ?? item.handle ?? item.id),
+          () => {
+            if (editing?.id === item.id) setEditing(null)
+            void load()
+          },
+          (message) => setError(message)
+        )
+      }
       onSubmit={handleSubmit}
       fields={[
-        { name: "id", label: "ID (اتركه فارغاً للجديد)", optional: true },
         { name: "handle", label: "Handle (rafid)" },
         { name: "civilization_id", label: "civilization_id (babylon)", optional: true },
         { name: "title_ar", label: "العنوان عربي" },
@@ -188,10 +259,13 @@ export function TypesTab() {
   )
   const [busy, setBusy] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
+  const [editing, setEditing] = useState<Lookup | null>(null)
+  const remove = useDelete("product-types")
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
+
     setBusy(true)
     setError(null)
     setSuccess(null)
@@ -200,16 +274,16 @@ export function TypesTab() {
       await studioFetch("/admin/threeweeq/product-types", {
         method: "POST",
         body: JSON.stringify({
-          id: data.get("id") || undefined,
+          id: editing?.id ?? (data.get("id") || undefined),
           code: data.get("code"),
           name_ar: data.get("name_ar"),
           name_en: data.get("name_en"),
           sort_order: Number(data.get("sort_order") ?? 0),
-          is_active: data.get("is_active") === "on",
+          is_active: editing ? editing.is_active : data.get("is_active") === "on",
         }),
       })
       setSuccess("تم الحفظ")
-      event.currentTarget.reset()
+      setEditing(null)
       await load()
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "failed")
@@ -224,9 +298,22 @@ export function TypesTab() {
       error={error}
       success={success}
       busy={busy}
+      editing={editing}
+      onEdit={setEditing}
+      onCancelEdit={() => setEditing(null)}
+      onDelete={(item) =>
+        remove.remove(
+          String(item.id),
+          String(item.name_ar ?? item.name_en ?? item.code ?? item.id),
+          () => {
+            if (editing?.id === item.id) setEditing(null)
+            void load()
+          },
+          (message) => setError(message)
+        )
+      }
       onSubmit={handleSubmit}
       fields={[
-        { name: "id", label: "ID (اتركه فارغاً للجديد)", optional: true },
         { name: "code", label: "Code (fragrance)" },
         { name: "name_ar", label: "الاسم عربي" },
         { name: "name_en", label: "Name (EN)" },
@@ -244,6 +331,10 @@ function EntityForm({
   error,
   success,
   busy,
+  editing,
+  onEdit,
+  onCancelEdit,
+  onDelete,
   onSubmit,
   fields,
   columns,
@@ -253,6 +344,10 @@ function EntityForm({
   error: string | null
   success: string | null
   busy: boolean
+  editing: Lookup | null
+  onEdit: (item: Lookup) => void
+  onCancelEdit: () => void
+  onDelete: (item: Lookup) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   fields: Array<{
     name: string
@@ -265,12 +360,18 @@ function EntityForm({
   columns: string[]
   items: Lookup[]
 }) {
+  function valueOf(name: string) {
+    const value = editing?.[name]
+    return value === null || value === undefined ? "" : String(value)
+  }
+
   return (
     <div>
       {error && <div style={studioStyles.error}>{error}</div>}
       {success && <div style={studioStyles.success}>{success}</div>}
 
       <form
+        key={editing?.id ?? "new"}
         onSubmit={onSubmit}
         style={{
           ...studioStyles.card,
@@ -279,12 +380,20 @@ function EntityForm({
           gap: 12,
         }}
       >
-        <h3 style={{ gridColumn: "1 / -1", margin: 0 }}>{title}</h3>
+        <h3 style={{ gridColumn: "1 / -1", margin: 0 }}>
+          {editing
+            ? `تعديل: ${editing.name_ar ?? editing.title_ar ?? editing.id}`
+            : title}
+        </h3>
         {fields.map((field) => (
           <div key={field.name} style={field.area ? { gridColumn: "1 / -1" } : undefined}>
             <label style={studioStyles.label}>{field.label}</label>
             {field.select ? (
-              <select name={field.name} style={studioStyles.input}>
+              <select
+                name={field.name}
+                defaultValue={valueOf(field.name) || field.select[0]}
+                style={studioStyles.input}
+              >
                 {field.select.map((option) => (
                   <option key={option} value={option}>
                     {option}
@@ -292,18 +401,38 @@ function EntityForm({
                 ))}
               </select>
             ) : field.checkbox ? (
-              <input type="checkbox" name={field.name} style={{ width: 18, height: 18 }} />
+              <input
+                type="checkbox"
+                name={field.name}
+                defaultChecked={
+                  editing ? Boolean(editing[field.name]) : true
+                }
+                style={{ width: 18, height: 18 }}
+              />
             ) : field.area ? (
-              <textarea name={field.name} style={studioStyles.textarea} />
+              <textarea
+                name={field.name}
+                defaultValue={valueOf(field.name)}
+                style={studioStyles.textarea}
+              />
             ) : (
-              <input name={field.name} style={studioStyles.input} />
+              <input
+                name={field.name}
+                defaultValue={valueOf(field.name)}
+                style={studioStyles.input}
+              />
             )}
           </div>
         ))}
-        <div style={{ gridColumn: "1 / -1" }}>
+        <div style={{ gridColumn: "1 / -1", display: "flex", gap: 8 }}>
           <button type="submit" disabled={busy} style={studioStyles.button}>
-            حفظ
+            {editing ? "حفظ التعديل" : "حفظ"}
           </button>
+          {editing && (
+            <button type="button" onClick={onCancelEdit} style={studioStyles.buttonGray}>
+              إلغاء
+            </button>
+          )}
         </div>
       </form>
 
@@ -315,6 +444,7 @@ function EntityForm({
                 {column}
               </th>
             ))}
+            <th style={{ padding: 8 }}>إجراءات</th>
           </tr>
         </thead>
         <tbody>
@@ -325,6 +455,29 @@ function EntityForm({
                   {String(item[column] ?? "—")}
                 </td>
               ))}
+              <td style={{ padding: 8, whiteSpace: "nowrap" }}>
+                <button
+                  type="button"
+                  onClick={() => onEdit(item)}
+                  style={{ ...studioStyles.buttonGray, padding: "4px 8px", fontSize: 12, marginRight: 6 }}
+                >
+                  تعديل
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete(item)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#9b1c1c",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    padding: 0,
+                  }}
+                >
+                  حذف
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

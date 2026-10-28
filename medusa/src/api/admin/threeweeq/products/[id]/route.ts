@@ -2,16 +2,16 @@ import type {
   MedusaRequest,
   MedusaResponse,
 } from "@medusajs/framework/http"
-import { CatalogAdminService } from "../../../../../lib/threeweeq/admin-service"
+import { catalogAdminService } from "../../../../../lib/threeweeq/admin-route"
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
-  const service = new CatalogAdminService(req.scope)
+  const service = catalogAdminService(req)
   const productId = String(req.params.id ?? "")
   res.json(await service.getProductAdmin(productId))
 }
 
 export async function PUT(req: MedusaRequest, res: MedusaResponse) {
-  const service = new CatalogAdminService(req.scope)
+  const service = catalogAdminService(req)
   const productId = String(req.params.id ?? "")
   const body = (req.body ?? {}) as Record<string, unknown>
 
@@ -19,7 +19,7 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
 }
 
 export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
-  const service = new CatalogAdminService(req.scope)
+  const service = catalogAdminService(req)
   const productId = String(req.params.id ?? "")
   res.json(await service.archiveProduct(productId))
 }

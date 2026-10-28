@@ -62,17 +62,28 @@ const POLICIES: Policy[] = [
     slug: "shipping",
     titleAr: "الشحن والتوصيل",
     titleEn: "Shipping & Delivery",
-    introAr: "نشحن إلى دول الخليج، ونعمل على التوسع تدريجيًا.",
-    introEn: "We ship to Gulf countries and are expanding gradually.",
+    introAr: "نشحن داخل الإمارات العربية المتحدة فقط، عبر شركة شحن مؤمّنة.",
+    introEn:
+      "We ship inside the United Arab Emirates only, through an insured courier.",
     sections: [
       {
         headingAr: "مدة التوصيل",
         headingEn: "Delivery time",
         bodyAr: [
-          "داخل المملكة: 2–4 أيام عمل. دول الخليج: 4–7 أيام عمل. قد تزيد المدة في مواسم الإطلاق المحدود.",
+          "داخل الإمارات: 2–4 أيام عمل من تأكيد الطلب. قد تزيد المدة في مواسم الإطلاق المحدود، ونبلّغك في حال حدوث ذلك.",
         ],
         bodyEn: [
-          "Within the Kingdom: 2–4 business days. Gulf countries: 4–7 business days. Times may increase during limited-launch seasons.",
+          "Inside the UAE: 2–4 business days from order confirmation. Times may be longer during limited-launch seasons, and we will let you know if that happens.",
+        ],
+      },
+      {
+        headingAr: "النطاق الجغرافي",
+        headingEn: "Where we deliver",
+        bodyAr: [
+          "نشحن إلى جميع الإمارات السبع حاليًا. الشحن الدولي غير متاح بعد؛ سنعلن عبر النشرة البريدية عند إضافته.",
+        ],
+        bodyEn: [
+          "We currently deliver to all seven emirates. International shipping is not available yet; we will announce it through the newsletter when it is.",
         ],
       },
       {
@@ -89,10 +100,10 @@ const POLICIES: Policy[] = [
         headingAr: "تتبع الطلب",
         headingEn: "Order tracking",
         bodyAr: [
-          "يصلك رقم تتبع عبر البريد الإلكتروني فور خروج الطلب من المستودع.",
+          "يصلك بريد تأكيد الطلب فور الدفع، ثم رقم تتبع عبر البريد الإلكتروني فور خروج الطلب من المستودع.",
         ],
         bodyEn: [
-          "You will receive a tracking number by email as soon as your order leaves the warehouse.",
+          "You receive an order confirmation email as soon as payment succeeds, then a tracking number by email as soon as your order leaves the warehouse.",
         ],
       },
     ],
@@ -109,10 +120,10 @@ const POLICIES: Policy[] = [
         headingAr: "مدة الاسترجاع",
         headingEn: "Return window",
         bodyAr: [
-          "يمكن طلب الاسترجاع خلال 14 يومًا من الاستلام، بشرط أن يكون الغلاف الخارجي سليمًا ولم تُفتح قطعة العطر.",
+          "يمكن طلب الاسترجاع داخل الإمارات خلال 14 يومًا من الاستلام، بشرط أن يكون الغلاف الخارجي سليمًا ولم تُفتح قطعة العطر.",
         ],
         bodyEn: [
-          "Returns can be requested within 14 days of delivery, provided the outer packaging is intact and the fragrance has not been opened.",
+          "Returns can be requested inside the UAE within 14 days of delivery, provided the outer packaging is intact and the fragrance has not been opened.",
         ],
       },
       {
@@ -135,6 +146,16 @@ const POLICIES: Policy[] = [
           "Numbered pieces can only be exchanged in the case of a manufacturing defect, given their limited nature.",
         ],
       },
+      {
+        headingAr: "كيف أطلب استرجاعًا؟",
+        headingEn: "How to request a return",
+        bodyAr: [
+          "راسلنا على care@3weeq.ae مع رقم الطلب خلال المهلة أعلاه. نرد خلال يوم عمل واحد، ونتحمّل نحن تكلفة الشحن في حال وجود عيب تصنيعي.",
+        ],
+        bodyEn: [
+          "Email care@3weeq.ae with your order number within the window above. We reply within one business day, and we cover return shipping when there is a manufacturing defect.",
+        ],
+      },
     ],
   },
   {
@@ -155,13 +176,27 @@ const POLICIES: Policy[] = [
         ],
       },
       {
-        headingAr: "الأسعار",
-        headingEn: "Prices",
+        headingAr: "الأسعار والضريبة",
+        headingEn: "Prices and VAT",
         bodyAr: [
-          "جميع الأسعار بالدرهم الإماراتي وتشمل القيمة المضافة حيث ينطبق. قد تتغير الأسعار دون إشعار مسبق.",
+          "جميع الأسعار معروضة بالدرهم الإماراتي (AED) وتشمل ضريبة القيمة المضافة بنسبة 5% المطبّقة في دولة الإمارات. لا تُضاف أي رسوم ضريبية أخرى عند الدفع.",
+          "أي تغيير في السعر لا يؤثر على طلب تم تأكيده ودفعه بالفعل.",
         ],
         bodyEn: [
-          "All prices are in UAE Dirhams and include VAT where applicable. Prices may change without prior notice.",
+          "All prices are shown in UAE Dirhams (AED) and include the 5% VAT applied in the United Arab Emirates. No further tax is added at checkout.",
+          "A price change never affects an order that has already been confirmed and paid.",
+        ],
+      },
+      {
+        headingAr: "الدفع",
+        headingEn: "Payment",
+        bodyAr: [
+          "يُعالج الدفع عبر مزوّد دفع معتمد، ولا نحتفظ ببيانات بطاقتك على خوادمنا. يصدر إيصال الطلب بالبريد الإلكتروني بعد نجاح الدفع.",
+          "لأغراض الفوترة، رقم التسجيل الضريبي (TRN) متاح عند الطلب عبر care@3weeq.ae ويظهر على الفاتورة الضريبية.",
+        ],
+        bodyEn: [
+          "Payment is processed by an authorised payment provider and card details are never stored on our servers. An order receipt is emailed once payment succeeds.",
+          "For invoicing, our Tax Registration Number (TRN) is available on request at care@3weeq.ae and appears on the tax invoice.",
         ],
       },
       {

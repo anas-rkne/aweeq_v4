@@ -19,7 +19,9 @@
     "medusa:dev": "npm --prefix medusa run dev",
     "medusa:build": "npm --prefix medusa run build",
     "medusa:migrate": "npm --prefix medusa run db:migrate",
-    "medusa:seed": "npm --prefix medusa run seed"
+    "medusa:seed": "npm --prefix medusa run seed",
+    "check:env": "node deploy/check-env.mjs",
+    "check:health": "bash deploy/healthcheck.sh"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -35,7 +37,8 @@
     "next-intl": "^4.14.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "three": "^0.186.1"
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.4.3",
@@ -48,6 +51,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.186.0",
     "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9",
     "eslint-config-next": "^16.4.3",

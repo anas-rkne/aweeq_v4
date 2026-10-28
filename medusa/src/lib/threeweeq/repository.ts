@@ -212,6 +212,67 @@ export class ThreeweeqRepository {
       )
   }
 
+  /**
+   * Storefront newsletter (footer + home section). Unlike the waitlist this is
+   * not tied to a civilization, so it needs its own table; the unique index on
+   * lower(email) makes the upsert idempotent for the same address.
+   */
+  async addNewsletterSubscriber(input: {
+    email: string
+    locale?: Locale
+    source?: string | null
+    metadata?: Record<string, unknown>
+  }) {
+    const email = input.email.trim().toLowerCase()
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "A valid email is required"
+      )
+    }
+
+    return this.db.transaction(async (trx: any) => {
+      const existing = await trx("engagement.newsletter_subscriber")
+        .whereRaw("lower(email) = ?", [email])
+        .whereNull("deleted_at")
+        .first()
+
+      if (existing) {
+        // Re-subscribing after an unsubscribe should work without a new row.
+        if (existing.status === "unsubscribed") {
+          const [updated] = await trx("engagement.newsletter_subscriber")
+            .where({ id: existing.id })
+            .update({
+              status: "subscribed",
+              unsubscribed_at: null,
+              updated_at: trx.fn.now(),
+            })
+            .returning("*")
+
+          return { subscriber: updated, created: false, resubscribed: true }
+        }
+
+        return { subscriber: existing, created: false, resubscribed: false }
+      }
+
+      const [subscriber] = await trx("engagement.newsletter_subscriber")
+        .insert({
+          id: randomUUID(),
+          email,
+          locale: input.locale ?? "ar",
+          source: input.source ?? null,
+          status: "subscribed",
+          metadata: JSON.stringify(input.metadata ?? {}),
+          created_at: trx.fn.now(),
+          updated_at: trx.fn.now(),
+        })
+        .returning("*")
+
+      return { subscriber, created: true, resubscribed: false }
+    })
+  }
+
   async addWaitlist(input: WaitlistInput) {
     const email = input.email.trim().toLowerCase()
 
@@ -832,6 +893,89 @@ export class ThreeweeqRepository {
     }
 
     return this.enqueueOutbox(input)
+  }
+
+  /**
+   * Atomically claim up to `limit` due outbox events. `FOR UPDATE SKIP LOCKED`
+   * keeps two workers (or two ticks of the same job) from sending the same
+   * email twice.
+   */
+  async claimOutboxEvents(limit = 10) {
+    return this.db.transaction(async (trx: any) => {
+      // A crash between claim and mark leaves rows in `processing` forever.
+      // The claim itself sets a 15-minute lease in `available_at`, so any row
+      // whose lease expired is safe to reclaim.
+      await trx("ops.outbox_event")
+        .where({ status: "processing" })
+        .where("available_at", "<=", trx.fn.now())
+        .update({ status: "pending" })
+
+      const rows = await trx("ops.outbox_event")
+        .where({ status: "pending" })
+        .where("available_at", "<=", trx.fn.now())
+        .orderBy("available_at", "asc")
+        .limit(limit)
+        .forUpdate()
+        .skipLocked()
+
+      if (!rows.length) {
+        return []
+      }
+
+      await trx("ops.outbox_event")
+        .whereIn(
+          "id",
+          rows.map((row: { id: string }) => row.id)
+        )
+        .update({
+          status: "processing",
+          // lease: if this worker dies, the row becomes reclaimable after 15m
+          available_at: trx.raw("now() + interval '15 minutes'"),
+        })
+
+      return rows
+    })
+  }
+
+  async markOutboxPublished(id: string) {
+    await this.db("ops.outbox_event")
+      .where({ id })
+      .update({ status: "published", published_at: this.db.fn.now(), last_error: null })
+  }
+
+  /**
+   * Put a claimed event back without counting an attempt. Used when nothing was
+   * actually attempted (no API key configured, no template, no recipient).
+   */
+  async releaseOutboxEvent(id: string, reason: string) {
+    await this.db("ops.outbox_event")
+      .where({ id })
+      .update({
+        status: "pending",
+        last_error: reason.slice(0, 1000),
+        available_at: this.db.raw("now() + interval '15 minutes'"),
+      })
+  }
+
+  async markOutboxFailed(id: string, error: string, retryInSeconds: number, maxAttempts = 5) {
+    const row = await this.db("ops.outbox_event").where({ id }).first()
+    const attempts = Number(row?.attempts ?? 0) + 1
+    const exhausted = attempts >= maxAttempts || retryInSeconds <= 0
+
+    await this.db("ops.outbox_event")
+      .where({ id })
+      .update({
+        status: exhausted ? "failed" : "pending",
+        attempts,
+        last_error: error.slice(0, 1000),
+        available_at: exhausted
+          ? this.db.fn.now()
+          : this.db.raw("now() + (? || ' seconds')::interval", [
+              String(retryInSeconds),
+            ]),
+      })
+
+    return { attempts, exhausted }
   }
 
   async recordWebhookEvent(input: WebhookRecordInput) {

@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation"
 import { useEffect, useRef } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { SectionFade } from "@/shared/ui/section-fade"
 import { SpotlightCard } from "@/shared/ui/spotlight-card"
 import { TextReveal } from "@/shared/ui/text-reveal"
 import { JOURNAL_POSTS } from "./journal-posts"
@@ -51,33 +52,10 @@ export function JournalSection() {
     <section
       ref={sectionRef}
       id="journal"
-      className="relative isolate min-h-screen overflow-hidden bg-royal-navy"
+      data-cuneiform-surface
+      className="relative isolate min-h-svh overflow-hidden"
     >
-      <Image
-        src="/images/journal/journal_bg.jpg"
-        alt=""
-        fill
-        quality={90}
-        sizes="100vw"
-        className="z-0 object-cover object-center"
-      />
-
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 z-0 bg-royal-navy/80"
-      />
-
-      {/* receives the midnight of Beyond without a seam */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-0 top-0 z-10 h-32 w-full md:h-64"
-        style={{
-          background:
-            "linear-gradient(to bottom, var(--color-royal-navy) 0%, transparent 100%)",
-        }}
-      />
-
-      <div className="relative z-10 mx-auto w-full max-w-[84rem] px-5 py-24 sm:px-8 md:px-16 md:py-28 lg:py-32">
+      <div className="relative z-10 w-full px-5 py-24 sm:px-8 md:px-16 md:py-28 lg:py-32">
         {/* ===== the header: the words on the right, the way out on the left ===== */}
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <div className="text-start">
@@ -94,7 +72,7 @@ export function JournalSection() {
           <div className="flex shrink-0 flex-wrap items-center gap-6 self-start md:self-auto">
             <Link
               href="/products?collection=rafid"
-              className="group inline-flex items-center gap-2 font-secondary text-[11px] tracking-[0.28em] text-gold transition-colors duration-300 hover:text-sand"
+              className="group inline-flex items-center gap-2 font-secondary text-[13px] text-gold transition-colors duration-300 hover:text-sand"
             >
               {t("shopCollection")}
               <span
@@ -107,7 +85,7 @@ export function JournalSection() {
 
             <Link
               href="/journal"
-              className="group inline-flex items-center gap-3 font-secondary text-[11px] tracking-[0.28em] text-sand/70 transition-colors duration-300 hover:text-gold"
+              className="group inline-flex items-center gap-3 font-secondary text-[13px] text-sand/80 transition-colors duration-300 hover:text-gold"
             >
               {t("viewAll")}
               <span
@@ -130,7 +108,7 @@ export function JournalSection() {
               }}
               className="group"
             >
-              <SpotlightCard className="aspect-[4/5] border border-sand/10 transition-colors duration-500 hover:border-gold/50">
+              <SpotlightCard className="aspect-[4/5]">
                 <Image
                   src={post.image}
                   alt={locale === "ar" ? post.titleAr : post.titleEn}
@@ -140,20 +118,11 @@ export function JournalSection() {
                   className="object-cover object-center transition-transform duration-[900ms] ease-out-expo group-hover:scale-[1.035]"
                 />
 
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-royal-navy/75 via-transparent to-transparent"
-                />
-
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-x-5 bottom-5 h-px bg-gold/30 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                />
               </SpotlightCard>
 
               <div className="mt-5 flex items-start justify-between gap-5">
                 <div className="min-w-0 text-start">
-                  <h3 className="font-secondary text-[clamp(1.1rem,1.5vw,1.4rem)] leading-tight tracking-[-0.005em] text-sand">
+                  <h3 className="font-secondary text-[clamp(1.1rem,1.5vw,1.4rem)] leading-tight tracking-[-0.005em] text-gold">
                     {locale === "ar" ? post.titleAr : post.titleEn}
                   </h3>
                   <p className="mt-2 font-primary text-[13px] leading-none text-gold">
@@ -166,7 +135,7 @@ export function JournalSection() {
                   aria-label={`${t("readArticle")}: ${
                     locale === "ar" ? post.titleAr : post.titleEn
                   }`}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold text-gold transition-colors duration-300 hover:bg-gold hover:text-royal-navy"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold text-royal-navy transition-colors duration-300 hover:bg-sand"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -188,15 +157,8 @@ export function JournalSection() {
         </div>
       </div>
 
-      {/* hands the gallery to the Newsletter without a seam */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-32 md:h-64"
-        style={{
-          background:
-            "linear-gradient(to top, var(--color-royal-navy) 0%, transparent 100%)",
-        }}
-      />
+      {/* the fog the invitation to subscribe rises out of */}
+      <SectionFade edge="bottom" zIndex={6} />
     </section>
   )
 }

@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { Instagram, Youtube } from "lucide-react"
 import { Link, usePathname } from "@/i18n/navigation"
 import { RollingText } from "@/shared/ui/rolling-text"
+import { SectionFade } from "@/shared/ui/section-fade"
 import { TextReveal } from "@/shared/ui/text-reveal"
 
 const QUICK_LINKS = [
@@ -37,8 +38,12 @@ export function Footer() {
       : `/${locale}${href}`
 
   return (
-    <footer id="footer" className="bg-royal-navy pb-12 pt-12">
-      <div className="mx-auto grid w-full max-w-7xl grid-cols-2 items-center gap-8 px-6 md:flex md:flex-row md:items-center md:justify-between md:gap-12 md:px-12">
+    <footer id="footer" data-cuneiform-surface className="relative pb-12 pt-12">
+      {/* the night the newsletter leaves behind, thinning down into the wall.
+          it sits below the words (z-0) rather than over them. */}
+      <SectionFade edge="top" zIndex={0} />
+
+      <div className="relative z-10 mx-auto grid w-full max-w-[84rem] grid-cols-2 items-center gap-8 px-5 sm:px-8 md:flex md:flex-row md:items-center md:justify-between md:gap-12 md:px-16">
         {/* far right: the mark */}
         <div className="col-start-1 row-start-1 flex justify-start">
           <a
@@ -107,7 +112,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
-              className="inline-flex rounded-full border border-gold p-2 text-gold transition-colors duration-300 hover:bg-gold hover:text-royal-navy"
+              className="inline-flex rounded-full bg-gold p-2 text-royal-navy transition-colors duration-300 hover:bg-sand"
             >
               <Instagram className="h-4 w-4" strokeWidth={1.4} />
             </a>
@@ -117,7 +122,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Youtube"
-              className="inline-flex rounded-full border border-gold p-2 text-gold transition-colors duration-300 hover:bg-gold hover:text-royal-navy"
+              className="inline-flex rounded-full bg-gold p-2 text-royal-navy transition-colors duration-300 hover:bg-sand"
             >
               <Youtube className="h-4 w-4" strokeWidth={1.4} />
             </a>
@@ -126,8 +131,8 @@ export function Footer() {
       </div>
 
       {/* the full-bleed golden panel */}
-      <div className="w-full overflow-hidden pt-8">
-        <div className="h-16 w-full overflow-hidden md:h-24">
+      <div className="relative z-10 w-full overflow-hidden pt-8">
+        <div className="h-14 w-full overflow-hidden md:h-20">
           <Image
             src="/images/footer/footer_ornament.webp"
             alt=""
@@ -136,18 +141,23 @@ export function Footer() {
             quality={90}
             sizes="100vw"
             className="pointer-events-none h-full w-full select-none object-cover mix-blend-screen"
-            style={{ objectPosition: "50% 10%" }}
+            style={{ objectPosition: "50% 0%" }}
           />
         </div>
       </div>
 
-      <div className="px-6 md:px-12">
-        <div className="mx-auto mt-8 flex w-full max-w-7xl flex-col items-center justify-between gap-4 text-sm text-sand/60 md:flex-row">
-          <p className="font-primary">{t("rights")}</p>
+      <div className="relative z-10 px-5 sm:px-8 md:px-16">
+        <div className="mx-auto mt-8 flex w-full max-w-[84rem] flex-col items-center justify-between gap-4 text-sm text-sand/80 md:flex-row">
+          {/* the last two lines sit at the very foot of the page: they are
+              always readable, never part of the scroll reveal */}
+          <p data-no-reveal className="font-primary">
+            {t("rights")}
+          </p>
 
           <p
+            data-no-reveal
             dir="ltr"
-            className="font-secondary text-[10px] tracking-[0.28em] md:text-left md:text-[11px]"
+            className="font-secondary text-[13px] md:text-left"
           >
             {t("tagline")}
           </p>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { useTranslations } from "next-intl"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { SectionFade } from "@/shared/ui/section-fade"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -271,10 +272,11 @@ export function CivilizationsSection() {
       scrollTrigger: {
         trigger: section,
         start: "top top",
-        end: "+=4000",
+        // the section is 2.2 screens tall in the markup, so the film's length
+        // is part of the document instead of a distance added after the frames
+        // load. the page no longer re-forms under the reader.
+        end: "bottom bottom",
         scrub: 1,
-        pin: true,
-        anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate: (self) => applyProgress(self.progress),
         onLeave: () => setActive(-1),
@@ -336,8 +338,8 @@ export function CivilizationsSection() {
       applyProgress(tl.scrollTrigger.progress)
     }
 
-    // the film loads late, so its pin changes the page height after the first
-    // pass; re-measure so the sections below keep their true positions
+    // the frames load late; the height they need is already in the markup, so
+    // this only picks up font metrics and the first paint of the film
     ScrollTrigger.refresh()
 
     return () => {
@@ -348,92 +350,70 @@ export function CivilizationsSection() {
   }, [loaded, images])
 
   return (
+    // the 2.2 screens the film needs are part of the document from the first
+    // paint; the stage inside is what sticks while they pass
     <section
       ref={sectionRef}
       id="civilizations"
-      className="relative h-screen overflow-hidden bg-royal-navy motion-reduce:h-auto motion-reduce:min-h-screen"
+      className="relative h-[220svh] bg-royal-navy motion-reduce:h-auto motion-reduce:min-h-svh"
     >
-      <canvas
-        ref={canvasRef}
-        aria-hidden="true"
-        className="absolute inset-0 z-0 h-full w-full object-cover motion-reduce:hidden"
-      />
+      <div className="sticky top-0 h-svh overflow-hidden motion-reduce:relative motion-reduce:h-auto motion-reduce:min-h-svh">
+        {/* the fog the packaging leaves behind */}
+        <SectionFade edge="top" zIndex={6} />
+        <canvas
+          ref={canvasRef}
+          aria-hidden="true"
+          className="absolute inset-0 z-0 h-full w-full object-cover motion-reduce:hidden"
+        />
 
-      {/* the pool of night under the words, so the type never stands on raw
-            pixels */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[5] motion-reduce:hidden"
-        style={{
-          backgroundImage:
-            "radial-gradient(ellipse 88% 78% at 50% 50%, rgba(10, 22, 40, 0.22) 0%, rgba(10, 22, 40, 0.05) 46%, rgba(10, 22, 40, 0.38) 100%)",
-        }}
-      />
+        {/* a flat field under the words, so the type never stands on raw pixels */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-[5] bg-royal-navy/35 motion-reduce:hidden"
+        />
 
-      {/* receives the gradient from the section above, so the two meet in
-            the same midnight with no seam */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-0 top-0 z-[6] h-32 w-full motion-reduce:hidden md:h-64"
-        style={{
-          background:
-            "linear-gradient(to bottom, var(--color-royal-navy) 0%, transparent 100%)",
-        }}
-      />
+        <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center p-8 motion-reduce:relative motion-reduce:inset-auto motion-reduce:gap-20 motion-reduce:py-24">
+          {CIVILIZATIONS.map((civilization, index) => {
+            const interactive = reducedMotion || active === index
 
-      {/* the last frame settles into the midnight, so Beyond begins on the
-            same colour with no seam */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-0 z-[6] h-32 w-full motion-reduce:hidden md:h-64"
-        style={{
-          background:
-            "linear-gradient(to top, var(--color-royal-navy) 0%, transparent 100%)",
-        }}
-      />
-
-      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center p-8 motion-reduce:relative motion-reduce:inset-auto motion-reduce:gap-20 motion-reduce:py-24">
-        {CIVILIZATIONS.map((civilization, index) => {
-          const interactive = reducedMotion || active === index
-
-          return (
-            <div
-              key={civilization.id}
-              ref={(element) => {
-                textRefs.current[index] = element
-              }}
-              className={`absolute inset-0 flex flex-col items-center justify-center px-5 text-center opacity-0 motion-reduce:relative motion-reduce:inset-auto motion-reduce:opacity-100 ${
-                interactive ? "pointer-events-auto" : "pointer-events-none"
-              }`}
-            >
-              <span aria-hidden="true" className="block h-px w-16 bg-gold/70" />
-
-              <p className="mt-6 font-secondary text-[11px] tracking-[0.42em] text-gold/90">
-                {t(`${civilization.id}.chapter`)}
-              </p>
-
-              <h2 className="mt-4 max-w-4xl font-primary text-[clamp(1.9rem,4.4vw,3.9rem)] leading-[1.15] text-sand">
-                {t(`${civilization.id}.title`)}
-              </h2>
-
-              <p className="mt-6 max-w-[38rem] font-primary text-[clamp(0.98rem,1.15vw,1.16rem)] leading-[1.95] text-sand/85">
-                {t(`${civilization.id}.body`)}
-              </p>
-
-              <a
-                href="#newsletter"
-                tabIndex={interactive ? 0 : -1}
-                aria-label={t(`${civilization.id}.cta`)}
-                className={`group relative mt-9 inline-flex h-11 items-center justify-center overflow-hidden whitespace-nowrap bg-brand-gold px-7 font-primary text-[14px] leading-none text-royal-navy transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] sm:h-[46px] sm:px-9 ${
+            return (
+              <div
+                key={civilization.id}
+                ref={(element) => {
+                  textRefs.current[index] = element
+                }}
+                className={`absolute inset-0 flex flex-col items-center justify-center px-5 text-center opacity-0 motion-reduce:relative motion-reduce:inset-auto motion-reduce:opacity-100 ${
                   interactive ? "pointer-events-auto" : "pointer-events-none"
                 }`}
               >
-                <span aria-hidden="true" className="cta-sheen" />
-                <span className="relative">{t(`${civilization.id}.cta`)}</span>
-              </a>
-            </div>
-          )
-        })}
+                <h2 className="max-w-4xl font-primary text-h2 leading-[1.15] text-gold">
+                  {t(`${civilization.id}.title`)}
+                </h2>
+
+                <p className="mt-6 max-w-[38rem] font-primary text-body leading-[1.75] text-sand">
+                  {t(`${civilization.id}.body`)}
+                </p>
+
+                <a
+                  href="#newsletter"
+                  tabIndex={interactive ? 0 : -1}
+                  aria-label={t(`${civilization.id}.cta`)}
+                  className={`group relative mt-9 inline-flex h-11 items-center justify-center overflow-hidden whitespace-nowrap bg-brand-gold px-7 font-primary text-[14px] leading-none text-royal-navy transition-transform duration-[250ms] ease-out-expo hover:scale-[1.01] active:scale-[0.99] sm:h-[46px] sm:px-9 ${
+                    interactive ? "pointer-events-auto" : "pointer-events-none"
+                  }`}
+                >
+                  <span aria-hidden="true" className="cta-sheen" />
+                  <span className="relative">
+                    {t(`${civilization.id}.cta`)}
+                  </span>
+                </a>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* the fog the boutique rises out of */}
+        <SectionFade edge="bottom" zIndex={6} />
       </div>
     </section>
   )

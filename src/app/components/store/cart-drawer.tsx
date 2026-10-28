@@ -170,7 +170,7 @@ export function CartDrawer() {
         aria-labelledby="cart-drawer-title"
         aria-hidden={!isOpen}
         inert={!isOpen}
-        className={`absolute inset-y-0 end-0 flex h-full w-full max-w-md flex-col border-s border-sand/15 bg-navy-950 transition-transform duration-300 ease-out ${
+        className={`absolute inset-y-0 end-0 flex h-full w-full max-w-md flex-col bg-navy-950 transition-transform duration-300 ease-out ${
           isOpen
             ? "translate-x-0"
             : isRtl
@@ -178,7 +178,7 @@ export function CartDrawer() {
               : "translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-sand/10 px-5 py-5 sm:px-7">
+        <div className="flex items-center justify-between px-5 py-5 sm:px-7">
           <div>
             <h2
               id="cart-drawer-title"
@@ -187,7 +187,7 @@ export function CartDrawer() {
               {t("title")}
             </h2>
             <p
-              className="mt-1 font-secondary text-[11px] tracking-[0.14em] text-sand/45"
+              className="mt-1 font-secondary text-[13px] text-sand/60"
               aria-live="polite"
             >
               {itemCount > 0 ? t("items", { count: itemCount }) : t("empty")}

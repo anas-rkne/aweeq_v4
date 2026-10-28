@@ -7,6 +7,7 @@ import gsap from "gsap"
 import { Link } from "@/i18n/navigation"
 import { RollingText } from "@/shared/ui/rolling-text"
 import { TextReveal } from "@/shared/ui/text-reveal"
+import { SectionFade } from "@/shared/ui/section-fade"
 import { DarkGradientBg } from "./dark-gradient-bg"
 
 const FRAME_COUNT = 30
@@ -245,13 +246,13 @@ export function Hero() {
     >
       <DarkGradientBg className="min-h-svh">
         <div className="relative min-h-svh">
-          {/* ===== كتلة النص: تتمركز عمودياً فوق منطقة السماء، وتنتهي قبل خط الآثار ===== */}
+          {/* ===== كتلة النص: ترتكز على أسفل اليمين، وتنتهي قبل خط الآثار ===== */}
           <div
             ref={textRef}
             data-parallax-text
-            className="relative z-30 flex min-h-svh items-center px-5 pb-16 pt-28 will-change-transform sm:px-8 sm:pt-32 md:px-16 md:pt-36"
+            className="relative z-30 flex min-h-svh items-end px-5 pb-20 pt-28 will-change-transform sm:px-8 sm:pt-32 md:px-16 md:pb-28 md:pt-36"
           >
-            <div className="relative flex w-full flex-col justify-center text-start md:ml-auto md:w-1/2 md:max-w-[38rem]">
+            <div className="on-photo relative flex w-full flex-col text-start md:ml-auto md:w-[56%] md:max-w-[46rem]">
               {/* a very light pool behind the words — just enough to read */}
               <div
                 aria-hidden="true"
@@ -261,21 +262,21 @@ export function Hero() {
                     "radial-gradient(ellipse at center, rgba(10,22,40,0.5) 0%, rgba(10,22,40,0.22) 45%, rgba(10,22,40,0) 78%)",
                 }}
               />
-              <h1 className="font-primary text-[clamp(2.5rem,4.8vw,4.25rem)] leading-[1.1] text-sand">
+              <h1 className="font-primary text-[clamp(2.75rem,5.4vw,5rem)] leading-[1.06] tracking-[-0.01em] text-gold">
                 <TextReveal preset="words" blur stagger={0.08}>
                   {`${t("titleLine1")}\n${t("titleLine2")}`}
                 </TextReveal>
               </h1>
 
-              <p className="hero-part-3 mt-5 max-w-[31rem] text-body text-sand/80">
+              <p className="hero-part-3 mt-6 max-w-[34rem] text-lead text-sand/85">
                 {t("description")}
               </p>
 
-              <div className="mt-6 flex flex-wrap items-center justify-start gap-4 md:gap-6">
+              <div className="mt-8 flex flex-wrap items-center justify-start gap-4 md:gap-7">
                 <span className="hero-part-4 inline-flex">
                   <Link
                     href="/products/rafid"
-                    className="group relative inline-flex h-9 items-center overflow-hidden whitespace-nowrap bg-gold px-4 font-primary text-[13px] text-royal-navy transition-transform duration-150 ease-out active:scale-[0.98] md:h-[40px] md:px-5 md:text-[14px]"
+                    className="group relative inline-flex h-12 items-center overflow-hidden whitespace-nowrap bg-gold px-6 font-primary text-[15px] text-royal-navy transition-transform duration-150 ease-out [text-shadow:none] active:scale-[0.98] md:h-[52px] md:px-8 md:text-[16px]"
                   >
                     <span aria-hidden="true" className="cta-sheen" />
                     <RollingText>{t("discoverRafid")}</RollingText>
@@ -297,7 +298,7 @@ export function Hero() {
                 <span className="hero-part-5 inline-flex">
                   <a
                     href="#civilizations"
-                    className="group inline-flex items-center gap-1.5 whitespace-nowrap font-primary text-[13px] text-sand/80 transition-colors duration-200 ease-out hover:text-gold md:gap-2 md:text-[14px]"
+                    className="group inline-flex items-center gap-1.5 whitespace-nowrap font-primary text-[15px] text-sand/85 transition-colors duration-200 ease-out hover:text-gold md:gap-2.5 md:text-[16px]"
                   >
                     <RollingText>{t("exploreCivilizations")}</RollingText>
                     <svg
@@ -307,7 +308,7 @@ export function Hero() {
                       strokeWidth={1.5}
                       strokeLinecap="square"
                       aria-hidden="true"
-                      className="h-4 w-4 transition-transform duration-300 ease-out group-hover:-translate-x-1 md:h-[18px] md:w-[18px]"
+                      className="h-[18px] w-[18px] transition-transform duration-300 ease-out group-hover:-translate-x-1 md:h-5 md:w-5"
                     >
                       <path d="M19 12H5" />
                       <path d="M11 6l-6 6 6 6" />
@@ -369,6 +370,22 @@ export function Hero() {
             />
           </div>
 
+          {/* ===== a very light shadow laid over the picture =====
+              one breath of night across the whole frame, and a softer wall
+              along the right edge where the words now rest. light enough that
+              the painting keeps its daylight, enough that the larger type
+              keeps its edge. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-[5]"
+            style={{
+              backgroundImage: [
+                "linear-gradient(to left, rgba(10, 22, 40, 0.38) 0%, rgba(10, 22, 40, 0.14) 40%, rgba(10, 22, 40, 0) 70%)",
+                "linear-gradient(to bottom, rgba(10, 22, 40, 0.12) 0%, rgba(10, 22, 40, 0.12) 100%)",
+              ].join(", "),
+            }}
+          />
+
           {/* the cinematic vignette: the top and bottom shadows carry the
               header and the words, while the radial keeps the centre bright
               and lets the corners fall into the brand navy */}
@@ -383,6 +400,8 @@ export function Hero() {
               ].join(", "),
             }}
           />
+          {/* the fog the invitation rises out of */}
+          <SectionFade edge="bottom" />
         </div>
       </DarkGradientBg>
     </section>

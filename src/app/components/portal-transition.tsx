@@ -25,12 +25,11 @@ export function PortalTransition() {
   const ringRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const about = document.getElementById("story")
-    const room = document.getElementById("about-room")
+    const source = document.getElementById("store-invitation")
     const first = document.getElementById("first-chapter")
     const content = document.getElementById("first-chapter-content")
     const ring = ringRef.current
-    if (!about || !room || !first || !content || !ring) return
+    if (!source || !first || !content || !ring) return
 
     /**
      * Without motion there is no door: the chapter simply takes its place in
@@ -65,22 +64,15 @@ export function PortalTransition() {
     sizeRing()
 
     /**
-     * The door opens over the last screen of the About's pinned journey: the
-     * journey ends where the About's own pin ends, and the door opens one
-     * screen before that. The pin is the only honest measure of where the
-     * About stops being held, so the range is taken from it.
+     * The door opens as the store invitation (hero-2) scrolls off the screen:
+     * from its bottom reaching the top to its top reaching the top. The door
+     * opens over that full screen, revealing the first chapter behind it.
      */
-    const aboutPin = ScrollTrigger.getAll().find((st) => st.trigger === about)
-    const range = () => {
-      const end = aboutPin ? aboutPin.end : 0
-      return { start: end - window.innerHeight, end }
-    }
-
     const tl = gsap.timeline({
       scrollTrigger: {
-        trigger: room,
-        start: () => range().start,
-        end: () => range().end,
+        trigger: source,
+        start: "bottom top",
+        end: "top top",
         scrub: 1,
         invalidateOnRefresh: true,
       },
@@ -105,8 +97,6 @@ export function PortalTransition() {
         { scale: 1.5, opacity: 1, duration: 1, ease: "power2.inOut" },
         "<"
       )
-      // the About goes under the light
-      .to(about, { autoAlpha: 0, duration: 0.75, ease: "power2.inOut" }, "<")
       // and a breath, for the door to settle
       .to({}, { duration: 0.25 })
 

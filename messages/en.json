@@ -83,10 +83,33 @@
     "imageAlt": "The Ishtar Gate — Babylon"
   },
   "Featured": {
-    "title": "RAFID — The First Chapter",
-    "body": "A fragrance carrying the soul of Mesopotamia. Inspired by the depth of history and the strength of place, it tells the tales of Babylon in every spray.",
+    "eyebrow": "BABYLON · FIRST EDITION",
+    "title": "RAFID",
+    "tagline": "A fragrance that leaves the Gate of Ishtar",
+    "price": "",
+    "edition": "Numbered edition",
+    "materialLabel": "Material",
+    "materialBody": "Hand-finished glass, etched from Babylonian clay.",
+    "materialMeta": "50 ml · Eau de Parfum",
+    "journeyTitle": "The Journey",
+    "journeyTopLabel": "Opening",
+    "journeyTop": "Saffron · Incense · Bergamot",
+    "journeyHeartLabel": "Heart",
+    "journeyHeart": "Rose · Oud · Balsam",
+    "journeyBaseLabel": "Base",
+    "journeyBase": "Amber · Sandalwood · Musk",
+    "journeyFoot": "Hours that change with it.",
+    "storyQuote": "“What is told in clay is told in scent.”",
+    "storyBody": "From the Tigris and the Euphrates, to a flacon in your hands.",
+    "closingTitle": "One bottle. One number.",
+    "closingBody": "Insured shipping · Certificate of authenticity · Numbered edition",
     "discover": "Discover RAFID",
     "collection": "The Babylon Collection"
+  },
+  "StoreInvitation": {
+    "title": "Discover a World of Civilizations",
+    "body": "From the depths of Babylon to the spell of Egypt, from the marble of Greece to the silk of China. Step into the 3WEEQ store to own pieces that tell the stories of history.",
+    "cta": "Shop Now"
   },
   "Packaging": {
     "eyebrow": "THE ART OF UNBOXING",
@@ -116,7 +139,7 @@
     }
   },
   "Beyond": {
-    "title": "A Boutique Inspired by Civilizations",
+    "title": "A Boutique Inspired by the Depth of Civilizations",
     "body": "A complete experience spanning fragrances, incense, smokers, textiles, leather goods, and curated pieces from different cultures. We don't just make perfume; we craft a lifestyle worthy of you.",
     "imageAlt": "The 3WEEQ boutique — a lifestyle inspired by civilizations",
     "items": {
@@ -265,6 +288,7 @@
     "shippingTitle": "Shipping method",
     "shippingNote": "Delivery within the UAE.",
     "noShippingOptions": "No shipping options available right now. Please try again.",
+    "retryShipping": "Try again",
     "continueToPayment": "Continue to payment",
     "paymentTitle": "Payment",
     "total": "Total",

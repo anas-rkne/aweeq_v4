@@ -12,6 +12,7 @@ import {
   completeCheckout,
   fetchShippingOptions,
   initCheckout,
+  prepareCheckout,
   type CheckoutInitResponse,
   type ShippingOption,
 } from "./api"
@@ -68,7 +69,18 @@ export function CheckoutFlow() {
     }
   }, [cartId, locale, options.length, optionsLoading, t])
 
-  function handleDetailsSubmit(event: FormEvent) {
+  function shippingAddress() {
+    return {
+      first_name: name.trim(),
+      last_name: "",
+      address_1: address.trim(),
+      city: city.trim(),
+      country_code: "AE",
+      phone: phone.trim(),
+    }
+  }
+
+  async function handleDetailsSubmit(event: FormEvent) {
     event.preventDefault()
 
     if (!EMAIL_PATTERN.test(email.trim())) {
@@ -81,10 +93,40 @@ export function CheckoutFlow() {
       return
     }
 
+    if (!cartId) {
+      setError(t("genericError"))
+      return
+    }
+
     localStorage.setItem(CHECKOUT_EMAIL_KEY, email.trim())
     setError(null)
-    setStep("shipping")
-    void loadOptions()
+    setLoading(true)
+    setOptionsLoading(true)
+
+    try {
+      // Address must be on the cart before Medusa can price shipping.
+      const prepared = await prepareCheckout({
+        cart_id: cartId,
+        email: email.trim(),
+        shipping_address: shippingAddress(),
+        locale,
+      })
+
+      setOptions(prepared.shipping_options ?? [])
+      setSelectedOption((current) => current || prepared.shipping_options?.[0]?.id || "")
+      setStep("shipping")
+
+      if (!prepared.shipping_options?.length) {
+        setError(t("noShippingOptions"))
+      }
+    } catch (prepareError) {
+      setError(
+        prepareError instanceof Error ? prepareError.message : t("genericError")
+      )
+    } finally {
+      setLoading(false)
+      setOptionsLoading(false)
+    }
   }
 
   async function handleShippingSubmit(event: FormEvent) {
@@ -102,14 +144,7 @@ export function CheckoutFlow() {
       const response = await initCheckout({
         cart_id: cartId,
         email: email.trim(),
-        shipping_address: {
-          first_name: name.trim(),
-          last_name: "",
-          address_1: address.trim(),
-          city: city.trim(),
-          country_code: "AE",
-          phone: phone.trim(),
-        },
+        shipping_address: shippingAddress(),
         shipping_option_id: selectedOption,
         locale,
       })
@@ -143,6 +178,7 @@ export function CheckoutFlow() {
         payment_session_id: pending.payment_session_id,
         provider_id: pending.provider_id,
         locale,
+        idempotency_key: pending.idempotency_key,
       })
 
       sessionStorage.removeItem(PENDING_CHECKOUT_KEY)
@@ -295,9 +331,18 @@ export function CheckoutFlow() {
               )}
 
               {!optionsLoading && options.length === 0 && (
-                <p className="font-primary text-sm text-sand/60">
-                  {t("noShippingOptions")}
-                </p>
+                <div className="space-y-3">
+                  <p className="font-primary text-sm text-sand/60">
+                    {t("noShippingOptions")}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void loadOptions()}
+                    className="border border-sand/20 px-5 py-2.5 font-primary text-sm text-sand/70 transition-colors hover:border-gold/50 hover:text-gold"
+                  >
+                    {t("retryShipping")}
+                  </button>
+                </div>
               )}
 
               <div className="space-y-3">

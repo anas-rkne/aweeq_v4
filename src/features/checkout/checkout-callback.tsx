@@ -78,6 +78,7 @@ export function CheckoutCallback() {
           payment_session_id: pending.payment_session_id,
           provider_id: pending.provider_id,
           locale,
+          idempotency_key: pending.idempotency_key,
         })
 
         if (active) {

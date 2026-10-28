@@ -135,7 +135,7 @@ export function AboutSection() {
         scrollTrigger: {
           trigger: section,
           start: "top top",
-          end: "+=6400",
+          end: "+=3000",
           pin: true,
           pinSpacing: false,
           scrub: 1,
@@ -148,7 +148,7 @@ export function AboutSection() {
 
       // the room the sequence travels through: the pin adds no spacing of its
       // own, so the section leaves that room behind it
-      if (room) room.style.height = "6400px"
+      if (room) room.style.height = "3000px"
 
       return () => {
         if (room) room.style.height = ""
@@ -168,7 +168,7 @@ export function AboutSection() {
         scrollTrigger: {
           trigger: section,
           start: "top top",
-          end: "+=4400",
+          end: "+=2200",
           pin: true,
           pinSpacing: false,
           scrub: 1,
@@ -179,7 +179,7 @@ export function AboutSection() {
 
       build(tl, false)
 
-      if (room) room.style.height = "4400px"
+      if (room) room.style.height = "2200px"
 
       return () => {
         if (room) room.style.height = ""
@@ -203,12 +203,12 @@ export function AboutSection() {
       <section
         id="story"
         ref={sectionRef}
-        className="relative z-10 min-h-screen bg-royal-navy"
+        className="relative z-10 min-h-svh bg-royal-navy"
       >
-        <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
+        <div className="grid min-h-svh grid-cols-1 md:grid-cols-2">
           {/* the pictures — on the left of the page */}
           <div
-            className={`relative order-first h-[46vh] w-full overflow-hidden bg-royal-navy md:h-screen ${
+            className={`relative order-first h-[46vh] w-full overflow-hidden bg-royal-navy md:h-svh ${
               isArabic ? "md:order-2" : "md:order-1"
             }`}
           >
@@ -234,22 +234,6 @@ export function AboutSection() {
               </div>
             ))}
 
-            {/* the stone dissolves into the night */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-b from-royal-navy/55 via-transparent to-royal-navy/75"
-            />
-
-            {/* the picture dissolves into the night on the edge of the words */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-1/3 md:block md:w-1/2"
-              style={{
-                background:
-                  "linear-gradient(to left, var(--color-royal-navy) 0%, transparent 100%)",
-              }}
-            />
-
             {/* the closing veil, drawn over the last picture */}
             <div
               ref={veilRef}
@@ -274,16 +258,6 @@ export function AboutSection() {
               className="absolute inset-0 h-full w-full object-cover opacity-40"
             />
 
-            {/* the night behind the words dissolves into the pictures */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/3 md:block md:w-1/2"
-              style={{
-                background:
-                  "linear-gradient(to right, var(--color-royal-navy) 0%, transparent 100%)",
-              }}
-            />
-
             <div className="relative flex flex-1 flex-col">
               <div className="relative min-h-[14rem] w-full max-w-[34rem] flex-1 md:min-h-[28rem]">
                 {CIVILIZATIONS.map((c, i) => (
@@ -299,18 +273,11 @@ export function AboutSection() {
                           }
                     }
                   >
-                    {/* the name of the world */}
-                    <div className="flex items-center gap-4">
-                      <span className="font-secondary text-[12px] tracking-[0.28em] text-gold">
-                        {t(`${c.id}.label`)}
-                      </span>
-                    </div>
-
-                    <h2 className="mt-6 font-secondary text-[clamp(1.75rem,3vw,2.75rem)] leading-[1.2] text-sand">
+                    <h2 className="font-secondary text-h2 leading-[1.2] text-sand">
                       {t(`${c.id}.title`)}
                     </h2>
 
-                    <p className="mt-5 text-body text-sand/85">
+                    <p className="mt-5 text-body text-sand">
                       {t(`${c.id}.body`)}
                     </p>
                   </div>
@@ -322,7 +289,7 @@ export function AboutSection() {
                 href="/story"
                 className="group mt-8 inline-flex w-fit items-center gap-5 md:mt-12"
               >
-                <span className="grid h-16 w-16 place-items-center rounded-full border border-gold/60 text-gold transition-colors duration-300 ease-out group-hover:bg-gold group-hover:text-royal-navy">
+                <span className="grid h-16 w-16 place-items-center rounded-full bg-gold text-royal-navy transition-colors duration-300 ease-out group-hover:bg-sand">
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -337,20 +304,13 @@ export function AboutSection() {
                   </svg>
                 </span>
 
-                <span className="font-secondary text-[13px] tracking-[0.22em] text-sand/80 transition-colors duration-300 ease-out group-hover:text-gold">
+                <span className="font-secondary text-[13px] text-sand transition-colors duration-300 ease-out group-hover:text-gold">
                   {t("readOurStory")}
                 </span>
               </Link>
             </div>
           </div>
         </div>
-
-        {/* the seam: a sliver of night over the joint, so no edge of a picture
-            can leak through while the pictures cross-fade */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-1/2 z-20 hidden w-1 -translate-x-1/2 bg-royal-navy md:block"
-        />
       </section>
 
       {/* the room the pinned sequence travels through */}
@@ -358,7 +318,7 @@ export function AboutSection() {
         id="about-room"
         ref={roomRef}
         aria-hidden="true"
-        className="h-[4400px] md:h-[6400px]"
+        className="h-[2200px] md:h-[3000px]"
       />
     </>
   )
