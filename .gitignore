@@ -58,7 +58,9 @@ next-env.d.ts
 /medusa/node_modules
 /medusa/.medusa
 /medusa/dist
-/medusa/static/uploads
+# uploaded catalog media (file-local provider writes here at runtime)
+/medusa/static/
+/medusa/static-private/
 /medusa/.env
 /medusa/.env.*
 /medusa/package-lock.json

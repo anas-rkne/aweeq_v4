@@ -117,13 +117,6 @@ export function FirstChapter() {
           that answer it — gsap fades the whole field with the section */}
       <GateLight />
 
-      {/* ===== on a phone the words still rest on the night; on a wide screen
-          the picture is left whole — no half-field of navy over it ===== */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-10 bg-royal-navy/55 md:hidden"
-      />
-
       {/* ===== the words: top-centre of the screen. بابل carries the section
           alone — the Latin wordmark is gone ===== */}
       <div

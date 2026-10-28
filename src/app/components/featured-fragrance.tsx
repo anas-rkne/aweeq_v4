@@ -287,13 +287,6 @@ export function FeaturedFragrance({
           className="absolute inset-0 z-[1] h-full w-full will-change-transform"
         />
 
-        {/* ===== on a phone the words rest on the night at the foot; on a wide
-          screen the film is left whole — no half-field of navy over it ===== */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[15] h-2/3 bg-royal-navy/70 md:hidden"
-        />
-
         {/* ===== the museum label: at the foot on a phone, on the right half of
           a wide screen. it is never faded and never moved — the name, the
           price and both doors stay present for the whole film ===== */}

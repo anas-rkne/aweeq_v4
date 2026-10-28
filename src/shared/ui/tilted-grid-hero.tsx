@@ -155,23 +155,48 @@ export function TiltedGridHero({
 
     let direction = 1
     let rate = 1
+    let lastRate = 1
+    let bias = 0
     let last = window.scrollY
     let frame = 0
+    let collect = 0
+    let animations: Animation[] = []
 
     const tick = () => {
       const y = window.scrollY
       const delta = y - last
       last = y
-      if (Math.abs(delta) > 1.5) direction = delta > 0 ? 1 : -1
+
+      /* a change of direction must earn itself: the wander accumulates and
+         only a real stretch of travel in one way (≈90px) flips the row.
+         touch and trackpad jitter around a point cancels itself out, so the
+         row can never be flipped back and forth into a freeze. */
+      bias += delta
+      if (Math.abs(bias) > 90) {
+        direction = bias > 0 ? 1 : -1
+        bias = 0
+      }
 
       rate += (direction - rate) * 0.12
-      if (Math.abs(rate) < 0.04) rate = 0
+      /* no floor here: on a real turn the row is allowed to come to rest and
+         glide through zero — the bias above is what keeps it from flipping
+         on jitter, and the lerp keeps easing toward the direction even while
+         the hand is still, so it can never park. */
 
       el.dataset.direction = String(direction)
       el.dataset.rate = rate.toFixed(3)
 
-      for (const animation of el.getAnimations({ subtree: true })) {
-        animation.playbackRate = rate
+      /* the tile set rarely changes; re-reading the animations every frame
+         on a phone is wasted work */
+      if (collect === 0) {
+        animations = el.getAnimations({ subtree: true })
+        collect = 30
+      }
+      collect -= 1
+
+      if (Math.abs(rate - lastRate) > 0.01) {
+        for (const animation of animations) animation.playbackRate = rate
+        lastRate = rate
       }
 
       frame = window.requestAnimationFrame(tick)
