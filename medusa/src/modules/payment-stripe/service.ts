@@ -148,7 +148,9 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
     form.set("amount", String(this.toMinorUnits(input.amount)))
     form.set("currency", input.currency_code.toLowerCase())
     form.set("capture_method", "manual")
-    form.set("payment_method_types[0]", "card")
+    // No payment_method_types / automatic_payment_methods: this account uses
+    // Stripe's dynamic payment methods (managed in the Dashboard), and sending
+    // either parameter is rejected with "no longer supported".
 
     if (customer.email) {
       form.set("receipt_email", String(customer.email))
