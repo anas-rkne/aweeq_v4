@@ -70,9 +70,16 @@ export function CheckoutFlow() {
   }, [cartId, locale, options.length, optionsLoading, t])
 
   function shippingAddress() {
+    // The form has one "full name" field; Medusa requires both first_name
+    // and last_name, so the name is split on the first space. A single-word
+    // name is used for both fields rather than failing validation.
+    const tokens = name.trim().split(/\s+/)
+    const firstName = tokens.shift() ?? ""
+    const lastName = tokens.join(" ") || firstName
+
     return {
-      first_name: name.trim(),
-      last_name: "",
+      first_name: firstName,
+      last_name: lastName,
       address_1: address.trim(),
       city: city.trim(),
       country_code: "AE",
