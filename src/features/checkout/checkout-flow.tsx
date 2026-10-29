@@ -82,7 +82,7 @@ export function CheckoutFlow() {
       last_name: lastName,
       address_1: address.trim(),
       city: city.trim(),
-      country_code: "AE",
+      country_code: "ae",
       phone: phone.trim(),
     }
   }
