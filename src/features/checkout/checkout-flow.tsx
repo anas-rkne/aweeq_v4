@@ -431,7 +431,18 @@ export function CheckoutFlow() {
               ) : (
                 <Elements
                   stripe={stripe}
-                  options={{ clientSecret: checkout.client_secret }}
+                  options={{
+                    clientSecret: checkout.client_secret,
+                    appearance: {
+                      theme: "night",
+                      variables: {
+                        colorText: "#f6e6d6",
+                        colorDanger: "#e4a11b",
+                        colorPrimary: "#c9994a",
+                        fontSizeBase: "16px",
+                      },
+                    },
+                  }}
                 >
                   <StripePaymentForm
                     amount={total}

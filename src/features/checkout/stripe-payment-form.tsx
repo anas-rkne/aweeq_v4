@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js"
+import { PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js"
 import { formatPrice } from "@/lib/format"
 import type { StoreLocale } from "@/lib/format"
 
@@ -88,19 +88,7 @@ export function StripePaymentForm({
   return (
     <div className="space-y-5">
       <div className="border border-sand/20 bg-royal-navy/60 px-4 py-4">
-        <CardElement
-          options={{
-            style: {
-              base: {
-                color: "#f6e6d6",
-                fontSize: "16px",
-                "::placeholder": { color: "rgba(246,230,214,0.4)" },
-              },
-              invalid: { color: "#e4a11b" },
-            },
-          }}
-          onChange={(event) => setCardComplete(event.complete)}
-        />
+        <PaymentElement onChange={(event) => setCardComplete(event.complete)} />
       </div>
 
       <p className="font-primary text-xs text-sand/45">
