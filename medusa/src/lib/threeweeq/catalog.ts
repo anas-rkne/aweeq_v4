@@ -187,11 +187,11 @@ export async function buildCatalogProducts(
 
   const repository = new ThreeweeqRepository(container)
   const productIds = products.map((product) => product.id)
-  const profiles = await repository.getCatalogProductProfiles(
+  const profiles = (await repository.getCatalogProductProfiles(
     productIds,
     input.locale
-  )
-  const profileByProduct = new Map(
+  )) as Array<Record<string, any>>
+  const profileByProduct = new Map<string, any>(
     profiles.map((profile: any) => [profile.product_id, profile])
   )
   const visibleProducts = products.filter((product) =>
@@ -206,22 +206,26 @@ export async function buildCatalogProducts(
   const variantIds = visibleProducts.flatMap((product) =>
     (product.variants ?? []).map((variant: any) => variant.id)
   )
-  const variantProfiles = await repository.getVariantProfiles(variantIds)
-  const variantProfileByVariant = new Map(
+  const variantProfiles = (await repository.getVariantProfiles(
+    variantIds
+  )) as Array<Record<string, any>>
+  const variantProfileByVariant = new Map<string, any>(
     variantProfiles.map((profile: any) => [profile.variant_id, profile])
   )
-  const media = await repository.getCatalogProductMedia(
+  const media = (await repository.getCatalogProductMedia(
     visibleProductIds,
     input.locale
-  )
-  const mediaByProduct = media.reduce<Record<string, any[]>>(
-    (result: Record<string, any[]>, item: any) => {
-      result[item.product_id] = [...(result[item.product_id] ?? []), item]
-      return result
-    },
-    {}
-  )
-  const serialAvailability = await repository.getSerialAvailability(variantIds)
+  )) as Array<Record<string, any>>
+  const mediaByProduct: Record<string, any[]> = {}
+  for (const item of media) {
+    mediaByProduct[item.product_id] = [
+      ...(mediaByProduct[item.product_id] ?? []),
+      item,
+    ]
+  }
+  const serialAvailability = (await repository.getSerialAvailability(
+    variantIds
+  )) as Map<string, number>
 
   return visibleProducts.map((product) => {
     const profile = profileByProduct.get(product.id)
@@ -324,7 +328,9 @@ export async function buildCatalogProducts(
       variants,
       price_range: buildPriceRange(variants),
       default_variant:
-        variants.find((variant) => variant.in_stock) ?? variants[0] ?? null,
+        variants.find((variant: any) => variant.in_stock) ??
+        variants[0] ??
+        null,
     }
   })
 }

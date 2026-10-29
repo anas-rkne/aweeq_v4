@@ -160,8 +160,10 @@ export async function serializeCart(
         .filter((variantId): variantId is string => Boolean(variantId))
     )
   )
-  const variantProfiles = await repository.getVariantProfiles(variantIds)
-  const variantProfileByVariant = new Map(
+  const variantProfiles = (await repository.getVariantProfiles(
+    variantIds
+  )) as Array<Record<string, any>>
+  const variantProfileByVariant = new Map<string, any>(
     variantProfiles.map((profile: any) => [profile.variant_id, profile])
   )
   const productIds = Array.from(
@@ -170,12 +172,16 @@ export async function serializeCart(
         .map((profile: any) => profile.product_id)
         .filter(Boolean)
     )
-  )
-  const productProfiles = await repository.getProductProfiles(productIds)
-  const productProfileByProduct = new Map(
+  ) as string[]
+  const productProfiles = (await repository.getProductProfiles(
+    productIds
+  )) as Array<Record<string, any>>
+  const productProfileByProduct = new Map<string, any>(
     productProfiles.map((profile: any) => [profile.product_id, profile])
   )
-  const serialAvailability = await repository.getSerialAvailability(variantIds)
+  const serialAvailability = (await repository.getSerialAvailability(
+    variantIds
+  )) as Map<string, number>
 
   const enrichedItems = items.map((item) => {
     const variantProfile = item.variant_id
@@ -397,11 +403,11 @@ export async function assertCartItemRules(
   }
 
   if (limit != null) {
-    const purchased = await repository.countPurchasedQuantities({
+    const purchased = (await repository.countPurchasedQuantities({
       customerId: input.cart.customer_id,
       email: input.cart.email,
       variantIds: [input.variantId],
-    })
+    })) as Map<string, number>
 
     if (
       (purchased.get(input.variantId) ?? 0) + input.requestedQuantity >
@@ -415,9 +421,9 @@ export async function assertCartItemRules(
   }
 
   if (variantProfile.is_serialized) {
-    const availability = await repository.getSerialAvailability([
+    const availability = (await repository.getSerialAvailability([
       input.variantId,
-    ])
+    ])) as Map<string, number>
     const available = availability.get(input.variantId) ?? 0
 
     if (input.requestedQuantity > available) {

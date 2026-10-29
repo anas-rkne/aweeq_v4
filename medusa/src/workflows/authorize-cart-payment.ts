@@ -1,4 +1,7 @@
-import { createWorkflow } from "@medusajs/framework/workflows-sdk"
+import {
+  createWorkflow,
+  WorkflowResponse,
+} from "@medusajs/framework/workflows-sdk"
 import { authorizePaymentSessionStep } from "@medusajs/medusa/core-flows"
 
 type AuthorizeCartPaymentInput = {
@@ -14,6 +17,6 @@ export const authorizeCartPaymentWorkflow = createWorkflow(
       context: input.context ?? {},
     })
 
-    return payment
+    return new WorkflowResponse(payment)
   }
 )

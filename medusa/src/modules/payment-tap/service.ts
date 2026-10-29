@@ -22,6 +22,8 @@ import type {
   RefundPaymentOutput,
   RetrievePaymentInput,
   RetrievePaymentOutput,
+  UpdatePaymentInput,
+  UpdatePaymentOutput,
   WebhookActionResult,
 } from "@medusajs/framework/types"
 import { verifyTapSignature } from "../../lib/payments/signatures"
@@ -290,7 +292,30 @@ class TapPaymentProviderService extends AbstractPaymentProvider<Options> {
       )
     }
 
-    return this.request<TapCharge>(`/charges/${id}`, "GET")
+    const charge = await this.request<TapCharge>(`/charges/${id}`, "GET")
+
+    return {
+      data: charge as unknown as Record<string, unknown>,
+    }
+  }
+
+  async updatePayment(
+    input: UpdatePaymentInput
+  ): Promise<UpdatePaymentOutput> {
+    const id = input.data?.id as string | undefined
+    if (!id) {
+      // Nothing was created on the provider side yet; keep the session data.
+      return { data: input.data ?? {} }
+    }
+
+    const charge = await this.request<TapCharge>(`/charges/${id}`, "GET")
+
+    return {
+      data: {
+        ...input.data,
+        ...charge,
+      },
+    }
   }
 
   async getWebhookActionAndData(

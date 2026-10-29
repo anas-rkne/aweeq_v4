@@ -253,8 +253,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const variantIds = Array.from(
     new Set(items.map((item) => item.variant_id as string))
   )
-  const variantProfiles = await repository.getVariantProfiles(variantIds)
-  const variantProfileByVariant = new Map(
+  const variantProfiles = (await repository.getVariantProfiles(
+    variantIds
+  )) as Array<Record<string, any>>
+  const variantProfileByVariant = new Map<string, any>(
     variantProfiles.map((profile: any) => [profile.variant_id, profile])
   )
   const productIds = Array.from(
@@ -263,8 +265,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         .map((profile: any) => profile.product_id)
         .filter(Boolean)
     )
-  )
-  const productProfiles = await repository.getProductProfiles(productIds)
+  ) as string[]
+  const productProfiles = (await repository.getProductProfiles(
+    productIds
+  )) as Array<Record<string, any>>
   const civilizationId = productProfiles[0]?.civilization_id ?? null
   const drop = body.drop_id
     ? await repository.getDropById(body.drop_id)

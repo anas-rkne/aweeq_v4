@@ -90,7 +90,7 @@ export function normalizePaymentWebhook(
 
     return {
       provider: "stripe",
-      externalId: stringValue(body.id),
+      externalId: stringValue(body.id) ?? null,
       eventType: type || "unknown",
       action,
       sessionId: stringValue(metadata.session_id),

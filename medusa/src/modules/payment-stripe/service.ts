@@ -22,6 +22,8 @@ import type {
   RefundPaymentOutput,
   RetrievePaymentInput,
   RetrievePaymentOutput,
+  UpdatePaymentInput,
+  UpdatePaymentOutput,
   WebhookActionResult,
 } from "@medusajs/framework/types"
 import { verifyStripeSignature } from "../../lib/payments/signatures"
@@ -313,10 +315,41 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
       )
     }
 
-    return this.request<StripePaymentIntent>(
+    const intent = await this.request<StripePaymentIntent>(
       `/payment_intents/${id}`,
       "GET"
     )
+
+    return {
+      data: intent as unknown as Record<string, unknown>,
+    }
+  }
+
+  async updatePayment(
+    input: UpdatePaymentInput
+  ): Promise<UpdatePaymentOutput> {
+    const id = input.data?.id as string | undefined
+    if (!id) {
+      // Nothing was created on the provider side yet; keep the session data.
+      return { data: input.data ?? {} }
+    }
+
+    const form = new URLSearchParams()
+    form.set("amount", String(this.toMinorUnits(input.amount)))
+    form.set("currency", input.currency_code.toLowerCase())
+
+    const intent = await this.request<StripePaymentIntent>(
+      `/payment_intents/${id}`,
+      "POST",
+      form
+    )
+
+    return {
+      data: {
+        ...input.data,
+        ...intent,
+      },
+    }
   }
 
   async getWebhookActionAndData(

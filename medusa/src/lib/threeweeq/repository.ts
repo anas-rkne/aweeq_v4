@@ -1135,9 +1135,9 @@ export class ThreeweeqRepository {
       return base
     }
 
-    const countRow = await build()
-      .count<{ count: string }>("p.product_id as count")
-      .first()
+    const countRow = (await build()
+      .count("p.product_id as count")
+      .first()) as { count: string } | undefined
     const count = Number(countRow?.count ?? 0)
 
     const items = await build()
@@ -1239,7 +1239,7 @@ export class ThreeweeqRepository {
       return []
     }
 
-    const counts = await this.db("catalog.product_profile")
+    const counts = (await this.db("catalog.product_profile")
       .whereIn(
         "collection_id",
         items.map((item: any) => item.id)
@@ -1248,7 +1248,10 @@ export class ThreeweeqRepository {
       .whereNull("deleted_at")
       .groupBy("collection_id")
       .select("collection_id")
-      .count<{ collection_id: string; count: string }[]>("product_id as count")
+      .count("product_id as count")) as Array<{
+      collection_id: string
+      count: string
+    }>
 
     const countByCollection = new Map(
       counts.map((row: any) => [row.collection_id, Number(row.count)])
@@ -1300,12 +1303,15 @@ export class ThreeweeqRepository {
       return new Map<string, number>()
     }
 
-    const rows = await this.db("catalog.serial_unit")
+    const rows = (await this.db("catalog.serial_unit")
       .whereIn("variant_id", variantIds)
       .where("status", "allocated")
       .groupBy("variant_id")
       .select("variant_id")
-      .count<{ variant_id: string; count: string }[]>("id as count")
+      .count("id as count")) as Array<{
+      variant_id: string
+      count: string
+    }>
 
     return new Map(
       rows.map((row: any) => [row.variant_id, Number(row.count)])
@@ -1334,10 +1340,13 @@ export class ThreeweeqRepository {
       return new Map<string, number>()
     }
 
-    const rows = await query
+    const rows = (await query
       .groupBy("oi.variant_id")
       .select("oi.variant_id")
-      .sum<{ variant_id: string; total: string }[]>("oi.quantity as total")
+      .sum("oi.quantity as total")) as Array<{
+      variant_id: string
+      total: string
+    }>
 
     return new Map(
       rows.map((row: any) => [row.variant_id, Number(row.total)])
