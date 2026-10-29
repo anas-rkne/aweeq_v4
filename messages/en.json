@@ -119,6 +119,11 @@
     "imageAlt": "RAFID packaging"
   },
   "Civilizations": {
+    "gulf": {
+      "title": "The Gulf — The Golden Coast",
+      "body": "From the deep waters of the Gulf, where divers descended for pearls, and from the ports of frankincense and oud that bound the East to the world, 3WEEQ begins its tale. Fragrances that seal inside the bottle the salt of the sea, the warmth of the sands, and the spirit of ancestors.",
+      "cta": "Join the Gulf waitlist"
+    },
     "china": {
       "chapter": "CIVILIZATION I",
       "title": "China — The Silk Empire",

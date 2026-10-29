@@ -6,7 +6,6 @@ import { FeaturedFragrance } from "@/components/featured-fragrance"
 import { FirstChapter } from "@/components/first-chapter"
 import { Footer } from "@/components/footer"
 import { Hero } from "@/components/hero"
-import { JournalSection } from "@/components/journal-section"
 import { NewsletterSection } from "@/components/newsletter-section"
 import { PackagingSection } from "@/components/packaging-section"
 import { ScrollReveal } from "@/components/scroll-reveal"
@@ -43,7 +42,6 @@ export default async function Home({
         <CivilizationsSection />
       </div>
       <BeyondSection locale={locale} />
-      <JournalSection />
       <NewsletterSection />
       <Footer />
     </main>

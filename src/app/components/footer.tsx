@@ -5,7 +5,6 @@ import { useLocale, useTranslations } from "next-intl"
 import { Instagram, Youtube } from "lucide-react"
 import { Link, usePathname } from "@/i18n/navigation"
 import { RollingText } from "@/shared/ui/rolling-text"
-import { SectionFade } from "@/shared/ui/section-fade"
 import { TextReveal } from "@/shared/ui/text-reveal"
 
 const QUICK_LINKS = [
@@ -39,10 +38,6 @@ export function Footer() {
 
   return (
     <footer id="footer" data-cuneiform-surface className="relative pb-12 pt-12">
-      {/* the night the newsletter leaves behind, thinning down into the wall.
-          it sits below the words (z-0) rather than over them. */}
-      <SectionFade edge="top" zIndex={0} />
-
       <div className="relative z-10 mx-auto grid w-full max-w-[84rem] grid-cols-2 items-center gap-8 px-5 sm:px-8 md:flex md:flex-row md:items-center md:justify-between md:gap-12 md:px-16">
         {/* far right: the mark */}
         <div className="col-start-1 row-start-1 flex justify-start">
@@ -132,7 +127,7 @@ export function Footer() {
 
       {/* the full-bleed golden panel */}
       <div className="relative z-10 w-full overflow-hidden pt-8">
-        <div className="h-14 w-full overflow-hidden md:h-20">
+        <div className="aspect-[18/1] w-full overflow-hidden md:aspect-auto md:h-20">
           <Image
             src="/images/footer/footer_ornament.webp"
             alt=""

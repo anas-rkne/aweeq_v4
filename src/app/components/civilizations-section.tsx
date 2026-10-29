@@ -8,32 +8,71 @@ import { SectionFade } from "@/shared/ui/section-fade"
 
 gsap.registerPlugin(ScrollTrigger)
 
-const CHINA_FRAMES = 29
-const GREECE_FRAMES = 36
-const EGYPT_FRAMES = 36
-const TOTAL_FRAMES = CHINA_FRAMES + GREECE_FRAMES + EGYPT_FRAMES
+/**
+ * The film is four civilizations concatenated in display order:
+ *   Gulf   → 29 frames (khaleg)   → 0.0000 → 0.2231
+ *   China  → 29 frames            → 0.2231 → 0.4462
+ *   Egypt  → 36 frames            → 0.4462 → 0.7231
+ *   Greece → 36 frames            → 0.7231 → 1.0000
+ *
+ * Egypt plays before Greece, but the exported film on disk runs China →
+ * Greece → Egypt, so the manifest points at the files out of their on-disk
+ * order rather than re-exporting the film.
+ */
+type FrameBlock = {
+  id: "gulf" | "china" | "egypt" | "greece"
+  /** "khaleg" is the sub-folder; "frames" is the combined film */
+  dir: "khaleg" | "frames"
+  /** first frame number (1-based) inside its own folder */
+  from: number
+  count: number
+}
+
+const BLOCKS: FrameBlock[] = [
+  { id: "gulf", dir: "khaleg", from: 1, count: 29 },
+  { id: "china", dir: "frames", from: 1, count: 29 },
+  { id: "egypt", dir: "frames", from: 66, count: 36 },
+  { id: "greece", dir: "frames", from: 30, count: 36 },
+]
+
+const TOTAL_FRAMES = BLOCKS.reduce((sum, block) => sum + block.count, 0)
+
+/* scroll-progress boundaries, one per scene */
+const GULF_END = 29 / TOTAL_FRAMES
+const CHINA_END = 58 / TOTAL_FRAMES
+const EGYPT_END = 94 / TOTAL_FRAMES
 
 /**
- * The frame groups, expressed as scroll progress (0 → 1):
- *   China  → frames 1–29   → 0.000000 → 0.287129
- *   Greece → frames 30–65  → 0.287129 → 0.643564
- *   Egypt  → frames 66–101 → 0.643564 → 1.000000
+ * The ordered frame URLs. Filenames carry the timestamp of the frame inside
+ * its own film, so a re-ordered block keeps its original timestamps (Egypt's
+ * frames stay 6.50s → 9.96s even though they now play third). The combined
+ * film stamps its final frame at 9.96s instead of 10.00s.
  */
-const CHINA_END = CHINA_FRAMES / TOTAL_FRAMES
-const GREECE_END = (CHINA_FRAMES + GREECE_FRAMES) / TOTAL_FRAMES
+const FRAME_SOURCES: string[] = (() => {
+  const sources: string[] = []
 
-/**
- * The exported film runs in 0.10s steps (0.00s → 9.90s) and the final frame
- * lands at 9.96s. The names below must match the files on disk exactly.
- */
-const FRAME_TIMES = Array.from({ length: TOTAL_FRAMES }, (_, index) =>
-  index === TOTAL_FRAMES - 1 ? "9.96" : (index * 0.1).toFixed(2)
-)
+  for (const block of BLOCKS) {
+    for (let index = 0; index < block.count; index++) {
+      const number = block.from + index
+      const time =
+        block.dir === "frames" && number === 101
+          ? "9.96"
+          : ((number - 1) * 0.1).toFixed(2)
+      const folder = block.dir === "khaleg" ? "khaleg/" : ""
+      sources.push(
+        `/images/civil/frames/${folder}frame-${String(number).padStart(4, "0")}-${time}s.webp`
+      )
+    }
+  }
+
+  return sources
+})()
 
 const CIVILIZATIONS = [
+  { id: "gulf" },
   { id: "china" },
-  { id: "greece" },
   { id: "egypt" },
+  { id: "greece" },
 ] as const
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)"
@@ -49,12 +88,7 @@ function getReducedMotionSnapshot() {
 }
 
 function frameSources(index: number) {
-  const number = index + 1
-
-  return [
-    `/images/civil/frames/frame-${String(number).padStart(4, "0")}-${FRAME_TIMES[index]}s.webp`,
-    `/civil/frames/frame-${String(number).padStart(3, "0")}.webp`,
-  ]
+  return [FRAME_SOURCES[index]]
 }
 
 export function CivilizationsSection() {
@@ -237,7 +271,7 @@ export function CivilizationsSection() {
     }
 
     const applyProgress = (progress: number) => {
-      // 101 frames over 0 → 1. The clamp is the 0-indexed ceiling (100).
+      // 130 frames over 0 → 1. The clamp is the 0-indexed ceiling (129).
       const nextFrame = Math.min(
         images.length - 1,
         Math.floor(progress * TOTAL_FRAMES)
@@ -249,13 +283,15 @@ export function CivilizationsSection() {
       }
 
       const nextActive =
-        progress >= 0.15 && progress < 0.25
+        progress >= 0.13 && progress < 0.19
           ? 0
-          : progress >= 0.42 && progress < 0.55
+          : progress >= 0.36 && progress < 0.42
             ? 1
-            : progress >= 0.78 && progress < 0.9
+            : progress >= 0.59 && progress < 0.68
               ? 2
-              : -1
+              : progress >= 0.84 && progress < 0.92
+                ? 3
+                : -1
 
       setActive((previous) => (previous === nextActive ? previous : nextActive))
     }
@@ -284,53 +320,71 @@ export function CivilizationsSection() {
       },
     })
 
-    // ===== China — frames 1–29 (progress 0.000000 → 0.287129) =====
-    // in 0.05 → 0.15 · hold → 0.25 · out 0.25 → 0.287129
+    // ===== Gulf — frames 1–29 (progress 0.0000 → 0.2231) =====
+    // in 0.03 → 0.13 · hold · out 0.19 → 0.2231
     tl.fromTo(
       textElements[0],
       { opacity: 0, y: 20 },
       { opacity: 1, y: 0, duration: 0.1, ease: "power2.out" },
-      0.05
+      0.03
     ).to(
       textElements[0],
       {
         opacity: 0,
         y: -16,
-        duration: CHINA_END - 0.25,
+        duration: GULF_END - 0.19,
         ease: "power2.in",
       },
-      0.25
+      0.19
     )
 
-    // ===== Greece — frames 30–65 (progress 0.287129 → 0.643564) =====
-    // in 0.32 → 0.42 · hold → 0.55 · out 0.55 → 0.643564
+    // ===== China — frames 30–58 (progress 0.2231 → 0.4462) =====
+    // in 0.26 → 0.36 · hold · out 0.42 → 0.4462
     tl.fromTo(
       textElements[1],
       { opacity: 0, y: 20 },
       { opacity: 1, y: 0, duration: 0.1, ease: "power2.out" },
-      0.32
+      0.26
     ).to(
       textElements[1],
       {
         opacity: 0,
         y: -16,
-        duration: GREECE_END - 0.55,
+        duration: CHINA_END - 0.42,
         ease: "power2.in",
       },
-      0.55
+      0.42
     )
 
-    // ===== Egypt — frames 66–101 (progress 0.643564 → 1.000000) =====
-    // in 0.68 → 0.78 · hold → 0.90 · out 0.90 → 1.00
+    // ===== Egypt — frames 59–94 (progress 0.4462 → 0.7231) =====
+    // in 0.49 → 0.59 · hold · out 0.68 → 0.7231
     tl.fromTo(
       textElements[2],
       { opacity: 0, y: 20 },
       { opacity: 1, y: 0, duration: 0.1, ease: "power2.out" },
+      0.49
+    ).to(
+      textElements[2],
+      {
+        opacity: 0,
+        y: -16,
+        duration: EGYPT_END - 0.68,
+        ease: "power2.in",
+      },
       0.68
+    )
+
+    // ===== Greece — frames 95–130 (progress 0.7231 → 1.0000) =====
+    // in 0.74 → 0.84 · hold · out 0.92 → 1.00
+    tl.fromTo(
+      textElements[3],
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.1, ease: "power2.out" },
+      0.74
     ).to(
-      textElements[2],
+      textElements[3],
       { opacity: 0, y: -16, duration: 0.1, ease: "power2.in" },
-      0.9
+      0.92
     )
 
     // paints the frame the visitor is already on (reload / deep link)
