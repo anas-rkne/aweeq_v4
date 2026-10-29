@@ -1327,9 +1327,13 @@ export class ThreeweeqRepository {
       return new Map<string, number>()
     }
 
+    // Medusa v2 stores quantity on order_item and the variant/product reference
+    // on order_line_item (linked via order_item.item_id). Querying
+    // order_item.variant_id fails with "column oi.variant_id does not exist".
     const query = this.db("order as o")
       .join("order_item as oi", "oi.order_id", "o.id")
-      .whereIn("oi.variant_id", input.variantIds)
+      .join("order_line_item as oli", "oli.id", "oi.item_id")
+      .whereIn("oli.variant_id", input.variantIds)
       .whereNot("o.status", "canceled")
 
     if (input.customerId) {
@@ -1341,8 +1345,8 @@ export class ThreeweeqRepository {
     }
 
     const rows = (await query
-      .groupBy("oi.variant_id")
-      .select("oi.variant_id")
+      .groupBy("oli.variant_id")
+      .select("oli.variant_id")
       .sum("oi.quantity as total")) as Array<{
       variant_id: string
       total: string
