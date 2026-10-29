@@ -148,7 +148,7 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
     form.set("amount", String(this.toMinorUnits(input.amount)))
     form.set("currency", input.currency_code.toLowerCase())
     form.set("capture_method", "manual")
-    form.set("automatic_payment_methods[enabled]", "true")
+    form.set("payment_method_types[0]", "card")
 
     if (customer.email) {
       form.set("receipt_email", String(customer.email))
