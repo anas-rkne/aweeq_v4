@@ -58,7 +58,14 @@ describe("translation parity", () => {
   test("Arabic strings are actually Arabic where it matters", () => {
     // Brand names (3WEEQ), the Latin tagline and legal credits are legitimately
     // Latin, so only the UI-heavy namespaces are checked for Arabic script.
-    const arabicRequired = ["Checkout", "Cart", "Common", "NotFound"]
+    const arabicRequired = [
+      "Checkout",
+      "Cart",
+      "Common",
+      "NotFound",
+      "Store",
+      "Product",
+    ]
     const arabicPattern = /[\u0600-\u06FF]/
 
     const offenders = [...arKeys.entries()]

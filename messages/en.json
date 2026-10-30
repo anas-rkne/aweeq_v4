@@ -187,6 +187,7 @@
     "quick": {
       "home": "Home",
       "store": "Shop",
+      "collections": "Collections",
       "rafid": "RAFID",
       "story": "Our Story",
       "journal": "Journal",
@@ -207,6 +208,8 @@
   "Store": {
     "home": "Home",
     "shop": "Shop",
+    "registerTitle": "The Edition Register",
+    "shopNote": "Limited, numbered pieces inspired by civilizations that carry unforgettable stories.",
     "collections": "Collections",
     "story": "Our Story",
     "logoLabel": "3WEEQ — Home",
@@ -216,10 +219,9 @@
     "mainNav": "Store navigation",
     "mobileNav": "Store mobile navigation",
     "breadcrumb": "Breadcrumb",
-    "collectionEyebrow": "COLLECTIONS",
     "collectionsIntro": "Every collection is a gateway to a civilization: a story, a scent, and limited pieces bearing its symbols.",
     "noCollections": "No collections available right now",
-    "noCollectionsHint": "Make sure the Medusa server is running, then reload the page.",
+    "noCollectionsHint": "We're updating the collections. Check back soon to discover the editions.",
     "pieces": "{count} pieces",
     "filters": {
       "civilization": "Civilization",
@@ -227,6 +229,20 @@
       "type": "Type"
     },
     "all": "All",
+    "facts": {
+      "editions": {
+        "value": "Limited editions",
+        "label": "Each piece belongs to a fixed edition"
+      },
+      "numbering": {
+        "value": "Hand-numbered",
+        "label": "Each piece carries its own number"
+      },
+      "shipping": {
+        "value": "UAE delivery",
+        "label": "Delivered within the Emirates"
+      }
+    },
     "currentFilters": "Current filters:",
     "clearAll": "Clear all",
     "searchPlaceholder": "Search for a fragrance or piece...",
@@ -237,11 +253,76 @@
     "noResultsTitle": "No pieces match your selection",
     "noResultsHint": "Try removing some filters or searching with another word.",
     "errorTitle": "Couldn't reach the store right now",
-    "errorHint": "Make sure the Medusa server is running, then reload the page.",
+    "errorHint": "The store couldn't load right now. Please try again shortly.",
     "viewAll": "View all pieces",
+    "ctaCollections": "Discover the collections",
     "prev": "Previous",
     "next": "Next",
-    "searchResults": "Search: {q}"
+    "searchResults": "Search: {q}",
+    "sort": "Sort",
+    "sortNewest": "Newest",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "allCategories": "All categories",
+    "seeAll": "See all",
+    "heroCta": "Browse the register",
+    "limited": "Limited edition",
+    "catalogueTitle": "Every piece",
+    "catalogueNote": "Sort the pieces by type, or search for one in particular.",
+    "picksTitle": "House picks",
+    "categoriesTitle": "Browse by type",
+    "legalTitle": "Terms & privacy",
+    "announcement": {
+      "shipping": "Shipping across the UAE",
+      "numbering": "Hand-numbered pieces",
+      "secure": "Secure, encrypted payment"
+    },
+    "promos": {
+      "collections": {
+        "eyebrow": "Collections",
+        "title": "Gates to a civilization",
+        "cta": "Explore collections"
+      },
+      "editions": {
+        "eyebrow": "Editions",
+        "title": "Numbered, never repeated",
+        "cta": "Browse editions"
+      },
+      "story": {
+        "eyebrow": "The house",
+        "title": "How an edition is numbered",
+        "cta": "Read the story"
+      }
+    },
+    "newsletter": {
+      "title": "Stay in the loop",
+      "body": "New pieces reach the inbox first.",
+      "placeholder": "Your email address",
+      "cta": "Subscribe",
+      "note": "We respect your inbox. Unsubscribe anytime.",
+      "submitting": "Subscribing…",
+      "success": "You're in. We'll write when the next edition lands.",
+      "invalid": "Enter a valid email address.",
+      "error": "Couldn't subscribe right now. Try again."
+    },
+    "trust": {
+      "shipping": {
+        "title": "Shipping in the UAE",
+        "body": "Shipping details"
+      },
+      "returns": {
+        "title": "Returns & exchanges",
+        "body": "Return policy"
+      },
+      "payment": {
+        "title": "Secure payment",
+        "body": "Encrypted cards"
+      },
+      "numbering": {
+        "title": "Hand-numbered",
+        "body": "Every piece carries its number"
+      }
+    }
   },
   "Cart": {
     "title": "Shopping Cart",
@@ -297,6 +378,7 @@
     "continueToPayment": "Continue to payment",
     "paymentTitle": "Payment",
     "total": "Total",
+    "orderSummary": "Order summary",
     "paymentNotConfigured": "Online payment is not configured yet.",
     "pay": "Pay now",
     "processing": "Processing...",
@@ -342,7 +424,6 @@
     "shippingTaxesNote": "Shipping and taxes are calculated at checkout.",
     "available": "Available",
     "availableSerial": "{count} numbered pieces available",
-    "storyEyebrow": "THE STORY",
     "story": "The story of the piece",
     "pyramid": "Olfactory pyramid",
     "top": "Top",
@@ -356,9 +437,10 @@
     "typeLabel": "Type",
     "editionSize": "Edition size",
     "pieces": "pieces",
-    "relatedEyebrow": "CONTINUE EXPLORING",
     "related": "More pieces",
     "viewAll": "All pieces",
+    "beforeYouOrder": "Before you order",
+    "policyLink": "Read the policy",
     "galleryImage": "View image {index}"
   },
   "Common": {

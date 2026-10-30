@@ -61,6 +61,12 @@ function clientSecretOf(session: any) {
   return secret ? String(secret) : null
 }
 
+function redirectUrlOf(session: any) {
+  const data = session?.data ?? {}
+  const url = data.redirect_url ?? session?.redirect_url
+  return url ? String(url) : null
+}
+
 function serializableAmount(value: unknown) {
   if (value && typeof value === "object" && "numeric" in value) {
     return Number((value as { numeric: number }).numeric)
@@ -224,6 +230,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           cart_id: cartId,
           ...(metadata.drop_id ? { drop_id: metadata.drop_id } : {}),
           locale,
+          ...(email ? { email } : {}),
         },
       },
     })
@@ -239,11 +246,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   const clientSecret = clientSecretOf(session)
+  const redirectUrl = redirectUrlOf(session)
 
-  if (!clientSecret && !isSessionAuthorized(session)) {
+  if (!redirectUrl && !clientSecret && !isSessionAuthorized(session)) {
     throw new MedusaError(
       MedusaError.Types.UNEXPECTED_STATE,
-      "The payment provider did not return a client secret"
+      "The payment provider did not return a redirect URL"
     )
   }
 
@@ -256,6 +264,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     payment_collection_id: collection.id,
     payment_session_id: session.id,
     provider_id: session.provider_id ?? providerId,
+    redirect_url: redirectUrl,
     client_secret: clientSecret,
     amount: serializableAmount(session.amount ?? collection.amount),
     currency_code: session.currency_code ?? collection.currency_code ?? null,

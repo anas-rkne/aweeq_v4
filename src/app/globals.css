@@ -136,6 +136,25 @@ body {
   overscroll-behavior: none;
 }
 
+/* The store header height, in one place, so every offset (sticky panels, sticky
+   tab bars) derives from it instead of a hard-coded number. The announcement
+   bar and the secondary nav row scroll away; only this row sticks. */
+:root {
+  --store-header-h: 4rem; /* 64px */
+  --store-radius: 0.75rem; /* 12px — cards and media wells */
+  --store-radius-sm: 0.5rem; /* 8px — fields and small controls */
+  --store-radius-pill: 999px; /* search field, category chips */
+  --store-surface: rgb(246 230 214 / 0.04); /* a card on the navy ground */
+  --store-surface-hover: rgb(246 230 214 / 0.07);
+  --store-well: #f6e6d6; /* the light photo well, as in the reference */
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --store-header-h: 4.5rem; /* 72px */
+  }
+}
+
 ::selection {
   background: var(--color-brand-gold);
   color: var(--color-royal-navy);

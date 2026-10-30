@@ -48,51 +48,61 @@ export function OrderConfirmation({ orderId }: { orderId: string }) {
 
   if (state === "loading") {
     return (
-      <main className="flex min-h-[60vh] items-center justify-center bg-royal-navy">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
-      </main>
+      </div>
     )
   }
 
   if (state === "error" || !order) {
     return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center bg-royal-navy px-6 text-center">
-        <h1 className="font-primary text-2xl text-sand">
-          {t("orderNotFound")}
-        </h1>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
+        <h1 className="font-primary text-h2 text-gold">{t("orderNotFound")}</h1>
         <button
           type="button"
           onClick={() => router.push("/products")}
-          className="mt-6 border border-gold bg-gold px-6 py-3 font-primary text-sm font-bold text-royal-navy transition-colors hover:bg-sand"
+          className="mt-8 flex h-12 items-center justify-center rounded-\[var\(--store-radius-sm\)\] bg-gold px-8 font-primary text-sm font-bold text-royal-navy transition-colors hover:bg-sand"
         >
           {t("backToStore")}
         </button>
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="min-h-screen bg-royal-navy px-5 py-10 md:px-10">
-      <div className="mx-auto max-w-3xl">
-        <div className="border border-gold/30 bg-gold/5 p-6 text-center md:p-10">
-          <h1 className="font-primary text-2xl text-gold md:text-3xl">
-            {t("orderConfirmed")}
-          </h1>
-          <p className="mt-3 font-secondary text-sm tracking-[0.15em] text-sand/70">
-            {t("orderNumber")}: {order.display_id ?? order.id.slice(0, 8)}
-          </p>
-          <p className="mt-3 font-primary text-sm text-sand/55">
+    <div className="px-5 py-16 md:px-10">
+      <div className="mx-auto max-w-[40rem]">
+        <h1 className="text-center font-primary text-h2 leading-[1.2] text-gold">
+          {t("orderConfirmed")}
+        </h1>
+
+        {/* the receipt, stamped */}
+        <div className="mt-8 rounded-\[var\(--store-radius\)\] bg-sand px-6 py-10 text-center md:px-10 md:py-12">
+          {/* the house's seal */}
+          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border-2 border-gold">
+            <div>
+              <p className="font-primary text-[13px] leading-none text-royal-navy/60">
+                {t("orderNumber")}
+              </p>
+              <p className="mt-1.5 font-secondary text-base leading-none text-royal-navy">
+                {order.display_id ?? order.id.slice(0, 8)}
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-6 font-primary text-body leading-[1.7] text-royal-navy/80">
             {t("orderNote")}
           </p>
-        </div>
 
-        <div className="mt-8 border border-sand/10 p-5 md:p-6">
-          <ul className="divide-y divide-sand/10">
+          <ul className="mt-8 text-start">
             {order.items.map((item) => {
               const image = normalizeImageUrl(item.thumbnail)
               return (
-                <li key={item.id} className="flex gap-4 py-4 first:pt-0">
-                  <div className="relative h-20 w-16 shrink-0 overflow-hidden border border-sand/10 bg-sand/[0.03]">
+                <li
+                  key={item.id}
+                  className="flex gap-4 border-b border-royal-navy/15 py-4 first:border-t"
+                >
+                  <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-\[var\(--store-radius-sm\)\] bg-royal-navy/10">
                     {image ? (
                       <Image
                         src={image}
@@ -102,25 +112,25 @@ export function OrderConfirmation({ orderId }: { orderId: string }) {
                         className="object-cover"
                       />
                     ) : (
-                      <span className="absolute inset-0 grid place-items-center font-secondary text-xs text-gold/40">
+                      <span className="absolute inset-0 grid place-items-center font-secondary text-xs text-royal-navy/40">
                         3W
                       </span>
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-primary text-sm text-sand">
+                    <p className="truncate font-primary text-body text-royal-navy">
                       {item.title}
                     </p>
                     {item.variant_title && (
-                      <p className="mt-1 font-primary text-xs text-sand/45">
+                      <p className="mt-1 font-primary text-small text-royal-navy/60">
                         {item.variant_title}
                       </p>
                     )}
-                    <p className="mt-1 font-primary text-xs text-sand/40">
+                    <p className="mt-1 font-primary text-small text-royal-navy/60">
                       {t("quantityLabel")}: {item.quantity}
                     </p>
                   </div>
-                  <p className="shrink-0 font-secondary text-sm text-gold">
+                  <p className="shrink-0 font-secondary text-base text-royal-navy">
                     {formatPrice(
                       item.total ?? (item.unit_price ?? 0) * item.quantity,
                       order.currency_code ?? "aed",
@@ -132,10 +142,10 @@ export function OrderConfirmation({ orderId }: { orderId: string }) {
             })}
           </ul>
 
-          <dl className="mt-4 space-y-2 border-t border-sand/10 pt-4 font-primary text-sm">
+          <dl className="mt-8 space-y-3 text-start font-primary text-body">
             <div className="flex justify-between gap-4">
-              <dt className="text-sand/50">{t("subtotalLabel")}</dt>
-              <dd className="text-sand/85">
+              <dt className="text-royal-navy/60">{t("subtotalLabel")}</dt>
+              <dd className="text-royal-navy">
                 {formatPrice(
                   order.subtotal,
                   order.currency_code ?? "aed",
@@ -144,8 +154,8 @@ export function OrderConfirmation({ orderId }: { orderId: string }) {
               </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-sand/50">{t("shippingLabel")}</dt>
-              <dd className="text-sand/85">
+              <dt className="text-royal-navy/60">{t("shippingLabel")}</dt>
+              <dd className="text-royal-navy">
                 {formatPrice(
                   order.shipping_total,
                   order.currency_code ?? "aed",
@@ -153,9 +163,9 @@ export function OrderConfirmation({ orderId }: { orderId: string }) {
                 )}
               </dd>
             </div>
-            <div className="flex justify-between gap-4 border-t border-sand/10 pt-3">
-              <dt className="text-sand">{t("totalLabel")}</dt>
-              <dd className="font-secondary text-lg text-gold">
+            <div className="flex justify-between gap-4 border-t border-royal-navy/20 pt-3">
+              <dt className="text-royal-navy">{t("totalLabel")}</dt>
+              <dd className="font-secondary text-h3 leading-none text-royal-navy">
                 {formatPrice(
                   order.total,
                   order.currency_code ?? "aed",
@@ -164,18 +174,16 @@ export function OrderConfirmation({ orderId }: { orderId: string }) {
               </dd>
             </div>
           </dl>
-        </div>
 
-        <div className="mt-6 text-center">
           <button
             type="button"
             onClick={() => router.push("/products")}
-            className="border border-gold bg-gold px-6 py-3 font-primary text-sm font-bold text-royal-navy transition-colors hover:bg-sand"
+            className="mt-8 flex h-12 w-full items-center justify-center rounded-\[var\(--store-radius-sm\)\] bg-royal-navy px-8 font-primary text-sm font-bold text-sand transition-colors duration-300 hover:bg-navy-800"
           >
             {t("backToStore")}
           </button>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

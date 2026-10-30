@@ -199,7 +199,7 @@ export function CartDrawer() {
             type="button"
             onClick={closeCart}
             aria-label={t("close")}
-            className="p-2 text-sand/55 transition-colors duration-200 hover:text-gold"
+            className="grid h-11 w-11 place-items-center text-sand/55 transition-colors duration-200 hover:text-gold"
           >
             <CloseIcon />
           </button>
@@ -209,7 +209,7 @@ export function CartDrawer() {
           {actionError && (
             <div
               role="alert"
-              className="mb-4 flex items-start justify-between gap-3 border border-red-400/25 bg-red-950/25 px-3 py-2.5 font-primary text-xs leading-6 text-red-200/85"
+              className="mb-4 flex items-start justify-between gap-3 rounded-[var(--store-radius-sm)] border border-red-400/25 bg-red-950/25 px-3 py-2.5 font-primary text-xs leading-6 text-red-200/85"
             >
               <span>{actionError}</span>
               <button
@@ -239,14 +239,14 @@ export function CartDrawer() {
           )}
 
           {status === "error" && !actionError && (
-            <div className="border border-sand/10 px-5 py-10 text-center">
+            <div className="rounded-[var(--store-radius)] border border-sand/10 bg-[var(--store-surface)] px-5 py-10 text-center">
               <p className="font-primary text-sm leading-7 text-sand/65">
                 {error}
               </p>
               <button
                 type="button"
                 onClick={() => void refreshCart()}
-                className="mt-5 border border-gold/40 px-5 py-2.5 font-primary text-sm text-gold transition-colors hover:bg-gold hover:text-royal-navy"
+                className="mt-5 h-11 rounded-[var(--store-radius-sm)] border border-gold/40 px-5 font-primary text-sm text-gold transition-colors hover:bg-gold hover:text-royal-navy"
               >
                 {t("retry")}
               </button>
@@ -265,9 +265,9 @@ export function CartDrawer() {
                 {t("emptyMessage")}
               </p>
               <Link
-                href="/products"
+                href="/products#catalogue"
                 onClick={closeCart}
-                className="mt-6 border border-gold/40 px-6 py-3 font-primary text-sm text-gold transition-colors duration-300 hover:bg-gold hover:text-royal-navy"
+                className="mt-6 flex h-11 items-center justify-center rounded-[var(--store-radius-sm)] border border-gold/40 px-6 font-primary text-sm text-gold transition-colors duration-300 hover:bg-gold hover:text-royal-navy"
               >
                 {t("browseStore")}
               </Link>
@@ -291,7 +291,7 @@ export function CartDrawer() {
 
                 return (
                   <li key={item.id} className="flex gap-4 py-5 first:pt-0">
-                    <div className="relative h-24 w-20 shrink-0 overflow-hidden border border-sand/10 bg-sand/[0.03]">
+                    <div className="relative h-24 w-20 shrink-0 overflow-hidden rounded-[var(--store-radius-sm)] bg-[var(--store-well)]">
                       {image ? (
                         <Image
                           src={image}
@@ -341,7 +341,7 @@ export function CartDrawer() {
                       </div>
 
                       <div className="mt-4 flex items-center justify-between gap-3">
-                        <div className="inline-flex items-center border border-sand/15">
+                        <div className="inline-flex items-center overflow-hidden rounded-[var(--store-radius-sm)] border border-sand/15">
                           <button
                             type="button"
                             onClick={() =>
@@ -349,11 +349,11 @@ export function CartDrawer() {
                             }
                             disabled={pending || item.quantity <= 1}
                             aria-label={t("decrease")}
-                            className="grid h-8 w-8 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
+                            className="grid h-11 w-11 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
                           >
                             −
                           </button>
-                          <span className="grid h-8 min-w-8 place-items-center border-x border-sand/15 font-secondary text-xs text-sand">
+                          <span className="grid h-11 min-w-11 place-items-center border-x border-sand/15 font-secondary text-xs text-sand">
                             {item.quantity}
                           </span>
                           <button
@@ -363,7 +363,7 @@ export function CartDrawer() {
                             }
                             disabled={pending || item.quantity >= limit}
                             aria-label={t("increase")}
-                            className="grid h-8 w-8 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
+                            className="grid h-11 w-11 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
                           >
                             +
                           </button>
@@ -373,7 +373,7 @@ export function CartDrawer() {
                           type="button"
                           onClick={() => void handleRemove(item.id)}
                           disabled={pending}
-                          className="font-primary text-[11px] text-sand/35 underline-offset-4 transition-colors hover:text-red-300 hover:underline disabled:opacity-40"
+                          className="inline-flex min-h-11 items-center font-primary text-[11px] text-sand/45 underline-offset-4 transition-colors hover:text-red-300 hover:underline disabled:opacity-40"
                         >
                           {t("remove")}
                         </button>
@@ -404,14 +404,14 @@ export function CartDrawer() {
               <Link
                 href="/cart"
                 onClick={closeCart}
-                className="block w-full border border-gold bg-gold px-6 py-3.5 text-center font-primary text-sm font-bold text-royal-navy transition-colors duration-300 hover:bg-gold/85"
+                className="flex h-12 w-full items-center justify-center rounded-[var(--store-radius-sm)] bg-gold px-6 text-center font-primary text-sm font-bold text-royal-navy transition-colors duration-300 hover:bg-sand"
               >
                 {t("viewCart")}
               </Link>
               <Link
                 href="/checkout"
                 onClick={closeCart}
-                className="block w-full border border-sand/20 px-6 py-3 text-center font-primary text-sm text-sand transition-colors duration-300 hover:border-gold/60 hover:text-gold"
+                className="flex h-12 w-full items-center justify-center rounded-[var(--store-radius-sm)] border border-sand/20 px-6 text-center font-primary text-sm text-sand transition-colors duration-300 hover:border-gold/60 hover:text-gold"
               >
                 {t("checkout")}
               </Link>

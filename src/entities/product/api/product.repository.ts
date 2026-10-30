@@ -27,6 +27,7 @@ export async function fetchProductsRepository(params?: {
   collection?: string
   product_type?: string
   q?: string
+  order?: "newest" | "price_asc" | "price_desc"
   locale?: StoreLocale
   currency_code?: string
 }): Promise<Result<ProductListResponse>> {
@@ -37,6 +38,7 @@ export async function fetchProductsRepository(params?: {
     collection: params?.collection,
     product_type: params?.product_type,
     q: params?.q,
+    order: params?.order,
     locale: params?.locale ?? DEFAULT_LOCALE,
     currency_code: params?.currency_code ?? DEFAULT_CURRENCY,
   })}`

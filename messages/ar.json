@@ -187,6 +187,7 @@
     "quick": {
       "home": "الرئيسية",
       "store": "المتجر",
+      "collections": "المجموعات",
       "rafid": "عطر رافد",
       "story": "قصتنا",
       "journal": "المجلة",
@@ -207,6 +208,8 @@
   "Store": {
     "home": "الرئيسية",
     "shop": "المتجر",
+    "registerTitle": "سجل الإصدارات",
+    "shopNote": "قطع محدودة ومرقّمة، مستوحاة من حضارات تحمل حكايات لا تُنسى.",
     "collections": "المجموعات",
     "story": "قصتنا",
     "logoLabel": "3WEEQ — الرئيسية",
@@ -216,10 +219,9 @@
     "mainNav": "تنقل المتجر",
     "mobileNav": "تنقل المتجر للجوال",
     "breadcrumb": "مسار التنقل",
-    "collectionEyebrow": "COLLECTIONS",
     "collectionsIntro": "كل مجموعة بوابة إلى حضارة: حكاية، رائحة، وقطع محدودة تحمل رموزها.",
     "noCollections": "لا توجد مجموعات حالياً",
-    "noCollectionsHint": "تأكد من تشغيل خادم Medusa ثم أعد تحميل الصفحة.",
+    "noCollectionsHint": "نحدّث المجموعات الآن. عُد بعد قليل لاكتشاف الإصدارات.",
     "pieces": "{count} قطعة",
     "filters": {
       "civilization": "الحضارة",
@@ -227,6 +229,20 @@
       "type": "النوع"
     },
     "all": "الكل",
+    "facts": {
+      "editions": {
+        "value": "إصدارات محدودة",
+        "label": "كل قطعة جزء من إصدار محدد"
+      },
+      "numbering": {
+        "value": "ترقيم يدوي",
+        "label": "كل قطعة تحمل رقمها الخاص"
+      },
+      "shipping": {
+        "value": "شحن إماراتي",
+        "label": "توصيل داخل دولة الإمارات"
+      }
+    },
     "currentFilters": "التصفية الحالية:",
     "clearAll": "مسح الكل",
     "searchPlaceholder": "ابحث عن عطر أو قطعة...",
@@ -237,11 +253,76 @@
     "noResultsTitle": "لا توجد قطع تطابق اختيارك",
     "noResultsHint": "جرّب إزالة بعض عوامل التصفية أو ابحث بكلمة أخرى.",
     "errorTitle": "تعذر الاتصال بالمتجر حالياً",
-    "errorHint": "تأكد من تشغيل خادم Medusa ثم أعد تحميل الصفحة.",
+    "errorHint": "تعذّر تحميل المتجر الآن. أعد المحاولة بعد قليل.",
     "viewAll": "عرض كل القطع",
+    "ctaCollections": "اكتشف المجموعات",
     "prev": "السابق",
     "next": "التالي",
-    "searchResults": "بحث: {q}"
+    "searchResults": "بحث: {q}",
+    "sort": "فرز",
+    "sortNewest": "الأحدث",
+    "sortPriceAsc": "السعر: تصاعدي",
+    "sortPriceDesc": "السعر: تنازلي",
+    "allCategories": "كل الفئات",
+    "seeAll": "عرض الكل",
+    "heroCta": "تصفّح السجل",
+    "limited": "إصدار محدود",
+    "catalogueTitle": "كل القطع",
+    "catalogueNote": "صفّ القطع بحسب النوع، أو ابحث عن قطعة بعينها.",
+    "picksTitle": "مختارات الدار",
+    "categoriesTitle": "تصفّح بحسب النوع",
+    "legalTitle": "الشروط والخصوصية",
+    "announcement": {
+      "shipping": "شحن داخل الإمارات",
+      "numbering": "ترقيم يدوي لكل قطعة",
+      "secure": "دفع آمن ومشفّر"
+    },
+    "promos": {
+      "collections": {
+        "eyebrow": "المجموعات",
+        "title": "بوابات إلى حضارة",
+        "cta": "اكتشف المجموعات"
+      },
+      "editions": {
+        "eyebrow": "الإصدارات",
+        "title": "قطع مرقّمة لا تتكرر",
+        "cta": "تصفّح الإصدارات"
+      },
+      "story": {
+        "eyebrow": "الدار",
+        "title": "كيف يُرقَّم الإصدار",
+        "cta": "اقرأ القصة"
+      }
+    },
+    "newsletter": {
+      "title": "ابقَ على اطلاع",
+      "body": "القطع القادمة تصل إلى البريد أولاً.",
+      "placeholder": "بريدك الإلكتروني",
+      "cta": "اشترك",
+      "note": "نحترم بريدك، ويمكنك الإلغاء في أي وقت.",
+      "submitting": "جارٍ الاشتراك…",
+      "success": "وصلت. سنراسلك عند الإصدار القادم.",
+      "invalid": "أدخل بريداً إلكترونياً صحيحاً.",
+      "error": "تعذّر الاشتراك الآن. حاول مرة أخرى."
+    },
+    "trust": {
+      "shipping": {
+        "title": "شحن داخل الإمارات",
+        "body": "تفاصيل الشحن"
+      },
+      "returns": {
+        "title": "إرجاع واستبدال",
+        "body": "سياسة الإرجاع"
+      },
+      "payment": {
+        "title": "دفع آمن",
+        "body": "بطاقات مشفّرة"
+      },
+      "numbering": {
+        "title": "ترقيم يدوي",
+        "body": "كل قطعة تحمل رقمها"
+      }
+    }
   },
   "Cart": {
     "title": "سلة التسوق",
@@ -297,6 +378,7 @@
     "continueToPayment": "متابعة للدفع",
     "paymentTitle": "الدفع",
     "total": "الإجمالي",
+    "orderSummary": "ملخص الطلب",
     "paymentNotConfigured": "الدفع الإلكتروني غير مفعّل حالياً.",
     "pay": "ادفع الآن",
     "processing": "جارٍ المعالجة...",
@@ -342,7 +424,6 @@
     "shippingTaxesNote": "الشحن والضرائب تُحسب عند إتمام الطلب.",
     "available": "متاح",
     "availableSerial": "متاح {count} قطعة مرقّمة",
-    "storyEyebrow": "THE STORY",
     "story": "حكاية القطعة",
     "pyramid": "الهرم العطري",
     "top": "المقدمة",
@@ -356,9 +437,10 @@
     "typeLabel": "النوع",
     "editionSize": "حجم الإصدار",
     "pieces": "قطعة",
-    "relatedEyebrow": "CONTINUE EXPLORING",
     "related": "قطع أخرى",
     "viewAll": "كل القطع",
+    "beforeYouOrder": "قبل أن تطلب",
+    "policyLink": "اقرأ السياسة",
     "galleryImage": "عرض الصورة {index}"
   },
   "Common": {

@@ -32,6 +32,7 @@ export type CheckoutInitResponse = {
   payment_collection_id: string
   payment_session_id: string
   provider_id: string | null
+  redirect_url: string | null
   client_secret: string | null
   amount: number | null
   currency_code: string | null

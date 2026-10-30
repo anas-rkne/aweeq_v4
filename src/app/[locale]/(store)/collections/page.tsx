@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation"
 import { getTranslations } from "next-intl/server"
 import { getCollections } from "@/lib/api"
 import { normalizeImageUrl } from "@/lib/format"
+import type { CollectionProfile } from "@/types"
 
 export async function generateMetadata({
   params,
@@ -27,106 +28,141 @@ export default async function CollectionsPage({
 }) {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: "Store" })
-  const collections = await getCollections(locale === "en" ? "en" : "ar")
+  const invitationT = await getTranslations({ locale, namespace: "StoreInvitation" })
+  const isArabic = locale === "ar"
+  const collections = await getCollections(isArabic ? "ar" : "en")
 
   return (
-    <main className="min-h-screen bg-royal-navy">
-      <section className="px-5 py-10 md:px-10 md:py-14 lg:px-16">
-        <div className="mx-auto max-w-7xl">
-          <nav
-            aria-label={t("breadcrumb")}
-            className="mb-8 flex items-center gap-2 font-primary text-xs text-sand/40"
-          >
-            <Link href="/" className="transition-colors hover:text-gold">
-              {t("home")}
-            </Link>
-            <span aria-hidden="true">/</span>
-            <span className="text-sand/65">{t("collections")}</span>
-          </nav>
-
-          <p className="mb-3 font-secondary text-xs tracking-[0.25em] text-gold/70">
-            {t("collectionEyebrow")}
-          </p>
-          <h1 className="font-primary text-4xl leading-tight text-gold md:text-5xl lg:text-6xl">
+    <main>
+      {/* ===== the register's index ===== */}
+      <section
+        data-cuneiform-surface
+        className="px-5 pb-10 pt-8 md:px-10 md:pt-12 lg:px-16"
+      >
+        <div className="mx-auto w-full max-w-[84rem]">
+          <h1 className="font-primary text-display leading-[1.12] text-gold">
             {t("collections")}
           </h1>
-          <p className="mt-4 max-w-2xl font-primary text-base leading-relaxed text-sand/65 md:text-lg">
+          <p className="mt-5 max-w-[46ch] font-primary text-body leading-[1.7] text-sand/70">
             {t("collectionsIntro")}
           </p>
         </div>
       </section>
 
-      <section className="px-5 pb-20 md:px-10 lg:px-16">
-        <div className="mx-auto max-w-7xl">
-          {collections.length === 0 ? (
-            <div className="flex min-h-72 flex-col items-center justify-center border border-sand/10 bg-navy-900/40 px-6 py-16 text-center">
-              <span className="mb-5 font-primary text-3xl text-gold/25">
-                3WEEQ
-              </span>
-              <p className="font-primary text-xl text-sand/70">
-                {t("noCollections")}
-              </p>
-              <p className="mt-3 max-w-md font-primary text-sm text-sand/40">
-                {t("noCollectionsHint")}
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              {collections.map((collection) => {
-                const heroUrl = normalizeImageUrl(collection.hero_url)
+      {/* ===== the collections as spreads ===== */}
+      {collections.length === 0 ? (
+        <section className="px-5 pb-20 md:px-10 lg:px-16">
+          <div className="mx-auto max-w-[84rem] rounded-[var(--store-radius)] border border-sand/10 bg-[var(--store-surface)] px-6 py-16 text-center">
+            <h2 className="font-primary text-h3 font-bold text-sand">
+              {t("noCollections")}
+            </h2>
+            <p className="mx-auto mt-3 max-w-[38ch] font-primary text-small leading-[1.7] text-sand/60">
+              {t("noCollectionsHint")}
+            </p>
+          </div>
+        </section>
+      ) : (
+        <section className="space-y-14 px-5 pb-20 md:px-10 lg:space-y-20 lg:px-16">
+          {collections.map((collection, index) => (
+            <CollectionSpread
+              key={collection.id}
+              collection={collection}
+              reversed={index % 2 === 1}
+              piecesLabel={t("pieces", { count: collection.product_count })}
+              viewAllLabel={t("viewAll")}
+            />
+          ))}
+        </section>
+      )}
 
-                return (
-                  <Link
-                    key={collection.id}
-                    href={`/products?collection=${encodeURIComponent(
-                      collection.handle
-                    )}`}
-                    className="group relative aspect-[16/10] overflow-hidden bg-navy-800"
-                  >
-                    {heroUrl ? (
-                      <Image
-                        src={heroUrl}
-                        alt={collection.title ?? collection.handle}
-                        fill
-                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <span className="font-primary text-3xl text-gold/30">
-                          3WEEQ
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-royal-navy via-royal-navy/45 to-transparent" />
-
-                    <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
-                      {collection.civilization_name && (
-                        <p className="mb-2 font-secondary text-[11px] tracking-[0.22em] text-gold/70">
-                          {collection.civilization_name}
-                        </p>
-                      )}
-                      <h2 className="font-primary text-2xl text-gold md:text-3xl">
-                        {collection.title ?? collection.handle}
-                      </h2>
-                      {collection.subtitle && (
-                        <p className="mt-2 font-primary text-sm text-sand/70">
-                          {collection.subtitle}
-                        </p>
-                      )}
-                      <p className="mt-5 inline-flex items-center gap-2 font-primary text-sm text-sand/60 transition-colors duration-300 group-hover:text-gold">
-                        {t("pieces", { count: collection.product_count })}
-                        <span aria-hidden="true">←</span>
-                      </p>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          )}
+      {/* ===== the house note ===== */}
+      <section className="px-5 pb-16 md:px-10 lg:px-16">
+        <div className="mx-auto max-w-[84rem] rounded-[var(--store-radius)] border border-gold/20 bg-gold/[0.06] p-6 md:p-10">
+          <p className="max-w-[60ch] font-primary text-body leading-[1.7] text-sand/70">
+            {invitationT("body")}
+          </p>
+          <p className="mt-6 font-primary text-h3 text-gold">3WEEQ</p>
+          <Link
+            href="/story"
+            className="-mx-2.5 mt-3 inline-flex min-h-11 items-center px-2.5 font-primary text-small text-gold underline-offset-4 transition-colors hover:text-sand hover:underline"
+          >
+            {t("story")}
+          </Link>
         </div>
       </section>
     </main>
+  )
+}
+
+function CollectionSpread({
+  collection,
+  reversed,
+  piecesLabel,
+  viewAllLabel,
+}: {
+  collection: CollectionProfile
+  reversed: boolean
+  piecesLabel: string
+  viewAllLabel: string
+}) {
+  const heroUrl = normalizeImageUrl(collection.hero_url)
+  const title = collection.title ?? collection.handle
+  const body = collection.description ?? collection.subtitle
+
+  return (
+    <article className="grid grid-cols-1 gap-8 lg:grid-cols-[5fr_7fr] lg:items-center lg:gap-12">
+      {/* the plate */}
+      <div className={reversed ? "lg:order-2" : undefined}>
+        <div className="rounded-[var(--store-radius)] border border-sand/10 bg-[var(--store-surface)] p-2">
+          <div className="relative aspect-square overflow-hidden rounded-[calc(var(--store-radius)-0.25rem)] bg-[var(--store-well)]">
+            {heroUrl ? (
+              <Image
+                src={heroUrl}
+                alt={collection.hero_alt_ar ?? title}
+                fill
+                className="object-cover"
+                sizes="(min-width: 64rem) 42vw, 100vw"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <span className="font-primary text-3xl text-royal-navy/30">
+                  3WEEQ
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* the words */}
+      <div className={reversed ? "lg:order-1" : undefined}>
+        {collection.civilization_name && (
+          <p className="font-primary text-[11px] uppercase tracking-[0.14em] text-gold">
+            {collection.civilization_name}
+          </p>
+        )}
+        <h2 className="mt-3 font-primary text-h2 leading-[1.2] text-sand">
+          {title}
+        </h2>
+        {body && (
+          <p className="mt-4 max-w-xl font-primary text-body leading-[1.7] text-sand/70">
+            {body}
+          </p>
+        )}
+        <div className="mt-7 flex flex-wrap items-center gap-5">
+          <Link
+            href={`/products?collection=${encodeURIComponent(
+              collection.handle
+            )}#catalogue`}
+            className="flex h-12 items-center justify-center rounded-[var(--store-radius-sm)] bg-gold px-6 font-primary text-sm font-bold text-royal-navy transition-colors duration-300 hover:bg-sand"
+          >
+            {viewAllLabel}
+          </Link>
+          <span className="font-primary text-small text-sand/60">
+            {piecesLabel}
+          </span>
+        </div>
+      </div>
+    </article>
   )
 }

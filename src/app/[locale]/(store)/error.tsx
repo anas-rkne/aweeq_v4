@@ -12,26 +12,27 @@ export default function StoreError({
   const t = useTranslations("Common")
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
-      <span className="mb-5 font-primary text-3xl text-gold/25">3WEEQ</span>
-      <h1 className="font-primary text-2xl text-sand/80">
-        {t("unexpectedError")}
-      </h1>
-      <p className="mt-3 max-w-md font-primary text-sm leading-relaxed text-sand/45">
-        {t("errorHint")}
-      </p>
-      {error.digest && (
-        <p className="mt-2 font-secondary text-[10px] text-sand/25">
-          {error.digest}
-        </p>
-      )}
-      <button
-        type="button"
-        onClick={reset}
-        className="mt-6 border border-gold/40 px-6 py-3 font-primary text-sm text-gold transition-colors hover:bg-gold/10"
-      >
-        {t("retry")}
-      </button>
+    <div className="flex min-h-[70svh] flex-col items-center justify-center px-5 py-16 md:px-10">
+      <div className="w-full max-w-[34rem]">
+        <h1 className="font-primary text-h2 leading-[1.2] text-gold">
+          {t("unexpectedError")}
+        </h1>
+
+        <div className="mt-8 rounded-[var(--store-radius)] bg-sand px-6 py-10 md:px-10 md:py-12">
+          <p className="border-b border-royal-navy/15 pb-6 font-primary text-body leading-[1.7] text-royal-navy/80">
+            {t("errorHint")}
+          </p>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={reset}
+              className="flex h-12 items-center justify-center rounded-[var(--store-radius-sm)] bg-royal-navy px-8 font-primary text-sm font-bold text-sand transition-colors duration-300 hover:bg-navy-800"
+            >
+              {t("retry")}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

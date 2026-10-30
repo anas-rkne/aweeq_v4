@@ -45,6 +45,17 @@ type StripePaymentIntent = {
   [key: string]: unknown
 }
 
+type StripeCheckoutSession = {
+  id: string
+  url?: string
+  payment_status?: string
+  payment_intent?: string
+  amount_total?: number
+  currency?: string
+  metadata?: Record<string, string>
+  [key: string]: unknown
+}
+
 class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
   static identifier = "stripe"
 
@@ -143,38 +154,48 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
   ): Promise<InitiatePaymentOutput> {
     const data = (input.data ?? {}) as Record<string, unknown>
     const customer = (input.context?.customer ?? {}) as Record<string, unknown>
+    const locale = data.locale === "en" ? "en" : "ar"
+    const storefrontUrl = (
+      process.env.MEDUSA_STOREFRONT_URL || "http://localhost:3000"
+    ).replace(/\/+$/, "")
+
     const form = new URLSearchParams()
+    form.set("mode", "payment")
+    form.set(
+      "line_items[0][price_data][currency]",
+      input.currency_code.toLowerCase()
+    )
+    form.set(
+      "line_items[0][price_data][unit_amount]",
+      String(this.toMinorUnits(input.amount))
+    )
+    form.set("line_items[0][price_data][product_data][name]", "3WEEQ Order")
+    form.set("line_items[0][quantity]", "1")
+    form.set(
+      "success_url",
+      `${storefrontUrl}/${locale}/checkout/callback?session_id={CHECKOUT_SESSION_ID}`
+    )
+    form.set("cancel_url", `${storefrontUrl}/${locale}/checkout`)
 
-    form.set("amount", String(this.toMinorUnits(input.amount)))
-    form.set("currency", input.currency_code.toLowerCase())
-    form.set("capture_method", "manual")
-    // No payment_method_types / automatic_payment_methods: this account uses
-    // Stripe's dynamic payment methods (managed in the Dashboard), and sending
-    // either parameter is rejected with "no longer supported".
-
-    if (customer.email) {
-      form.set("receipt_email", String(customer.email))
+    if (customer.email || data.email) {
+      form.set("customer_email", String(customer.email ?? data.email))
     }
 
     for (const [key, value] of Object.entries(this.metadataFrom(data))) {
       form.set(`metadata[${key}]`, value)
     }
 
-    form.set(
-      "description",
-      typeof data.description === "string" ? data.description : "3weeq order"
-    )
-
-    const intent = await this.request<StripePaymentIntent>(
-      "/payment_intents",
+    const session = await this.request<StripeCheckoutSession>(
+      "/checkout/sessions",
       "POST",
       form
     )
 
     return {
-      id: intent.id,
+      id: session.id,
       data: {
-        ...intent,
+        ...session,
+        redirect_url: session.url,
         session_id: data.session_id,
         cart_id: data.cart_id,
         order_id: data.order_id,
@@ -190,46 +211,31 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
     if (!id) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
-        "Stripe payment intent id is missing"
+        "Stripe checkout session id is missing"
       )
     }
 
-    const intent = await this.request<StripePaymentIntent>(
-      `/payment_intents/${id}`,
+    const session = await this.request<StripeCheckoutSession>(
+      `/checkout/sessions/${id}`,
       "GET"
     )
 
     return {
       data: {
         ...input.data,
-        ...intent,
+        ...session,
       },
-      status: this.mapStatus(intent.status),
+      status: session.payment_status === "paid" ? "captured" : "pending",
     }
   }
 
   async capturePayment(
     input: CapturePaymentInput
   ): Promise<CapturePaymentOutput> {
-    const id = input.data?.id as string | undefined
-    if (!id) {
-      throw new MedusaError(
-        MedusaError.Types.INVALID_DATA,
-        "Stripe payment intent id is missing"
-      )
-    }
-
-    const intent = await this.request<StripePaymentIntent>(
-      `/payment_intents/${id}/capture`,
-      "POST",
-      new URLSearchParams()
-    )
-
+    // Checkout Sessions capture immediately on completion; there is nothing
+    // left to capture, so this is a no-op that preserves the session data.
     return {
-      data: {
-        ...input.data,
-        ...intent,
-      },
+      data: input.data ?? {},
     }
   }
 
@@ -292,17 +298,17 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
     if (!id) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
-        "Stripe payment intent id is missing"
+        "Stripe checkout session id is missing"
       )
     }
 
-    const intent = await this.request<StripePaymentIntent>(
-      `/payment_intents/${id}`,
+    const session = await this.request<StripeCheckoutSession>(
+      `/checkout/sessions/${id}`,
       "GET"
     )
 
     return {
-      status: this.mapStatus(intent.status),
+      status: session.payment_status === "paid" ? "captured" : "pending",
     }
   }
 
@@ -313,17 +319,17 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
     if (!id) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
-        "Stripe payment intent id is missing"
+        "Stripe checkout session id is missing"
       )
     }
 
-    const intent = await this.request<StripePaymentIntent>(
-      `/payment_intents/${id}`,
+    const session = await this.request<StripeCheckoutSession>(
+      `/checkout/sessions/${id}`,
       "GET"
     )
 
     return {
-      data: intent as unknown as Record<string, unknown>,
+      data: session as unknown as Record<string, unknown>,
     }
   }
 
@@ -336,20 +342,15 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
       return { data: input.data ?? {} }
     }
 
-    const form = new URLSearchParams()
-    form.set("amount", String(this.toMinorUnits(input.amount)))
-    form.set("currency", input.currency_code.toLowerCase())
-
-    const intent = await this.request<StripePaymentIntent>(
-      `/payment_intents/${id}`,
-      "POST",
-      form
+    const session = await this.request<StripeCheckoutSession>(
+      `/checkout/sessions/${id}`,
+      "GET"
     )
 
     return {
       data: {
         ...input.data,
-        ...intent,
+        ...session,
       },
     }
   }
@@ -384,9 +385,16 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
     const type = String(data.type ?? "")
     const sessionId = String(metadata.session_id ?? "")
     const amountInMinor = Number(
-      object.amount_received ?? object.amount ?? 0
+      object.amount_received ?? object.amount ?? object.amount_total ?? 0
     )
     const amount = new BigNumber(amountInMinor / 100)
+
+    if (type === "checkout.session.completed") {
+      return {
+        action: "authorized",
+        data: { session_id: sessionId, amount },
+      }
+    }
 
     if (type === "payment_intent.succeeded") {
       return {

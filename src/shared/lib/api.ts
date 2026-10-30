@@ -22,6 +22,7 @@ export async function getProducts(params?: {
   collection?: string
   product_type?: string
   q?: string
+  order?: "newest" | "price_asc" | "price_desc"
   locale?: StoreLocale
   currency_code?: string
 }) {
@@ -37,6 +38,7 @@ export async function getProducts(params?: {
     offset: params?.offset ?? 0,
     locale: params?.locale ?? DEFAULT_LOCALE,
     currency_code: params?.currency_code ?? DEFAULT_CURRENCY,
+    facets: { types: {} },
     error: "unavailable",
   } satisfies ProductListResponse
 }

@@ -43,28 +43,34 @@ export function ProductGallery({ product }: ProductGalleryProps) {
 
   if (!active) {
     return (
-      <div className="flex aspect-[3/4] w-full items-center justify-center bg-navy-800">
-        <span className="font-primary text-3xl text-gold/30">3WEEQ</span>
+      <div className="rounded-[var(--store-radius)] border border-sand/10 bg-[var(--store-surface)] p-2">
+        <div className="flex aspect-square w-full items-center justify-center rounded-[calc(var(--store-radius)-0.25rem)] bg-[var(--store-well)]">
+          <span className="font-primary text-3xl text-royal-navy/30">3WEEQ</span>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="space-y-3">
-      <div className="relative aspect-[3/4] overflow-hidden bg-navy-800">
-        <Image
-          key={active.url}
-          src={active.url}
-          alt={active.alt}
-          fill
-          preload
-          className="object-cover"
-          sizes="(max-width: 1024px) 100vw, 50vw"
-        />
+      {/* the plate: a light photo well inside a thin surface frame, the same
+          card the catalogue uses so the shop reads as one piece */}
+      <div className="rounded-[var(--store-radius)] border border-sand/10 bg-[var(--store-surface)] p-2">
+        <div className="relative aspect-square overflow-hidden rounded-[calc(var(--store-radius)-0.25rem)] bg-[var(--store-well)]">
+          <Image
+            key={active.url}
+            src={active.url}
+            alt={active.alt}
+            fill
+            priority
+            className="object-cover"
+            sizes="(min-width: 64rem) 50vw, 100vw"
+          />
+        </div>
       </div>
 
       {images.length > 1 && (
-        <div className="grid grid-cols-5 gap-2">
+        <div className="flex flex-wrap gap-2">
           {images.map((image, index) => (
             <button
               key={image.id}
@@ -72,10 +78,10 @@ export function ProductGallery({ product }: ProductGalleryProps) {
               onClick={() => setActiveIndex(index)}
               aria-label={t("galleryImage", { index: index + 1 })}
               aria-pressed={index === activeIndex}
-              className={`relative aspect-square overflow-hidden bg-navy-800 transition-all duration-300 ${
+              className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-[var(--store-radius-sm)] border bg-[var(--store-well)] transition-colors duration-200 ${
                 index === activeIndex
-                  ? "ring-1 ring-gold"
-                  : "opacity-55 hover:opacity-100"
+                  ? "border-gold"
+                  : "border-sand/15 opacity-70 hover:opacity-100"
               }`}
             >
               <Image
@@ -83,7 +89,7 @@ export function ProductGallery({ product }: ProductGalleryProps) {
                 alt=""
                 fill
                 className="object-cover"
-                sizes="20vw"
+                sizes="56px"
               />
             </button>
           ))}

@@ -24,11 +24,12 @@ const HELP_LINKS = [
   { key: "privacy", href: "/policies/privacy" },
 ] as const
 
-export function Footer() {
+export function Footer({ className = "" }: { className?: string }) {
   const t = useTranslations("Footer")
   const locale = useLocale()
   const pathname = usePathname()
   const isHome = pathname === "/"
+  const links = QUICK_LINKS
   const sectionHref = (href: string) =>
     href.startsWith("#")
       ? isHome
@@ -37,7 +38,11 @@ export function Footer() {
       : `/${locale}${href}`
 
   return (
-    <footer id="footer" data-cuneiform-surface className="relative pb-12 pt-12">
+    <footer
+      id="footer"
+      data-cuneiform-surface
+      className={`relative pb-12 pt-12 ${className}`}
+    >
       <div className="relative z-10 mx-auto grid w-full max-w-[84rem] grid-cols-2 items-center gap-8 px-5 sm:px-8 md:flex md:flex-row md:items-center md:justify-between md:gap-12 md:px-16">
         {/* far right: the mark */}
         <div className="col-start-1 row-start-1 flex justify-start">
@@ -66,7 +71,7 @@ export function Footer() {
           </h3>
 
           <ul className="space-y-4">
-            {QUICK_LINKS.map((link) => (
+            {links.map((link) => (
               <li key={link.key}>
                 <a
                   href={sectionHref(link.href)}

@@ -10,6 +10,8 @@ interface ProductCardProps {
   product: Product
 }
 
+/* The retail card of the reference: a light photo well, a badge, a two-line
+   title, and the price with the house's round arrow. */
 export function ProductCard({ product }: ProductCardProps) {
   const t = useTranslations("Product")
   const locale = useLocale()
@@ -22,82 +24,86 @@ export function ProductCard({ product }: ProductCardProps) {
   )
   const hasStock = product.variants.some((variant) => variant.in_stock)
 
+  const origin = [
+    product.collection?.title,
+    product.product_type?.name,
+    product.civilization?.name,
+  ]
+    .filter(Boolean)
+    .join(" · ")
+
   return (
     <Link
       href={`/products/${product.handle}`}
-      className="group block focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold/70"
+      className="group flex h-full flex-col"
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-navy-800">
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={product.title}
-            fill
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <span className="font-primary text-2xl text-gold/35">3WEEQ</span>
-          </div>
-        )}
+      <div className="relative overflow-hidden rounded-[var(--store-radius)] border border-sand/10 bg-[var(--store-surface)] p-2 transition-colors duration-300 group-hover:border-gold/40 group-hover:bg-[var(--store-surface-hover)]">
+        <div className="relative aspect-square overflow-hidden rounded-[calc(var(--store-radius)-0.25rem)] bg-[var(--store-well)]">
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={product.title}
+              fill
+              sizes="(min-width: 64rem) 20vw, (min-width: 40rem) 44vw, 68vw"
+              className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <span className="font-primary text-xl text-royal-navy/40">
+                3WEEQ
+              </span>
+            </div>
+          )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-royal-navy/75 via-transparent to-transparent opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
-
-        <div className="absolute inset-x-0 top-0 flex flex-wrap justify-end gap-1.5 p-3">
           {product.is_limited && (
-            <span className="border border-gold/40 bg-royal-navy/75 px-2 py-1 font-primary text-[10px] text-gold backdrop-blur-sm">
+            <span className="absolute start-2 top-2 rounded-full bg-royal-navy/90 px-2.5 py-1 font-primary text-[10px] leading-none text-gold">
               {t("limited")}
             </span>
           )}
-          {product.is_serialized && (
-            <span className="border border-sand/20 bg-royal-navy/75 px-2 py-1 font-primary text-[10px] text-sand/80 backdrop-blur-sm">
-              {t("serialized")}
-            </span>
-          )}
-        </div>
 
-        <div className="absolute inset-x-0 bottom-0 translate-y-2 p-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-          <span className="inline-flex items-center gap-2 font-primary text-sm text-gold">
-            {t("discover")}
-            <span aria-hidden="true">←</span>
-          </span>
-        </div>
-      </div>
-
-      <div className="space-y-1.5 pt-4">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="font-primary text-lg leading-snug text-sand transition-colors duration-300 group-hover:text-gold">
-            {product.title}
-          </h3>
-          {price && (
-            <p className="shrink-0 font-secondary text-sm text-gold">{price}</p>
-          )}
-        </div>
-
-        {product.subtitle && (
-          <p className="line-clamp-1 font-primary text-sm text-sand/55">
-            {product.subtitle}
-          </p>
-        )}
-
-        <div className="flex items-center justify-between gap-3 pt-1">
-          <p className="font-primary text-xs text-sand/40">
-            {product.product_type?.name ??
-              product.collection?.title ??
-              product.civilization?.name ??
-              "3WEEQ"}
-          </p>
           {!hasStock && (
-            <span className="font-primary text-[11px] text-sand/40">
+            <span className="absolute end-2 top-2 rounded-full bg-royal-navy/90 px-2.5 py-1 font-primary text-[10px] leading-none text-sand/80">
               {t("outOfStock")}
             </span>
           )}
-          {hasStock && !price && (
-            <span className="font-primary text-[11px] text-sand/40">
-              {t("priceOnRequest")}
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-1 flex-col">
+        <h3 className="line-clamp-2 font-primary text-[15px] font-bold leading-6 text-sand transition-colors duration-300 group-hover:text-gold">
+          {product.title}
+        </h3>
+
+        {origin && (
+          <p className="mt-1 truncate font-primary text-[11px] leading-5 text-sand/60">
+            {origin}
+          </p>
+        )}
+
+        <div className="mt-auto flex items-center justify-between gap-3 pt-3">
+          {price && (
+            <span className="font-secondary text-base leading-none text-gold">
+              {price}
             </span>
           )}
+
+          <span
+            aria-hidden="true"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-sand/15 text-sand/70 transition-colors duration-300 group-hover:border-gold group-hover:text-gold"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4 rtl:rotate-180"
+            >
+              <path d="M5 12h14" />
+              <path d="m13 6 6 6-6 6" />
+            </svg>
+          </span>
         </div>
       </div>
     </Link>

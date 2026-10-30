@@ -1071,6 +1071,92 @@ export class ThreeweeqRepository {
     return row?.id ?? null
   }
 
+  /* One query shape shared by the list, its count, and the facet counts, so a
+     filter added in one place can never drift from the others. */
+  private catalogProductProfilesQuery(input: {
+    locale: Locale
+    productIds?: string[]
+    civilizationId?: string
+    collectionId?: string
+    productTypeId?: string
+    query?: string
+  }) {
+    const base = this.db("catalog.product_profile as p")
+      .joinRaw(
+        "join catalog.product_translation pt on pt.product_id = p.product_id and pt.locale = ?",
+        [input.locale]
+      )
+      .leftJoin("catalog.product_type as ptype", "ptype.id", "p.product_type_id")
+      .leftJoin("catalog.collection_profile as cp", "cp.id", "p.collection_id")
+      .joinRaw(
+        "left join catalog.collection_translation ctr on ctr.collection_id = cp.id and ctr.locale = ?",
+        [input.locale]
+      )
+      .joinRaw(
+        "left join catalog.civilization_translation civt on civt.civilization_id = p.civilization_id and civt.locale = ?",
+        [input.locale]
+      )
+      .leftJoin("catalog.media_asset as hero", "hero.id", "p.hero_media_id")
+      .where("p.status", "active")
+      .whereNull("p.deleted_at")
+
+    if (input.productIds) {
+      if (!input.productIds.length) {
+        base.whereRaw("1 = 0")
+      } else {
+        base.whereIn("p.product_id", input.productIds)
+      }
+    }
+
+    if (input.civilizationId) {
+      base.where("p.civilization_id", input.civilizationId)
+    }
+
+    if (input.collectionId) {
+      base.where("p.collection_id", input.collectionId)
+    }
+
+    if (input.productTypeId) {
+      base.where("p.product_type_id", input.productTypeId)
+    }
+
+    if (input.query?.trim()) {
+      const term = `%${input.query.trim()}%`
+      base.where((builder: any) => {
+        builder
+          .whereILike("pt.title", term)
+          .orWhereILike("pt.subtitle", term)
+          .orWhereILike("pt.short_description", term)
+          .orWhereILike("pt.description", term)
+      })
+    }
+
+    return base
+  }
+
+  /* How many pieces sit behind each type, for the rails and the catalogue tabs.
+     The type filter itself is deliberately left out: a facet shows how many
+     pieces a visitor would get if they chose it. */
+  async countCatalogProductProfilesByType(input: {
+    locale: Locale
+    civilizationId?: string
+    collectionId?: string
+    query?: string
+  }): Promise<Record<string, number>> {
+    const rows = (await this.catalogProductProfilesQuery(input)
+      .whereNotNull("ptype.code")
+      .groupBy("ptype.code")
+      .select("ptype.code as code")
+      .count("p.product_id as count")) as Array<{
+      code: string
+      count: string
+    }>
+
+    return Object.fromEntries(
+      rows.map((row) => [row.code, Number(row.count ?? 0)])
+    )
+  }
+
   async listCatalogProductProfiles(input: {
     locale: Locale
     productIds?: string[]
@@ -1081,59 +1167,7 @@ export class ThreeweeqRepository {
     limit?: number
     offset?: number
   }) {
-    const build = () => {
-      const base = this.db("catalog.product_profile as p")
-        .joinRaw(
-          "join catalog.product_translation pt on pt.product_id = p.product_id and pt.locale = ?",
-          [input.locale]
-        )
-        .leftJoin("catalog.product_type as ptype", "ptype.id", "p.product_type_id")
-        .leftJoin("catalog.collection_profile as cp", "cp.id", "p.collection_id")
-        .joinRaw(
-          "left join catalog.collection_translation ctr on ctr.collection_id = cp.id and ctr.locale = ?",
-          [input.locale]
-        )
-        .joinRaw(
-          "left join catalog.civilization_translation civt on civt.civilization_id = p.civilization_id and civt.locale = ?",
-          [input.locale]
-        )
-        .leftJoin("catalog.media_asset as hero", "hero.id", "p.hero_media_id")
-        .where("p.status", "active")
-        .whereNull("p.deleted_at")
-
-      if (input.productIds) {
-        if (!input.productIds.length) {
-          base.whereRaw("1 = 0")
-        } else {
-          base.whereIn("p.product_id", input.productIds)
-        }
-      }
-
-      if (input.civilizationId) {
-        base.where("p.civilization_id", input.civilizationId)
-      }
-
-      if (input.collectionId) {
-        base.where("p.collection_id", input.collectionId)
-      }
-
-      if (input.productTypeId) {
-        base.where("p.product_type_id", input.productTypeId)
-      }
-
-      if (input.query?.trim()) {
-        const term = `%${input.query.trim()}%`
-        base.where((builder: any) => {
-          builder
-            .whereILike("pt.title", term)
-            .orWhereILike("pt.subtitle", term)
-            .orWhereILike("pt.short_description", term)
-            .orWhereILike("pt.description", term)
-        })
-      }
-
-      return base
-    }
+    const build = () => this.catalogProductProfilesQuery(input)
 
     const countRow = (await build()
       .count("p.product_id as count")
@@ -1143,7 +1177,9 @@ export class ThreeweeqRepository {
     const items = await build()
       .orderBy("p.created_at", "desc")
       .offset(Math.max(0, input.offset ?? 0))
-      .limit(Math.min(100, Math.max(1, input.limit ?? 24)))
+      // 200 is the ceiling a price-sorted page may ask for: the sort happens
+      // after the rows are priced, so it has to see the whole slice at once.
+      .limit(Math.min(200, Math.max(1, input.limit ?? 24)))
       .select(
         "p.product_id",
         "p.civilization_id",

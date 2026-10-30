@@ -37,6 +37,13 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         : undefined
   const search =
     typeof req.query.q === "string" ? req.query.q.trim() : undefined
+  const orderParam =
+    typeof req.query.order === "string" ? req.query.order : "newest"
+  const order =
+    orderParam === "price_asc" || orderParam === "price_desc"
+      ? orderParam
+      : "newest"
+  const isPriceSort = order !== "newest"
 
   let civilizationId = civilizationParam
   if (civilizationParam && !civilizationParam.includes("-")) {
@@ -59,15 +66,29 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       productTypeParam
   }
 
-  const profiles = await repository.listCatalogProductProfiles({
+  const filters = {
     locale,
     civilizationId,
     collectionId,
     productTypeId,
     query: search,
-    limit,
-    offset,
-  })
+  }
+
+  const [profiles, facets] = await Promise.all([
+    repository.listCatalogProductProfiles({
+      ...filters,
+      // a price page has to be sorted after the variants are priced, so it
+      // reads the whole result set first and slices the page itself
+      limit: isPriceSort ? 200 : limit,
+      offset: isPriceSort ? 0 : offset,
+    }),
+    repository.countCatalogProductProfilesByType({
+      locale,
+      civilizationId,
+      collectionId,
+      query: search,
+    }),
+  ])
 
   const products = await buildCatalogProducts(
     req.scope,
@@ -81,12 +102,27 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     .map((item: any) => productById.get(item.product_id))
     .filter(Boolean)
 
+  if (isPriceSort) {
+    const priceOf = (product: any) =>
+      product?.price_range?.min ?? Number.POSITIVE_INFINITY
+
+    orderedProducts.sort((a: any, b: any) =>
+      order === "price_asc" ? priceOf(a) - priceOf(b) : priceOf(b) - priceOf(a)
+    )
+  }
+
   res.json({
-    products: orderedProducts,
+    products: isPriceSort
+      ? orderedProducts.slice(
+          Math.max(0, offset),
+          Math.max(0, offset) + limit
+        )
+      : orderedProducts,
     count: profiles.count,
     limit,
     offset,
     locale,
     currency_code: currencyCode,
+    facets: { types: facets },
   })
 }

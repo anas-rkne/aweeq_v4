@@ -79,32 +79,21 @@ export function CartPageClient() {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-5 pb-24 pt-8 md:px-10 md:pt-12">
-      <nav
-        aria-label={t("title")}
-        className="font-primary text-xs text-sand/40"
-      >
-        <Link href="/" className="transition-colors hover:text-gold">
-          {t("continueShopping")}
-        </Link>
-        <span className="mx-2 text-sand/20">/</span>
-        <span className="text-sand/65">{t("title")}</span>
-      </nav>
-
-      <div className="mt-8 flex flex-wrap items-end justify-between gap-4 border-b border-sand/10 pb-6">
+      <div className="mt-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-primary text-3xl text-sand md:text-4xl">
+          <h1 className="font-primary text-h2 leading-[1.2] text-gold">
             {t("title")}
           </h1>
           <p
-            className="mt-2 font-secondary text-[11px] tracking-[0.16em] text-sand/40"
+            className="mt-2 font-primary text-small text-sand/70"
             aria-live="polite"
           >
             {itemCount > 0 ? t("items", { count: itemCount }) : t("noItems")}
           </p>
         </div>
         <Link
-          href="/products"
-          className="font-primary text-sm text-sand/55 underline-offset-4 transition-colors hover:text-gold hover:underline"
+          href="/products#catalogue"
+          className="inline-flex min-h-11 items-center font-primary text-small text-sand/70 underline-offset-4 transition-colors hover:text-gold hover:underline"
         >
           {t("continueShopping")}
         </Link>
@@ -128,14 +117,14 @@ export function CartPageClient() {
       )}
 
       {status === "loading" && (
-        <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-5">
             {[0, 1].map((row) => (
               <div
                 key={row}
-                className="flex animate-pulse gap-5 border-b border-sand/10 pb-5"
+                className="flex animate-pulse gap-5 rounded-[var(--store-radius)] border border-sand/10 bg-[var(--store-surface)] p-3"
               >
-                <div className="h-36 w-28 shrink-0 bg-sand/5" />
+                <div className="h-36 w-28 shrink-0 rounded-[var(--store-radius-sm)] bg-sand/5" />
                 <div className="flex-1 space-y-4 py-2">
                   <div className="h-4 w-2/3 bg-sand/10" />
                   <div className="h-3 w-1/3 bg-sand/5" />
@@ -144,19 +133,19 @@ export function CartPageClient() {
               </div>
             ))}
           </div>
-          <div className="h-72 animate-pulse border border-sand/10 bg-sand/[0.02]" />
+          <div className="h-72 animate-pulse rounded-[var(--store-radius)] border border-sand/10 bg-sand/[0.02]" />
         </div>
       )}
 
       {status === "error" && items.length === 0 && (
-        <div className="mt-10 border border-sand/10 px-6 py-16 text-center">
+        <div className="mt-8 rounded-[var(--store-radius)] border border-sand/10 bg-[var(--store-surface)] px-6 py-16 text-center">
           <p className="font-primary text-base leading-8 text-sand/65">
             {error}
           </p>
           <button
             type="button"
             onClick={() => void refreshCart()}
-            className="mt-6 border border-gold/40 px-6 py-3 font-primary text-sm text-gold transition-colors hover:bg-gold hover:text-royal-navy"
+            className="mt-6 h-11 rounded-[var(--store-radius-sm)] border border-gold/40 px-6 font-primary text-sm text-gold transition-colors hover:bg-gold hover:text-royal-navy"
           >
             {t("retry")}
           </button>
@@ -164,19 +153,19 @@ export function CartPageClient() {
       )}
 
       {status !== "loading" && status !== "error" && items.length === 0 && (
-        <div className="mt-10 flex min-h-[420px] flex-col items-center justify-center border border-sand/10 px-6 text-center">
+        <div className="mt-8 flex min-h-[420px] flex-col items-center justify-center rounded-[var(--store-radius)] border border-sand/10 bg-[var(--store-surface)] px-6 text-center">
           <span className="text-gold/40">
             <BagIcon />
           </span>
           <h2 className="mt-6 font-primary text-2xl text-sand">
             {t("emptyTitle")}
           </h2>
-          <p className="mt-3 max-w-sm font-primary text-sm leading-7 text-sand/45">
+          <p className="mt-3 max-w-sm font-primary text-sm leading-7 text-sand/50">
             {t("emptyPage")}
           </p>
           <Link
-            href="/products"
-            className="mt-8 border border-gold bg-gold px-8 py-3.5 font-primary text-sm font-bold text-royal-navy transition-colors duration-300 hover:bg-gold/85"
+            href="/products#catalogue"
+            className="mt-8 flex h-12 items-center justify-center rounded-[var(--store-radius-sm)] bg-gold px-8 font-primary text-sm font-bold text-royal-navy transition-colors duration-300 hover:bg-sand"
           >
             {t("browseStore")}
           </Link>
@@ -184,8 +173,8 @@ export function CartPageClient() {
       )}
 
       {items.length > 0 && (
-        <div className="mt-10 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <ul className="divide-y divide-sand/10 border-t border-sand/10">
+        <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <ul className="divide-y divide-sand/10 overflow-hidden rounded-[var(--store-radius)] border border-sand/10 bg-[var(--store-surface)]">
             {items.map((item) => {
               const image = normalizeImageUrl(item.thumbnail)
               const limit = cartItemLimit(item)
@@ -200,8 +189,8 @@ export function CartPageClient() {
                   : null)
 
               return (
-                <li key={item.id} className="flex gap-4 py-6 sm:gap-6">
-                  <div className="relative h-32 w-24 shrink-0 overflow-hidden border border-sand/10 bg-sand/[0.03] sm:h-40 sm:w-32">
+                <li key={item.id} className="flex gap-4 p-4 sm:gap-6 sm:p-5">
+                  <div className="relative h-32 w-24 shrink-0 overflow-hidden rounded-[var(--store-radius-sm)] bg-[var(--store-well)] sm:h-40 sm:w-32">
                     {image ? (
                       <Image
                         src={image}
@@ -211,7 +200,7 @@ export function CartPageClient() {
                         className="object-cover"
                       />
                     ) : (
-                      <span className="absolute inset-0 grid place-items-center font-secondary text-sm tracking-[0.2em] text-gold/30">
+                      <span className="absolute inset-0 grid place-items-center font-secondary text-sm tracking-[0.2em] text-royal-navy/30">
                         3W
                       </span>
                     )}
@@ -259,7 +248,7 @@ export function CartPageClient() {
                     </div>
 
                     <div className="mt-auto flex flex-wrap items-center justify-between gap-4 pt-5">
-                      <div className="inline-flex items-center border border-sand/15">
+                      <div className="inline-flex items-center overflow-hidden rounded-[var(--store-radius-sm)] border border-sand/15">
                         <button
                           type="button"
                           onClick={() =>
@@ -267,11 +256,11 @@ export function CartPageClient() {
                           }
                           disabled={pending || item.quantity <= 1}
                           aria-label={t("decrease")}
-                          className="grid h-9 w-9 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
+                          className="grid h-11 w-11 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
                         >
                           −
                         </button>
-                        <span className="grid h-9 min-w-9 place-items-center border-x border-sand/15 font-secondary text-sm text-sand">
+                        <span className="grid h-11 min-w-11 place-items-center border-x border-sand/15 font-secondary text-sm text-sand">
                           {item.quantity}
                         </span>
                         <button
@@ -281,7 +270,7 @@ export function CartPageClient() {
                           }
                           disabled={pending || item.quantity >= limit}
                           aria-label={t("increase")}
-                          className="grid h-9 w-9 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
+                          className="grid h-11 w-11 place-items-center text-sand/60 transition-colors hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
                         >
                           +
                         </button>
@@ -291,7 +280,7 @@ export function CartPageClient() {
                         type="button"
                         onClick={() => void handleRemove(item.id)}
                         disabled={pending}
-                        className="font-primary text-xs text-sand/35 underline-offset-4 transition-colors hover:text-red-300 hover:underline disabled:opacity-40"
+                        className="inline-flex min-h-11 items-center font-primary text-xs text-sand/45 underline-offset-4 transition-colors hover:text-red-300 hover:underline disabled:opacity-40"
                       >
                         {t("remove")}
                       </button>
@@ -302,50 +291,50 @@ export function CartPageClient() {
             })}
           </ul>
 
-          <aside className="border border-sand/10 bg-sand/[0.02] p-6 lg:sticky lg:top-32">
-            <h2 className="font-primary text-xl text-sand">
+          <aside className="rounded-[var(--store-radius)] bg-sand p-6 lg:sticky lg:top-[calc(var(--store-header-h)+1.5rem)]">
+            <h2 className="font-primary text-h3 text-royal-navy">
               {t("orderSummary")}
             </h2>
 
-            <dl className="mt-6 space-y-4 border-b border-sand/10 pb-5 font-primary text-sm">
+            <dl className="mt-6 space-y-4 border-b border-royal-navy/15 pb-5 font-primary text-small">
               <div className="flex items-center justify-between gap-4">
-                <dt className="text-sand/50">{t("subtotal")}</dt>
-                <dd className="text-sand/85">
+                <dt className="text-royal-navy/60">{t("subtotal")}</dt>
+                <dd className="text-royal-navy">
                   {formatPrice(subtotal, currencyCode, storeLocale)}
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-4">
-                <dt className="text-sand/50">{t("shipping")}</dt>
-                <dd className="text-sand/45">{t("calculatedAtCheckout")}</dd>
+                <dt className="text-royal-navy/60">{t("shipping")}</dt>
+                <dd className="text-royal-navy/60">{t("calculatedAtCheckout")}</dd>
               </div>
               <div className="flex items-center justify-between gap-4">
-                <dt className="text-sand/50">{t("taxes")}</dt>
-                <dd className="text-sand/45">{t("calculatedAtCheckout")}</dd>
+                <dt className="text-royal-navy/60">{t("taxes")}</dt>
+                <dd className="text-royal-navy/60">{t("calculatedAtCheckout")}</dd>
               </div>
             </dl>
 
             <div className="mt-5 flex items-baseline justify-between gap-4">
-              <span className="font-primary text-base text-sand">
+              <span className="font-primary text-body text-royal-navy">
                 {t("total")}
               </span>
-              <span className="font-secondary text-xl text-gold">
+              <span className="font-secondary text-h3 leading-none text-royal-navy">
                 {formatPrice(total, currencyCode, storeLocale)}
               </span>
             </div>
 
             <Link
               href="/checkout"
-              className="mt-6 block w-full border border-gold bg-gold px-6 py-4 text-center font-primary text-sm font-bold text-royal-navy transition-colors duration-300 hover:bg-gold/85"
+              className="mt-6 flex h-14 w-full items-center justify-center rounded-[var(--store-radius-sm)] bg-royal-navy font-primary text-sm font-bold text-sand transition-colors duration-300 hover:bg-navy-800"
             >
               {t("checkout")}
             </Link>
-            <p className="mt-3 text-center font-primary text-[11px] leading-5 text-sand/35">
+            <p className="mt-3 text-center font-primary text-small leading-5 text-royal-navy/60">
               {t("checkoutNote")}
             </p>
 
             <Link
-              href="/products"
-              className="mt-5 block text-center font-primary text-xs text-sand/45 underline-offset-4 transition-colors hover:text-gold hover:underline"
+              href="/products#catalogue"
+              className="mt-4 flex min-h-11 items-center justify-center text-center font-primary text-small text-royal-navy/60 underline-offset-4 transition-colors hover:text-royal-navy hover:underline"
             >
               {t("continueShopping")}
             </Link>

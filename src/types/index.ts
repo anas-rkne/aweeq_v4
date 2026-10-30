@@ -167,6 +167,8 @@ export interface ProductListResponse {
   offset: number
   locale: string
   currency_code: string
+  /* how many pieces sit behind each product type, for the catalogue tabs */
+  facets?: { types: Record<string, number> }
   error?: string
 }
 

@@ -1,7 +1,14 @@
-import { Link } from "@/i18n/navigation"
-import { redirect } from "@/i18n/navigation"
+import { Link, redirect } from "@/i18n/navigation"
 import { getTranslations } from "next-intl/server"
 import { ProductCard } from "@/components/store/product-card"
+import { ProductRail } from "@/components/store/product-rail"
+import { StoreHero } from "@/components/store/store-hero"
+import { CategoryRail } from "@/components/store/category-rail"
+import { PromoTrio } from "@/components/store/promo-trio"
+import { NewsletterPanel } from "@/components/store/newsletter-panel"
+import { TrustRow } from "@/components/store/trust-row"
+import { SectionHeader } from "@/components/store/section-header"
+import { SortSelect } from "@/components/store/sort-select"
 import {
   asPositiveInt,
   asString,
@@ -20,7 +27,14 @@ type ProductsSearchParams = {
   civilization?: string | string[]
   collection?: string | string[]
   product_type?: string | string[]
+  sort?: string | string[]
   offset?: string | string[]
+}
+
+type SortOrder = "newest" | "price_asc" | "price_desc"
+
+function resolveSort(value: string): SortOrder {
+  return value === "price_asc" || value === "price_desc" ? value : "newest"
 }
 
 export async function generateMetadata({
@@ -55,42 +69,54 @@ export default async function ProductsPage({
   const civilization = asString(query.civilization).trim()
   const collection = asString(query.collection).trim()
   const productType = asString(query.product_type).trim()
+  const sort = resolveSort(asString(query.sort).trim())
   const offset = asPositiveInt(query.offset)
 
-  const [{ products, count, error }, civilizations, collections] =
-    await Promise.all([
-      getProducts({
-        q: q || undefined,
-        civilization: civilization || undefined,
-        collection: collection || undefined,
-        product_type: productType || undefined,
-        limit: STORE_PAGE_SIZE,
-        offset,
-        locale: storeLocale,
-      }),
-      getCivilizations(storeLocale),
-      getCollections(storeLocale),
-    ])
+  const [
+    { products, count, facets, error },
+    picks,
+    civilizations,
+    collections,
+  ] = await Promise.all([
+    getProducts({
+      q: q || undefined,
+      civilization: civilization || undefined,
+      collection: collection || undefined,
+      product_type: productType || undefined,
+      order: sort,
+      limit: STORE_PAGE_SIZE,
+      offset,
+      locale: storeLocale,
+    }),
+    getProducts({ limit: 8, locale: storeLocale }),
+    getCivilizations(storeLocale),
+    getCollections(storeLocale),
+  ])
+
+  const typeCounts = facets?.types ?? {}
 
   const activeFilters = {
     q,
     civilization,
     collection,
     product_type: productType,
+    sort,
   }
 
   const buildHref = (patch: Partial<ProductsSearchParams>) => {
     const next = { ...activeFilters, offset: "", ...patch }
     const search = new URLSearchParams()
+    const nextSort = resolveSort(String(next.sort ?? "newest"))
 
     if (next.q) search.set("q", String(next.q).trim())
     if (next.civilization) search.set("civilization", String(next.civilization))
     if (next.collection) search.set("collection", String(next.collection))
     if (next.product_type) search.set("product_type", String(next.product_type))
+    if (nextSort !== "newest") search.set("sort", nextSort)
     if (next.offset) search.set("offset", String(next.offset))
 
-    const query = search.toString()
-    return query ? `/products?${query}` : "/products"
+    const search$ = search.toString()
+    return search$ ? `/products?${search$}` : "/products"
   }
 
   if (offset > 0 && (count === 0 || offset >= count)) {
@@ -122,42 +148,86 @@ export default async function ProductsPage({
   const rangeEnd = Math.min(offset + products.length, count)
 
   const hasAnyFilter = Boolean(q || civilization || collection || productType)
+  const typesTotal = Object.values(typeCounts).reduce(
+    (sum, value) => sum + value,
+    0
+  )
+  const hasTypeCounts = typesTotal > 0
 
   return (
-    <main className="min-h-screen bg-royal-navy">
-      <section className="px-5 py-10 md:px-10 md:py-14 lg:px-16">
-        <div className="mx-auto max-w-7xl">
-          <nav
-            aria-label={t("breadcrumb")}
-            className="mb-8 flex items-center gap-2 font-primary text-xs text-sand/40"
-          >
-            <Link href="/" className="transition-colors hover:text-gold">
-              {t("home")}
-            </Link>
-            <span aria-hidden="true">/</span>
-            <span className="text-sand/65">{t("shop")}</span>
-          </nav>
+    <main>
+      <StoreHero />
 
-          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div>
-              <p className="mb-3 font-secondary text-xs tracking-[0.25em] text-gold/70">
-                3WEEQ COLLECTION
-              </p>
-              <h1 className="font-primary text-4xl leading-tight text-gold md:text-5xl lg:text-6xl">
-                {t("shop")}
-              </h1>
-              <p className="mt-4 max-w-2xl font-primary text-base leading-relaxed text-sand/65 md:text-lg">
-                {isArabic
-                  ? "قطع محدودة ومرقّمة، مستوحاة من حضارات تحمل حكايات لا تُنسى."
-                  : "Limited, numbered pieces inspired by civilizations that carry unforgettable stories."}
-              </p>
+      <CategoryRail
+        activeType={productType}
+        counts={hasTypeCounts ? typeCounts : undefined}
+        isArabic={isArabic}
+      />
+
+      {picks.products.length > 0 && (
+        <section className="px-5 pt-12 md:px-10 lg:px-16 lg:pt-16">
+          <div className="mx-auto max-w-[84rem]">
+            <SectionHeader
+              title={t("picksTitle")}
+              href="/products#catalogue"
+              cta={t("seeAll")}
+            />
+            <div data-no-reveal className="mt-6">
+              <ProductRail products={picks.products} />
             </div>
+          </div>
+        </section>
+      )}
 
+      <PromoTrio />
+
+      {/* ===== the catalogue ===== */}
+      <section
+        id="catalogue"
+        className="scroll-mt-[calc(var(--store-header-h)+1rem)] px-5 pt-14 md:px-10 lg:px-16 lg:pt-20"
+      >
+        <div className="mx-auto max-w-[84rem]">
+          <SectionHeader
+            title={t("catalogueTitle")}
+            note={t("catalogueNote")}
+            id="catalogue-title"
+          />
+
+          {/* the type tabs */}
+          <div
+            data-no-reveal
+            className="mt-6 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <TypeTab
+              href={buildHref({ product_type: "" })}
+              active={!productType}
+              count={hasTypeCounts ? typesTotal : undefined}
+            >
+              {t("all")}
+            </TypeTab>
+
+            {STORE_PRODUCT_TYPES.map((type) => (
+              <TypeTab
+                key={type.code}
+                href={buildHref({ product_type: type.code })}
+                active={productType === type.code}
+                count={hasTypeCounts ? typeCounts[type.code] : undefined}
+              >
+                {isArabic ? type.labelAr : type.labelEn}
+              </TypeTab>
+            ))}
+          </div>
+
+          {/* search and sort */}
+          <div
+            data-no-reveal
+            className="mt-6 flex flex-col gap-4 border-y border-sand/10 py-4 sm:flex-row sm:items-center sm:justify-between"
+          >
             <form
-              action="/products"
+              action={`/${locale}/products`}
               method="get"
               role="search"
-              className="flex w-full max-w-md items-stretch border border-sand/20 bg-navy-900"
+              className="w-full sm:max-w-md"
             >
               {civilization && (
                 <input type="hidden" name="civilization" value={civilization} />
@@ -168,43 +238,56 @@ export default async function ProductsPage({
               {productType && (
                 <input type="hidden" name="product_type" value={productType} />
               )}
-              <label htmlFor="store-search" className="sr-only">
-                {t("searchLabel")}
-              </label>
-              <input
-                id="store-search"
-                name="q"
-                type="search"
-                defaultValue={q}
-                placeholder={t("searchPlaceholder")}
-                className="min-w-0 flex-1 bg-transparent px-4 py-3 font-primary text-sm text-sand placeholder:text-sand/35 focus:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-gold/50"
-              />
-              <button
-                type="submit"
-                className="shrink-0 bg-gold px-5 font-primary text-sm font-bold text-royal-navy transition-colors hover:bg-sand"
-              >
-                {t("searchLabel")}
-              </button>
+              {sort !== "newest" && (
+                <input type="hidden" name="sort" value={sort} />
+              )}
+              <div className="flex h-12 items-center gap-2 rounded-[var(--store-radius-pill)] border border-sand/15 bg-sand/[0.04] ps-4 pe-1 transition-colors duration-200 focus-within:border-gold/60">
+                <label htmlFor="store-search" className="sr-only">
+                  {t("searchLabel")}
+                </label>
+                <input
+                  id="store-search"
+                  name="q"
+                  type="search"
+                  defaultValue={q}
+                  placeholder={t("searchPlaceholder")}
+                  className="h-11 min-w-0 flex-1 bg-transparent font-primary text-sm text-sand placeholder:text-sand/45 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  aria-label={t("searchLabel")}
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-sand/70 transition-colors duration-200 hover:text-gold"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.3}
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                    className="h-4 w-4"
+                  >
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m16.5 16.5 4 4" />
+                  </svg>
+                </button>
+              </div>
             </form>
-          </div>
-        </div>
-      </section>
 
-      <section className="border-y border-sand/10 px-5 md:px-10 lg:px-16">
-        <div className="mx-auto max-w-7xl py-5">
-          <div className="space-y-4">
+            <SortSelect value={sort} />
+          </div>
+
+          {/* the civilisations and collections stay one row below the folds */}
+          <div data-no-reveal className="mt-4 space-y-3">
             <FilterRow
               label={t("filters.civilization")}
               allLabel={t("all")}
-              allHref={buildHref({
-                civilization: "",
-                offset: "",
-              })}
+              allHref={buildHref({ civilization: "" })}
               allActive={!civilization}
               options={civilizations.map((item) => ({
                 key: item.id,
                 label: item.name,
-                href: buildHref({ civilization: item.id, offset: "" }),
+                href: buildHref({ civilization: item.id }),
                 active: civilization === item.id,
               }))}
             />
@@ -212,74 +295,62 @@ export default async function ProductsPage({
             <FilterRow
               label={t("filters.collection")}
               allLabel={t("all")}
-              allHref={buildHref({ collection: "", offset: "" })}
+              allHref={buildHref({ collection: "" })}
               allActive={!collection}
               options={collections.map((item) => ({
                 key: item.id,
                 label: item.title ?? item.handle,
-                href: buildHref({ collection: item.handle, offset: "" }),
+                href: buildHref({ collection: item.handle }),
                 active: collection === item.handle || collection === item.id,
-              }))}
-            />
-
-            <FilterRow
-              label={t("filters.type")}
-              allLabel={t("all")}
-              allHref={buildHref({ product_type: "", offset: "" })}
-              allActive={!productType}
-              options={STORE_PRODUCT_TYPES.map((item) => ({
-                key: item.code,
-                label: isArabic ? item.labelAr : item.labelEn,
-                href: buildHref({ product_type: item.code, offset: "" }),
-                active: productType === item.code,
               }))}
             />
           </div>
 
           {hasAnyFilter && (
-            <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-sand/10 pt-5">
-              <span className="font-primary text-xs text-sand/40">
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span className="font-primary text-[11px] uppercase tracking-[0.12em] text-sand/45">
                 {t("currentFilters")}
               </span>
               {q && (
                 <ActiveFilter
                   label={t("searchResults", { q })}
-                  href={buildHref({ q: "", offset: "" })}
+                  href={buildHref({ q: "" })}
                 />
               )}
               {selectedCivilization && (
                 <ActiveFilter
                   label={selectedCivilization.name}
-                  href={buildHref({ civilization: "", offset: "" })}
+                  href={buildHref({ civilization: "" })}
                 />
               )}
               {selectedCollection && (
                 <ActiveFilter
                   label={selectedCollection.title ?? selectedCollection.handle}
-                  href={buildHref({ collection: "", offset: "" })}
+                  href={buildHref({ collection: "" })}
                 />
               )}
               {selectedType && (
                 <ActiveFilter
                   label={isArabic ? selectedType.labelAr : selectedType.labelEn}
-                  href={buildHref({ product_type: "", offset: "" })}
+                  href={buildHref({ product_type: "" })}
                 />
               )}
               <Link
-                href="/products"
-                className="ms-1 font-primary text-xs text-gold/70 underline-offset-4 transition-colors hover:text-gold hover:underline"
+                href={buildHref({
+                  q: "",
+                  civilization: "",
+                  collection: "",
+                  product_type: "",
+                })}
+                className="inline-flex min-h-11 items-center font-primary text-small text-gold underline-offset-4 transition-colors hover:text-sand hover:underline"
               >
                 {t("clearAll")}
               </Link>
             </div>
           )}
-        </div>
-      </section>
 
-      <section className="px-5 py-10 md:px-10 md:py-14 lg:px-16">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-8 flex items-center justify-between gap-4">
-            <p className="font-primary text-sm text-sand/45">
+          <p className="mt-6 flex flex-wrap items-center justify-between gap-3 font-primary text-[12px] text-sand/60">
+            <span>
               {count > 0
                 ? t("results", {
                     start: rangeStart,
@@ -287,36 +358,34 @@ export default async function ProductsPage({
                     total: count,
                   })
                 : t("noResults")}
-            </p>
+            </span>
             {totalPages > 1 && (
-              <p className="font-primary text-xs text-sand/35">
-                {t("page", { current: currentPage, total: totalPages })}
-              </p>
+              <span>{t("page", { current: currentPage, total: totalPages })}</span>
             )}
-          </div>
+          </p>
 
           {products.length === 0 ? (
-            <div className="flex min-h-72 flex-col items-center justify-center border border-sand/10 bg-navy-900/40 px-6 py-16 text-center">
-              <span className="mb-5 font-primary text-3xl text-gold/25">
-                3WEEQ
-              </span>
-              <p className="font-primary text-xl text-sand/70">
+            <div className="mt-8 rounded-[var(--store-radius)] border border-sand/10 bg-[var(--store-surface)] px-6 py-14 text-center md:px-12">
+              <h3 className="font-primary text-h3 font-bold text-sand">
                 {error ? t("errorTitle") : t("noResultsTitle")}
-              </p>
-              <p className="mt-3 max-w-md font-primary text-sm leading-relaxed text-sand/40">
+              </h3>
+              <p className="mx-auto mt-3 max-w-[38ch] font-primary text-small leading-[1.7] text-sand/60">
                 {error ? t("errorHint") : t("noResultsHint")}
               </p>
               {hasAnyFilter && (
                 <Link
-                  href="/products"
-                  className="mt-6 border border-gold/40 px-6 py-3 font-primary text-sm text-gold transition-colors hover:bg-gold/10"
+                  href="/products#catalogue"
+                  className="mt-7 inline-flex h-12 items-center justify-center rounded-[var(--store-radius-sm)] bg-gold px-6 font-primary text-sm font-bold text-royal-navy transition-colors duration-300 hover:bg-sand"
                 >
                   {t("viewAll")}
                 </Link>
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            <div
+              data-no-reveal
+              className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 lg:grid-cols-4"
+            >
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -331,29 +400,29 @@ export default async function ProductsPage({
               {hasPrev ? (
                 <Link
                   href={buildHref({ offset: String(offset - STORE_PAGE_SIZE) })}
-                  className="border border-sand/20 px-5 py-2.5 font-primary text-sm text-sand/70 transition-colors hover:border-gold/50 hover:text-gold"
+                  className="flex h-11 items-center rounded-[var(--store-radius-pill)] border border-sand/15 px-5 font-primary text-sm text-sand/70 transition-colors duration-200 hover:border-gold/50 hover:text-gold"
                 >
                   {t("prev")}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed border border-sand/10 px-5 py-2.5 font-primary text-sm text-sand/25">
+                <span className="flex h-11 items-center rounded-[var(--store-radius-pill)] border border-sand/10 px-5 font-primary text-sm text-sand/25">
                   {t("prev")}
                 </span>
               )}
 
-              <span className="px-4 font-primary text-sm text-sand/45">
+              <span className="font-primary text-small text-sand/60">
                 {currentPage} / {totalPages}
               </span>
 
               {hasNext ? (
                 <Link
                   href={buildHref({ offset: String(offset + STORE_PAGE_SIZE) })}
-                  className="border border-sand/20 px-5 py-2.5 font-primary text-sm text-sand/70 transition-colors hover:border-gold/50 hover:text-gold"
+                  className="flex h-11 items-center rounded-[var(--store-radius-pill)] border border-sand/15 px-5 font-primary text-sm text-sand/70 transition-colors duration-200 hover:border-gold/50 hover:text-gold"
                 >
                   {t("next")}
                 </Link>
               ) : (
-                <span className="cursor-not-allowed border border-sand/10 px-5 py-2.5 font-primary text-sm text-sand/25">
+                <span className="flex h-11 items-center rounded-[var(--store-radius-pill)] border border-sand/10 px-5 font-primary text-sm text-sand/25">
                   {t("next")}
                 </span>
               )}
@@ -361,7 +430,46 @@ export default async function ProductsPage({
           )}
         </div>
       </section>
+
+      <NewsletterPanel />
+
+      <TrustRow />
     </main>
+  )
+}
+
+function TypeTab({
+  href,
+  active,
+  count,
+  children,
+}: {
+  href: string
+  active: boolean
+  count?: number
+  children: React.ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "true" : undefined}
+      className={`flex h-11 shrink-0 items-center gap-2 rounded-[var(--store-radius-pill)] border px-4 font-primary text-[13px] transition-colors duration-200 ${
+        active
+          ? "border-gold bg-gold text-royal-navy"
+          : "border-sand/15 text-sand/70 hover:border-sand/35 hover:text-sand"
+      }`}
+    >
+      {children}
+      {count !== undefined && count > 0 && (
+        <span
+          className={`font-secondary text-[11px] ${
+            active ? "text-royal-navy/60" : "text-sand/40"
+          }`}
+        >
+          {count}
+        </span>
+      )}
+    </Link>
   )
 }
 
@@ -388,38 +496,43 @@ function FilterRow({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <span className="w-16 shrink-0 font-primary text-xs text-sand/35">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+      <span className="font-primary text-[11px] uppercase tracking-[0.12em] text-sand/45">
         {label}
       </span>
 
-      <Link
-        href={allHref}
-        aria-current={allActive ? "true" : undefined}
-        className={`border-b pb-0.5 font-primary text-sm transition-colors ${
-          allActive
-            ? "border-gold text-gold"
-            : "border-transparent text-sand/55 hover:text-sand"
-        }`}
-      >
+      <FilterLink href={allHref} active={allActive}>
         {allLabel}
-      </Link>
+      </FilterLink>
 
       {options.map((option) => (
-        <Link
-          key={option.key}
-          href={option.href}
-          aria-current={option.active ? "true" : undefined}
-          className={`border-b pb-0.5 font-primary text-sm transition-colors ${
-            option.active
-              ? "border-gold text-gold"
-              : "border-transparent text-sand/55 hover:text-sand"
-          }`}
-        >
+        <FilterLink key={option.key} href={option.href} active={option.active}>
           {option.label}
-        </Link>
+        </FilterLink>
       ))}
     </div>
+  )
+}
+
+function FilterLink({
+  href,
+  active,
+  children,
+}: {
+  href: string
+  active: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "true" : undefined}
+      className={`inline-flex min-h-11 items-center font-primary text-[13px] transition-colors duration-200 ${
+        active ? "text-gold" : "text-sand/60 hover:text-gold"
+      }`}
+    >
+      {children}
+    </Link>
   )
 }
 
@@ -427,7 +540,7 @@ function ActiveFilter({ label, href }: { label: string; href: string }) {
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-1.5 border border-gold/30 bg-gold/5 px-2.5 py-1 font-primary text-[11px] text-gold/80 transition-colors hover:border-gold/60 hover:text-gold"
+      className="inline-flex min-h-11 items-center gap-1.5 rounded-[var(--store-radius-pill)] border border-gold/30 bg-gold/10 px-3 font-primary text-[12px] text-gold transition-colors duration-200 hover:border-gold/60 hover:text-sand"
     >
       {label}
       <span aria-hidden="true">×</span>

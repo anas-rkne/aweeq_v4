@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { useSearchParams } from "next/navigation"
 import { useRouter } from "@/i18n/navigation"
-import { getStripe } from "@/shared/lib/stripe"
 import { forgetCartId } from "@/lib/cart"
 import { completeCheckout } from "./api"
 
@@ -29,49 +28,17 @@ export function CheckoutCallback() {
     let active = true
 
     async function run() {
-      const clientSecret = searchParams.get("payment_intent_client_secret")
-      const redirectStatus = searchParams.get("redirect_status")
+      const sessionId = searchParams.get("session_id")
       const pending = readPendingCheckout()
 
-      if (!clientSecret || !pending) {
+      if (!sessionId || !pending) {
         setMessage(t("orderNotFound"))
         setState("error")
         return
       }
 
-      if (redirectStatus && redirectStatus !== "succeeded") {
-        setMessage(t("paymentError"))
-        setState("error")
-        return
-      }
-
-      const stripe = getStripe()
-      if (!stripe) {
-        setMessage(t("paymentNotConfigured"))
-        setState("error")
-        return
-      }
-
-      const resolvedStripe = await stripe
-      if (!resolvedStripe) {
-        setMessage(t("paymentNotConfigured"))
-        setState("error")
-        return
-      }
-
-      const { paymentIntent } =
-        await resolvedStripe.retrievePaymentIntent(clientSecret)
-
-      if (
-        !paymentIntent ||
-        (paymentIntent.status !== "succeeded" &&
-          paymentIntent.status !== "requires_capture")
-      ) {
-        setMessage(t("paymentError"))
-        setState("error")
-        return
-      }
-
+      // The server re-checks the Stripe Checkout Session is actually paid
+      // before completing the order, so no client-side verification here.
       try {
         const response = await completeCheckout({
           cart_id: pending.cart_id,
@@ -104,7 +71,7 @@ export function CheckoutCallback() {
   }, [locale, router, searchParams, t])
 
   return (
-    <main className="flex min-h-[70vh] flex-col items-center justify-center bg-royal-navy px-6 text-center">
+    <main className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
       {state === "verifying" ? (
         <>
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
@@ -114,7 +81,7 @@ export function CheckoutCallback() {
         </>
       ) : (
         <>
-          <h1 className="font-primary text-2xl text-sand">
+          <h1 className="font-primary text-h2 text-gold">
             {t("paymentError")}
           </h1>
           {message && (

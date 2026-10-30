@@ -71,6 +71,26 @@ export function normalizePaymentWebhook(
     const object = metadataOf(data.object)
     const metadata = metadataOf(object.metadata)
     const type = String(body.type ?? "")
+
+    if (type === "checkout.session.completed") {
+      return {
+        provider: "stripe",
+        externalId: stringValue(object.id) ?? null,
+        eventType: type,
+        action: "authorized",
+        sessionId: stringValue(metadata.session_id),
+        cartId: stringValue(metadata.cart_id),
+        orderId: stringValue(metadata.order_id),
+        paymentId: stringValue(metadata.payment_id),
+        amount:
+          object.amount_total === undefined
+            ? undefined
+            : Number(object.amount_total) / 100,
+        currency: stringValue(object.currency),
+        payload: body,
+      }
+    }
+
     const action =
       type === "payment_intent.amount_capturable_updated"
         ? "authorized"
