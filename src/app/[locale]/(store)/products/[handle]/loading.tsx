@@ -18,6 +18,20 @@ export default function ProductLoading() {
             <div className="mt-8 h-12 w-48 bg-royal-navy/20" />
           </div>
         </div>
+
+        {/* the packaging wall */}
+        <div className="mt-14">
+          <div className="h-8 w-40 bg-sand/10" />
+          <div className="mt-3 h-4 w-72 max-w-full bg-sand/[0.07]" />
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="aspect-square rounded-[var(--store-radius)] bg-sand/[0.06]"
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </main>
   )

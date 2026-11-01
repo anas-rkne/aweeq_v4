@@ -366,6 +366,9 @@
     "phone": "رقم الجوال",
     "address": "عنوان الشحن",
     "addressLine": "العنوان",
+    "emirate": "الإمارة",
+    "area": "المنطقة",
+    "selectEmirate": "اختر الإمارة",
     "city": "المدينة",
     "country": "الدولة",
     "countryUae": "الإمارات العربية المتحدة",
@@ -441,6 +444,11 @@
     "viewAll": "كل القطع",
     "beforeYouOrder": "قبل أن تطلب",
     "policyLink": "اقرأ السياسة",
+    "packagingTitle": "التغليف",
+    "packagingHint": "العلبة والغلاف والتفاصيل التي تصل مع كل قطعة.",
+    "closeGallery": "إغلاق المعرض",
+    "prevImage": "الصورة السابقة",
+    "nextImage": "الصورة التالية",
     "galleryImage": "عرض الصورة {index}"
   },
   "Common": {

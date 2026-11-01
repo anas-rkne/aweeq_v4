@@ -31,6 +31,16 @@ const STEPS = [
   { id: "payment", label: "paymentTitle" },
 ] as const
 
+const EMIRATES = [
+  { ar: "أبوظبي", en: "Abu Dhabi" },
+  { ar: "دبي", en: "Dubai" },
+  { ar: "الشارقة", en: "Sharjah" },
+  { ar: "عجمان", en: "Ajman" },
+  { ar: "أم القيوين", en: "Umm Al Quwain" },
+  { ar: "رأس الخيمة", en: "Ras Al Khaimah" },
+  { ar: "الفجيرة", en: "Fujairah" },
+] as const
+
 export function CheckoutFlow() {
   const t = useTranslations("Checkout")
   const locale = useLocale()
@@ -44,7 +54,8 @@ export function CheckoutFlow() {
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
-  const [city, setCity] = useState("")
+  const [emirate, setEmirate] = useState("")
+  const [area, setArea] = useState("")
   const [options, setOptions] = useState<ShippingOption[]>([])
   const [optionsLoading, setOptionsLoading] = useState(false)
   const [selectedOption, setSelectedOption] = useState("")
@@ -85,7 +96,8 @@ export function CheckoutFlow() {
       first_name: firstName,
       last_name: lastName,
       address_1: address.trim(),
-      city: city.trim(),
+      city: area.trim(),
+      province: emirate,
       country_code: "ae",
       phone: phone.trim(),
     }
@@ -99,7 +111,13 @@ export function CheckoutFlow() {
       return
     }
 
-    if (!name.trim() || !phone.trim() || !address.trim() || !city.trim()) {
+    if (
+      !name.trim() ||
+      !phone.trim() ||
+      !address.trim() ||
+      !emirate ||
+      !area.trim()
+    ) {
       setError(t("requiredFields"))
       return
     }
@@ -289,18 +307,28 @@ export function CheckoutFlow() {
               </Field>
 
               <div className="grid grid-cols-2 gap-4">
-                <Field label={t("city")}>
-                  <input
-                    value={city}
-                    onChange={(event) => setCity(event.target.value)}
-                    autoComplete="address-level2"
+                <Field label={t("emirate")}>
+                  <select
+                    value={emirate}
+                    onChange={(event) => setEmirate(event.target.value)}
+                    autoComplete="address-level1"
                     className={inputClass}
-                  />
+                  >
+                    <option value="" disabled>
+                      {t("selectEmirate")}
+                    </option>
+                    {EMIRATES.map((entry) => (
+                      <option key={entry.ar} value={entry.ar}>
+                        {locale === "en" ? entry.en : entry.ar}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
-                <Field label={t("country")}>
+                <Field label={t("area")}>
                   <input
-                    value={t("countryUae")}
-                    disabled
+                    value={area}
+                    onChange={(event) => setArea(event.target.value)}
+                    autoComplete="address-level2"
                     className={inputClass}
                   />
                 </Field>

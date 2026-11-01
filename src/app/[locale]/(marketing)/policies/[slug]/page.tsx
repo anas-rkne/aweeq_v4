@@ -70,20 +70,30 @@ const POLICIES: Policy[] = [
         headingAr: "مدة التوصيل",
         headingEn: "Delivery time",
         bodyAr: [
-          "داخل الإمارات: 2–4 أيام عمل من تأكيد الطلب. قد تزيد المدة في مواسم الإطلاق المحدود، ونبلّغك في حال حدوث ذلك.",
+          "توصيل خلال 24 ساعة من استلام الطلب: نستلم اليوم ونوصّل في اليوم التالي. يتم الاستلام قبل السادسة مساءً، والطلبات بعد هذا الموعد تُستلم في اليوم التالي.",
         ],
         bodyEn: [
-          "Inside the UAE: 2–4 business days from order confirmation. Times may be longer during limited-launch seasons, and we will let you know if that happens.",
+          "Delivery within 24 hours of pickup: we collect today and deliver the next day. Pickup happens before 6 PM; orders placed after that are collected the following day.",
         ],
       },
       {
         headingAr: "النطاق الجغرافي",
         headingEn: "Where we deliver",
         bodyAr: [
-          "نشحن إلى جميع الإمارات السبع حاليًا. الشحن الدولي غير متاح بعد؛ سنعلن عبر النشرة البريدية عند إضافته.",
+          "نشحن إلى جميع الإمارات السبع يوميًا. المنطقة الغربية وأطراف العين يتم التوصيل إليها يوميًا عدا الجمعة. الشحن الدولي غير متاح بعد؛ سنعلن عبر النشرة البريدية عند إضافته.",
         ],
         bodyEn: [
-          "We currently deliver to all seven emirates. International shipping is not available yet; we will announce it through the newsletter when it is.",
+          "We deliver to all seven emirates daily. The Western Region and outer areas of Al Ain are served daily except Friday. International shipping is not available yet; we will announce it through the newsletter when it is.",
+        ],
+      },
+      {
+        headingAr: "رسوم الشحن",
+        headingEn: "Shipping fees",
+        bodyAr: [
+          "30 درهمًا لكل الإمارات، و50 درهمًا للمنطقة الغربية وأطراف العين. الدفع بالبطاقة عند إتمام الطلب فقط؛ لا يتوفر الدفع عند الاستلام.",
+        ],
+        bodyEn: [
+          "AED 30 across the emirates, and AED 50 for the Western Region and outer areas of Al Ain. Payment is by card at checkout only; cash on delivery is not available.",
         ],
       },
       {

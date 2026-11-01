@@ -1,10 +1,10 @@
-import Image from "next/image"
 import { Link } from "@/i18n/navigation"
 import { notFound } from "next/navigation"
 import { cache } from "react"
 import { getTranslations } from "next-intl/server"
 import { ProductCard } from "@/components/store/product-card"
 import { ProductGallery } from "@/components/store/product-gallery"
+import { ProductPackagingGallery } from "@/components/store/product-packaging-gallery"
 import { ProductPurchasePanel } from "@/components/store/product-purchase-panel"
 import { getProductByHandle, getRelatedProducts } from "@/lib/api"
 import { normalizeImageUrl, parseJsonField } from "@/lib/format"
@@ -102,12 +102,42 @@ export default async function ProductDetailPage({
     product.variants[0]?.price?.currency_code ??
     "aed"
 
-  const packagingMedia = (product.media ?? []).filter(
-    (media) => media.role === "packaging" || media.role === "detail"
+  /* the packaging exhibition: the piece's own packaging shots first, then its
+     detail and gallery shots, then its plain images, so the wall exists for
+     every piece that has at least one photograph */
+  const packagingImages = [
+    ...(product.media ?? [])
+      .filter((media) =>
+        ["packaging", "detail", "gallery", "editorial"].includes(media.role)
+      )
+      .map((media) => ({
+        id: media.id,
+        url: normalizeImageUrl(media.url),
+        alt:
+          media.alt ||
+          media.alt_en ||
+          media.alt_ar ||
+          product.title,
+      })),
+    ...(product.images ?? []).map((image, index) => ({
+      id: image.id,
+      url: normalizeImageUrl(image.url),
+      alt: `${product.title} ${index + 1}`,
+    })),
+  ].filter((image): image is { id: string; url: string; alt: string } =>
+    Boolean(image.url)
   )
-  const packagingImage = packagingMedia.length
-    ? normalizeImageUrl(packagingMedia[0].url)
-    : normalizeImageUrl(product.thumbnail)
+
+  if (packagingImages.length === 0 && product.thumbnail) {
+    const thumbnail = normalizeImageUrl(product.thumbnail)
+    if (thumbnail) {
+      packagingImages.push({
+        id: "thumbnail",
+        url: thumbnail,
+        alt: product.title,
+      })
+    }
+  }
 
   const pyramidGroups = [
     { key: "top" as const, label: t("top") },
@@ -328,10 +358,37 @@ export default async function ProductDetailPage({
         </div>
       </section>
 
+      {/* ===== the packaging exhibition ===== */}
+      {packagingImages.length > 0 && (
+        <section
+          aria-labelledby="product-packaging-title"
+          className="px-5 py-14 md:px-10 md:py-16 lg:px-16"
+        >
+          <div className="mx-auto max-w-[84rem]">
+            <h2
+              id="product-packaging-title"
+              className="font-primary text-h2 text-gold"
+            >
+              {t("packagingTitle")}
+            </h2>
+            <p className="mt-3 max-w-[52ch] font-primary text-small leading-[1.7] text-sand/60">
+              {t("packagingHint")}
+            </p>
+
+            <div data-no-reveal className="mt-8">
+              <ProductPackagingGallery
+                images={packagingImages}
+                title={product.title}
+              />
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ===== before you order ===== */}
       <section className="px-5 py-14 md:px-10 md:py-16 lg:px-16">
-        <div className="mx-auto grid max-w-[84rem] grid-cols-1 gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
-          <div>
+        <div className="mx-auto max-w-[84rem]">
+          <div className="max-w-3xl">
             <h2 className="font-primary text-h2 text-gold">
               {t("beforeYouOrder")}
             </h2>
@@ -354,18 +411,6 @@ export default async function ProductDetailPage({
               ))}
             </div>
           </div>
-
-          {packagingImage && (
-            <div className="relative aspect-[3/4] overflow-hidden rounded-[var(--store-radius)] border border-sand/10 bg-[var(--store-well)]">
-              <Image
-                src={packagingImage}
-                alt={product.title}
-                fill
-                className="object-cover"
-                sizes="(min-width: 64rem) 33vw, 100vw"
-              />
-            </div>
-          )}
         </div>
       </section>
 

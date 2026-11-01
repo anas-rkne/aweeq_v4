@@ -366,6 +366,9 @@
     "phone": "Phone number",
     "address": "Shipping address",
     "addressLine": "Address",
+    "emirate": "Emirate",
+    "area": "Area",
+    "selectEmirate": "Select emirate",
     "city": "City",
     "country": "Country",
     "countryUae": "United Arab Emirates",
@@ -441,6 +444,11 @@
     "viewAll": "All pieces",
     "beforeYouOrder": "Before you order",
     "policyLink": "Read the policy",
+    "packagingTitle": "Packaging",
+    "packagingHint": "The box, the wrapping, and the details that arrive with every piece.",
+    "closeGallery": "Close the gallery",
+    "prevImage": "Previous image",
+    "nextImage": "Next image",
     "galleryImage": "View image {index}"
   },
   "Common": {

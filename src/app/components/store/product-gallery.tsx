@@ -28,6 +28,11 @@ export function ProductGallery({ product }: ProductGalleryProps) {
     add("thumbnail", product.thumbnail, product.title)
 
     for (const media of product.media ?? []) {
+      // packaging shots live in their own wall (see product-packaging-gallery),
+      // not in the main gallery
+      if (media.role === "packaging" || media.role === "video") {
+        continue
+      }
       add(media.id, media.url, media.alt || product.title)
     }
 

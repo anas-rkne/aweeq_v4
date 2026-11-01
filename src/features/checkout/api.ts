@@ -17,6 +17,7 @@ export type CheckoutInitInput = {
     last_name: string
     address_1: string
     city: string
+    province?: string
     country_code: string
     postal_code?: string
     phone?: string
@@ -101,6 +102,7 @@ export type CheckoutPrepareInput = {
     last_name: string
     address_1: string
     city: string
+    province?: string
     country_code: string
     postal_code?: string
     phone?: string
