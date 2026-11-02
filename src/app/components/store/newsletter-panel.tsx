@@ -89,7 +89,7 @@ export function NewsletterPanel() {
                   }}
                   placeholder={t("newsletter.placeholder")}
                   aria-invalid={status === "error" ? true : undefined}
-                  className="h-12 w-full min-w-0 rounded-[var(--store-radius-sm)] border border-sand/20 bg-royal-navy/40 px-4 font-primary text-sm text-sand placeholder:text-sand/40 focus:border-gold focus:outline-none sm:w-auto sm:flex-1"
+                  className="h-12 w-full min-w-0 rounded-[var(--store-radius-sm)] border border-sand/20 bg-royal-navy/40 px-4 font-primary text-sm text-sand placeholder:text-sand/55 focus:border-gold focus:outline-none sm:w-auto sm:flex-1"
                 />
                 <button
                   type="submit"
@@ -109,7 +109,7 @@ export function NewsletterPanel() {
                   ? "text-gold"
                   : status === "success"
                     ? "text-sand"
-                    : "text-sand/50"
+                    : "text-sand/55"
               }`}
             >
               {message || t("newsletter.note")}

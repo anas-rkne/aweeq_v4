@@ -22,11 +22,11 @@ export default function MarketingError({
       <h1 className="font-primary text-2xl text-sand/80">
         {t("unexpectedError")}
       </h1>
-      <p className="mt-3 max-w-md font-primary text-sm leading-relaxed text-sand/45">
+      <p className="mt-3 max-w-md font-primary text-sm leading-relaxed text-sand/55">
         {t("errorHint")}
       </p>
       {error.digest && (
-        <p className="mt-2 font-secondary text-[10px] text-sand/25">
+        <p className="mt-2 font-secondary text-[10px] text-sand/55">
           {error.digest}
         </p>
       )}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
+import { alternates } from "@/lib/seo"
 import { CartPageClient } from "@/components/store/cart-page-client"
 
 export async function generateMetadata({
@@ -16,6 +17,7 @@ export async function generateMetadata({
       locale === "ar"
         ? "راجع قطعك المختارة قبل إتمام الطلب من 3WEEQ."
         : "Review your selected pieces before completing your 3WEEQ order.",
+    alternates: alternates(locale, "/cart"),
     robots: {
       index: false,
       follow: false,

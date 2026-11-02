@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 
 export interface PackagingImage {
@@ -23,6 +23,9 @@ export function ProductPackagingGallery({
 }) {
   const t = useTranslations("Product")
   const [active, setActive] = useState<number | null>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+  const isOpen = active !== null
 
   useEffect(() => {
     if (active === null) return
@@ -45,6 +48,55 @@ export function ProductPackagingGallery({
       document.removeEventListener("keydown", onKeyDown)
     }
   }, [active, images.length])
+
+  /* focus management: move focus into the lightbox on open, trap Tab inside,
+     and return it to the thumbnail on close. keyed on `isOpen` so navigating
+     prev/next never steals focus back to the close button. */
+  useEffect(() => {
+    if (!isOpen) return
+
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+
+    const focusTimer = window.setTimeout(() => {
+      dialogRef.current
+        ?.querySelector<HTMLElement>("button")
+        ?.focus()
+    }, 40)
+
+    function onTab(event: KeyboardEvent) {
+      if (event.key !== "Tab" || !dialogRef.current) return
+
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => element.offsetParent !== null)
+
+      if (focusable.length === 0) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener("keydown", onTab)
+
+    return () => {
+      window.clearTimeout(focusTimer)
+      document.removeEventListener("keydown", onTab)
+      previousFocusRef.current?.focus()
+    }
+  }, [isOpen])
 
   const current = active === null ? null : images[active]
 
@@ -92,10 +144,11 @@ export function ProductPackagingGallery({
 
       {current && (
         <div
+          ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-label={t("packagingTitle")}
-          className="fixed inset-0 z-[110] flex flex-col bg-royal-navy/[0.97] backdrop-blur-sm"
+          className="fixed inset-0 z-[110] flex flex-col bg-royal-navy/[0.97]"
         >
           <div className="flex items-center justify-between px-4 py-3">
             <span className="font-primary text-[12px] text-sand/60">

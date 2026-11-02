@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { Link } from "@/i18n/navigation"
 import { getTranslations } from "next-intl/server"
+import { alternates } from "@/lib/seo"
 import { JOURNAL_POSTS } from "@/components/journal-posts"
 
 export async function generateMetadata({
@@ -15,6 +16,7 @@ export async function generateMetadata({
       locale === "ar"
         ? "قصص الحضارات ورموزها وفن العطر — قراءات من عالم 3WEEQ."
         : "Stories of civilizations, their symbols, and the art of fragrance — readings from the world of 3WEEQ.",
+    alternates: alternates(locale, "/journal"),
   }
 }
 
@@ -33,7 +35,7 @@ export default async function JournalIndexPage({
       <div className="mx-auto max-w-[84rem]">
         <nav
           aria-label={storeT("breadcrumb")}
-          className="mb-10 flex items-center gap-2 font-primary text-xs text-sand/40"
+          className="mb-10 flex items-center gap-2 font-primary text-xs text-sand/55"
         >
           <Link href="/" className="transition-colors hover:text-gold">
             {storeT("home")}

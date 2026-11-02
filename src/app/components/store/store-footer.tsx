@@ -56,7 +56,7 @@ export async function StoreFooter() {
 
             <p
               dir="ltr"
-              className="mt-4 font-secondary text-[12px] tracking-[0.12em] text-sand/50"
+              className="mt-4 font-secondary text-[12px] tracking-[0.12em] text-sand/55"
             >
               {t("tagline")}
             </p>
@@ -128,8 +128,8 @@ export async function StoreFooter() {
         </div>
 
         <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-sand/10 pt-6 sm:flex-row sm:items-center">
-          <p className="font-primary text-[12px] text-sand/50">{t("rights")}</p>
-          <p className="font-secondary text-[11px] text-sand/40">3WEEQ</p>
+          <p className="font-primary text-[12px] text-sand/55">{t("rights")}</p>
+          <p className="font-secondary text-[11px] text-sand/55">3WEEQ</p>
         </div>
       </div>
     </footer>

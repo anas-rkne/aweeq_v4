@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { BRAND_COLORS } from "@/shared/config/brand"
+import { createFrameWindow, type FrameWindow } from "@/shared/lib/frame-window"
 import { SectionFade } from "@/shared/ui/section-fade"
 
 gsap.registerPlugin(ScrollTrigger)
@@ -24,8 +25,7 @@ export function FeaturedFragrance({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sceneRefs = useRef<Array<HTMLDivElement | null>>([])
   const progressRef = useRef<HTMLDivElement>(null)
-  const [images, setImages] = useState<HTMLImageElement[]>([])
-  const [loaded, setLoaded] = useState(false)
+  const windowRef = useRef<FrameWindow | null>(null)
   const [shouldLoad, setShouldLoad] = useState(false)
 
   /* the label never fades, so its data has to survive any state of the film.
@@ -39,8 +39,8 @@ export function FeaturedFragrance({
     { label: t("journeyBaseLabel"), value: t("journeyBase") },
   ].filter((note) => note.value.length > 0)
   const labelClass = isArabic
-    ? "font-primary text-[10px] text-sand/45"
-    : "font-secondary text-[10px] uppercase tracking-[0.3em] text-sand/45"
+    ? "font-primary text-[10px] text-sand/55"
+    : "font-secondary text-[10px] uppercase tracking-[0.3em] text-sand/55"
   const eyebrowClass = isArabic
     ? "font-primary text-[11px] text-sand/60"
     : "font-secondary text-[11px] uppercase tracking-[0.3em] text-sand/60"
@@ -70,68 +70,20 @@ export function FeaturedFragrance({
     return () => observer.disconnect()
   }, [])
 
+  /* the film is 5.8 MB; it waits until its own section is near, then streams
+     only the frames around the scroll position instead of decoding all 101 */
   useEffect(() => {
-    if (!shouldLoad) return
-
-    let cancelled = false
-
-    const preload = async () => {
-      const promises: Promise<HTMLImageElement | null>[] = []
-
-      for (let i = 1; i <= frameCount; i++) {
-        const img = new window.Image()
-        img.decoding = "async"
-        const num = i.toString().padStart(4, "0")
-        const seconds = ((i - 1) * 0.1).toFixed(2)
-        img.src = `/featured_frames/frame-${num}-${seconds}s.webp`
-
-        promises.push(
-          new Promise<HTMLImageElement | null>((resolve) => {
-            img.onload = () => {
-              const decoded = img.decode?.()
-              if (!decoded) {
-                resolve(img)
-                return
-              }
-              void decoded.catch(() => undefined).then(() => resolve(img))
-            }
-            // a missing frame must not hold the whole film hostage
-            img.onerror = () => {
-              const fallback = new window.Image()
-              fallback.src = `/featured_frames/frame-${i
-                .toString()
-                .padStart(3, "0")}.jpg`
-              fallback.onload = () => resolve(fallback)
-              fallback.onerror = () => resolve(null)
-            }
-          })
-        )
-      }
-
-      const result = await Promise.all(promises)
-      if (cancelled) return
-
-      const loadedImages = result.filter(
-        (img): img is HTMLImageElement => img !== null
-      )
-
-      if (loadedImages.length === 0) {
-        console.error("No featured frames found in /featured_frames")
-        return
-      }
-
-      setImages(loadedImages)
-      setLoaded(true)
-    }
-
-    preload()
-    return () => {
-      cancelled = true
-    }
-  }, [frameCount, shouldLoad])
+    if (!shouldLoad || windowRef.current) return
+    windowRef.current = createFrameWindow((index) => {
+      const num = String(index + 1).padStart(4, "0")
+      const seconds = (index * 0.1).toFixed(2)
+      return `/featured_frames/frame-${num}-${seconds}s.webp`
+    }, 5)
+  }, [shouldLoad])
 
   useEffect(() => {
-    if (!loaded || images.length === 0) return
+    const frames = windowRef.current
+    if (!shouldLoad || !frames) return
     const section = sectionRef.current
     const canvas = canvasRef.current
     if (!section || !canvas) return
@@ -142,8 +94,9 @@ export function FeaturedFragrance({
     let currentFrame = 0
 
     const render = (index: number) => {
-      const img = images[index]
-      if (!img) return
+      const clamped = Math.max(0, Math.min(frameCount - 1, index))
+      frames.focus(clamped, frameCount)
+      const img = frames.nearest(clamped, frameCount)
 
       const cw = canvas.width
       const ch = canvas.height
@@ -151,13 +104,19 @@ export function FeaturedFragrance({
       ctx.fillStyle = BRAND_COLORS.navy
       ctx.fillRect(0, 0, cw, ch)
 
+      // while a frame is still in flight the navy ground stands in
+      if (!img) {
+        currentFrame = clamped
+        return
+      }
+
       // the frame fills the section edge to edge: scale up until both axes
       // are covered, then centre the overflow. no letterbox, no margins.
       const scale = Math.max(cw / img.width, ch / img.height)
       const w = img.width * scale
       const h = img.height * scale
       ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h)
-      currentFrame = index
+      currentFrame = clamped
     }
 
     const resize = () => {
@@ -173,9 +132,16 @@ export function FeaturedFragrance({
     resize()
     window.addEventListener("resize", resize)
 
+    // repaint the moment a focused frame finishes decoding, so a scrub that
+    // stops on a not-yet-loaded frame still shows it when it lands
+    const unsubscribe = frames.subscribe(() => render(currentFrame))
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       render(0)
-      return () => window.removeEventListener("resize", resize)
+      return () => {
+        unsubscribe()
+        window.removeEventListener("resize", resize)
+      }
     }
 
     const tl = gsap.timeline({
@@ -196,7 +162,7 @@ export function FeaturedFragrance({
     tl.to(
       frameObj,
       {
-        frame: images.length - 1,
+        frame: frameCount - 1,
         duration: 0.88,
         ease: "none",
         onUpdate: () => {
@@ -263,11 +229,12 @@ export function FeaturedFragrance({
     ScrollTrigger.refresh()
 
     return () => {
+      unsubscribe()
       window.removeEventListener("resize", resize)
       tl.scrollTrigger?.kill()
       tl.kill()
     }
-  }, [loaded, images])
+  }, [shouldLoad, frameCount])
 
   return (
     // the 2.6 screens belong to the document from the first paint. the stage
@@ -324,7 +291,7 @@ export function FeaturedFragrance({
               <p className="mt-2 font-primary text-[15px] leading-[1.7] text-sand/85 md:text-base">
                 {t("materialBody")}
               </p>
-              <p className="mt-2 font-primary text-[11px] text-sand/50">
+              <p className="mt-2 font-primary text-[11px] text-sand/55">
                 {t("materialMeta")}
               </p>
             </div>
@@ -342,7 +309,7 @@ export function FeaturedFragrance({
                 <dl className="mt-2 space-y-1">
                   {notes.map((note) => (
                     <div key={note.label} className="flex items-baseline gap-3">
-                      <dt className="w-14 shrink-0 font-primary text-[11px] text-sand/45">
+                      <dt className="w-14 shrink-0 font-primary text-[11px] text-sand/55">
                         {note.label}
                       </dt>
                       <dd className="font-primary text-[13px] text-sand/85 md:text-sm">
@@ -353,7 +320,7 @@ export function FeaturedFragrance({
                 </dl>
               ) : null}
 
-              <p className="mt-2 font-primary text-[11px] text-sand/50">
+              <p className="mt-2 font-primary text-[11px] text-sand/55">
                 {t("journeyFoot")}
               </p>
             </div>
@@ -368,7 +335,7 @@ export function FeaturedFragrance({
               <p className="font-primary text-[15px] leading-[1.7] text-sand/85 md:text-base">
                 {t("storyQuote")}
               </p>
-              <p className="mt-2 font-primary text-[11px] leading-[1.7] text-sand/50">
+              <p className="mt-2 font-primary text-[11px] leading-[1.7] text-sand/55">
                 {t("storyBody")}
               </p>
             </div>
@@ -383,7 +350,7 @@ export function FeaturedFragrance({
               <p className="font-primary text-[15px] leading-[1.7] text-sand/85 md:text-base">
                 {t("closingTitle")}
               </p>
-              <p className="mt-2 font-primary text-[11px] leading-[1.7] text-sand/50">
+              <p className="mt-2 font-primary text-[11px] leading-[1.7] text-sand/55">
                 {t("closingBody")}
               </p>
             </div>

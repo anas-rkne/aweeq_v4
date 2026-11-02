@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { useTranslations } from "next-intl"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { createFrameWindow, type FrameWindow } from "@/shared/lib/frame-window"
 import { SectionFade } from "@/shared/ui/section-fade"
 
 gsap.registerPlugin(ScrollTrigger)
@@ -87,20 +88,15 @@ function getReducedMotionSnapshot() {
   return window.matchMedia(REDUCED_MOTION_QUERY).matches
 }
 
-function frameSources(index: number) {
-  return [FRAME_SOURCES[index]]
-}
-
 export function CivilizationsSection() {
   const t = useTranslations("Civilizations")
   const sectionRef = useRef<HTMLElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const textRefs = useRef<(HTMLDivElement | null)[]>([])
 
-  const [images, setImages] = useState<HTMLImageElement[]>([])
-  const [loaded, setLoaded] = useState(false)
   const [active, setActive] = useState(-1)
   const [shouldLoad, setShouldLoad] = useState(false)
+  const windowRef = useRef<FrameWindow | null>(null)
   const reducedMotion = useSyncExternalStore(
     subscribeToReducedMotion,
     getReducedMotionSnapshot,
@@ -132,87 +128,17 @@ export function CivilizationsSection() {
     return () => observer.disconnect()
   }, [])
 
+  /* the film waits for its own section to come near, then streams only the
+     frames around the scroll position (130 × 1080p was decoded all at once
+     before; now ~11 are held at a time) */
   useEffect(() => {
-    if (!shouldLoad) return
-
-    let cancelled = false
-
-    const loadFrame = (index: number) =>
-      new Promise<HTMLImageElement | null>((resolve) => {
-        const sources = frameSources(index)
-        const img = new window.Image()
-        img.decoding = "async"
-
-        let attempt = 0
-        let settled = false
-
-        const settle = (value: HTMLImageElement | null) => {
-          if (settled) return
-          settled = true
-          resolve(value)
-        }
-
-        const next = () => {
-          if (cancelled) {
-            settle(null)
-            return
-          }
-
-          if (attempt >= sources.length) {
-            settle(null)
-            return
-          }
-
-          img.src = sources[attempt]
-          attempt += 1
-        }
-
-        img.onload = () => {
-          // Decode once, while the page is still quiet: drawImage() then never
-          // pays the decode cost in the middle of a scroll frame.
-          const decoded = img.decode?.()
-
-          if (!decoded) {
-            settle(img)
-            return
-          }
-
-          void decoded.catch(() => undefined).then(() => settle(img))
-        }
-
-        img.onerror = next
-        next()
-      })
-
-    const preload = async () => {
-      const frames = await Promise.all(
-        Array.from({ length: TOTAL_FRAMES }, (_, index) => loadFrame(index))
-      )
-
-      if (cancelled) return
-
-      const loadedFrames = frames.filter(
-        (frame): frame is HTMLImageElement => frame !== null
-      )
-
-      if (loadedFrames.length === 0) {
-        console.error("No civilizations frames found in /images/civil/frames")
-        return
-      }
-
-      setImages(loadedFrames)
-      setLoaded(true)
-    }
-
-    void preload()
-
-    return () => {
-      cancelled = true
-    }
+    if (!shouldLoad || windowRef.current) return
+    windowRef.current = createFrameWindow((index) => FRAME_SOURCES[index], 5)
   }, [shouldLoad])
 
   useEffect(() => {
-    if (!loaded || images.length === 0) return
+    const frames = windowRef.current
+    if (!shouldLoad || !frames) return
 
     const section = sectionRef.current
     const canvas = canvasRef.current
@@ -225,12 +151,19 @@ export function CivilizationsSection() {
     let frameIndex = 0
 
     const render = (index: number) => {
-      const img = images[Math.max(0, Math.min(images.length - 1, index))]
-      if (!img) return
+      const clamped = Math.max(0, Math.min(TOTAL_FRAMES - 1, index))
+      frames.focus(clamped, TOTAL_FRAMES)
+      const img = frames.nearest(clamped, TOTAL_FRAMES)
 
       const cw = canvas.width
       const ch = canvas.height
       if (cw === 0 || ch === 0) return
+
+      // while a frame is still in flight the navy ground stands in
+      if (!img) {
+        currentFrame = clamped
+        return
+      }
 
       ctx.imageSmoothingEnabled = true
       ctx.imageSmoothingQuality = "high"
@@ -262,10 +195,15 @@ export function CivilizationsSection() {
     resize()
     window.addEventListener("resize", resize)
 
+    // repaint the moment a focused frame finishes decoding, so a scrub that
+    // stops on a not-yet-loaded frame still shows it when it lands
+    const unsubscribe = frames.subscribe(() => render(frameIndex))
+
     const reduced = window.matchMedia(REDUCED_MOTION_QUERY).matches
 
     if (reduced) {
       return () => {
+        unsubscribe()
         window.removeEventListener("resize", resize)
       }
     }
@@ -273,7 +211,7 @@ export function CivilizationsSection() {
     const applyProgress = (progress: number) => {
       // 130 frames over 0 → 1. The clamp is the 0-indexed ceiling (129).
       const nextFrame = Math.min(
-        images.length - 1,
+        TOTAL_FRAMES - 1,
         Math.floor(progress * TOTAL_FRAMES)
       )
 
@@ -397,11 +335,12 @@ export function CivilizationsSection() {
     ScrollTrigger.refresh()
 
     return () => {
+      unsubscribe()
       window.removeEventListener("resize", resize)
       tl.scrollTrigger?.kill()
       tl.kill()
     }
-  }, [loaded, images])
+  }, [shouldLoad])
 
   return (
     // the 2.2 screens the film needs are part of the document from the first

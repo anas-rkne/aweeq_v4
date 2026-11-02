@@ -30,6 +30,9 @@ export async function medusaFetch<T>(
     ...rest,
     headers,
     credentials: "include",
+    /* a hung backend must not hang the render: fail fast and let the
+       repository return a degraded (empty) catalogue instead of a 60 s hang */
+    signal: AbortSignal.timeout(8000),
     ...(next ? { next } : { cache: "no-store" as const }),
   })
 

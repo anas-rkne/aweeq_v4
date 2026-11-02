@@ -525,10 +525,6 @@ export function CuneiformWall() {
       sync()
     }
 
-    const surfaces = Array.from(
-      document.querySelectorAll("[data-cuneiform-surface]")
-    )
-
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -539,7 +535,34 @@ export function CuneiformWall() {
       },
       { rootMargin: "120px" }
     )
-    for (const surface of surfaces) observer.observe(surface)
+
+    const observeSurface = (surface: Element) => {
+      if (!(surface instanceof Element)) return
+      observer.observe(surface)
+    }
+
+    for (const surface of Array.from(
+      document.querySelectorAll("[data-cuneiform-surface]")
+    )) {
+      observeSurface(surface)
+    }
+
+    /* Client-side navigation renders new `[data-cuneiform-surface]` sections
+       (e.g. the product page) long after this component mounted. Watch for
+       them so the wall keeps painting on every route instead of freezing. */
+    const surfaceWatcher = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node instanceof Element) {
+            if (node.matches("[data-cuneiform-surface]")) observeSurface(node)
+            node
+              .querySelectorAll("[data-cuneiform-surface]")
+              .forEach(observeSurface)
+          }
+        }
+      }
+    })
+    surfaceWatcher.observe(document.body, { childList: true, subtree: true })
 
     const onResize = () => {
       resize()
@@ -554,6 +577,7 @@ export function CuneiformWall() {
     return () => {
       disposed = true
       observer.disconnect()
+      surfaceWatcher.disconnect()
       window.removeEventListener("resize", onResize)
       document.removeEventListener("visibilitychange", sync)
       if (frame) window.cancelAnimationFrame(frame)

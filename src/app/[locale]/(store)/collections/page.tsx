@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation"
 import { getTranslations } from "next-intl/server"
 import { getCollections } from "@/lib/api"
 import { normalizeImageUrl } from "@/lib/format"
+import { alternates } from "@/lib/seo"
 import type { CollectionProfile } from "@/types"
 
 export async function generateMetadata({
@@ -18,6 +19,7 @@ export async function generateMetadata({
       locale === "ar"
         ? "استكشف مجموعات 3WEEQ، كل مجموعة تحكي قصة حضارة من خلال قطع محدودة ومرقّمة."
         : "Explore 3WEEQ collections — each one tells the story of a civilization through limited, numbered pieces.",
+    alternates: alternates(locale, "/collections"),
   }
 }
 

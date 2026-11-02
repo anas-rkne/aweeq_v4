@@ -87,7 +87,7 @@ export async function StoreHero() {
                   src="/images/packaging_images/5.webp"
                   alt=""
                   fill
-                  priority
+                  preload
                   sizes="(min-width: 64rem) 42rem, 100vw"
                   className="object-cover"
                 />

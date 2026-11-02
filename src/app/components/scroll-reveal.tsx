@@ -37,7 +37,7 @@ const SELECTOR = [
   "main a[href]",
 ].join(",")
 
-const SKIP = "#featured-fragrance, [data-reveal], [data-no-reveal]"
+const SKIP = "#hero, #featured-fragrance, [data-reveal], [data-no-reveal]"
 
 /** useLayoutEffect on the client, useEffect on the server: the hidden state
  *  is painted before the first frame, so nothing flashes in and then hides. */

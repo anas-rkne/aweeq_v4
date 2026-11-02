@@ -7,6 +7,7 @@ import React, {
   useImperativeHandle,
   useRef,
 } from "react"
+import { createFrameWindow, type FrameWindow } from "@/shared/lib/frame-window"
 import { CIVILIZATION_SCENES } from "./about-data"
 import { BRAND_COLORS } from "@/shared/config/brand"
 
@@ -23,102 +24,72 @@ const SCENE_BOUNDS = CIVILIZATION_SCENES.map((scene) => {
   return { start, end, count: scene.frameCount, folder: scene.folder }
 })
 
-/** Each scene is decoded as it is needed, never all at once. The arrays fill
- *  up frame by frame, so a scene can be drawn while the rest is still in
- *  flight. */
-const sceneFrames = new Map<string, (HTMLImageElement | undefined)[]>()
-const scenePromises = new Map<string, Promise<void>>()
-const completeScenes = new Set<string>()
-const sceneAttempts = new Map<string, number>()
-const MAX_SCENE_ATTEMPTS = 2
+/* One streaming window per scene folder, created lazily and dropped the moment
+ * the scene leaves the runway (see evictDistantScenes). Frames stay at native
+ * resolution, but only the ~13 around the current position are decoded at a
+ * time — so a full scroll of the story holds tens of MiB, not 1.6 GiB. */
+const FRAME_RADIUS = 5
+const windows = new Map<string, FrameWindow>()
 
-function loadFrame(folder: string, index: number) {
-  return new Promise<HTMLImageElement | null>((resolve) => {
-    const img = new window.Image()
-    img.decoding = "async"
+/* a module-level hook the canvas sets, so any freshly-decoded frame (across
+   any scene) can ask the canvas to repaint even while the scroll is still */
+let onFrameReady: (() => void) | null = null
+
+function urlFor(folder: string) {
+  return (index: number) => {
     const frameNumber = String(index + 1).padStart(4, "0")
     const seconds = (index * 0.1).toFixed(2)
-    img.src = `/${folder}/frame-${frameNumber}-${seconds}s.webp`
-
-    img.onload = () => {
-      // Decode once, while the loader is still quiet: drawImage() then never
-      // pays the decode cost in the middle of a scroll frame.
-      const decoded = img.decode?.()
-      if (!decoded) {
-        resolve(img)
-        return
-      }
-      void decoded.catch(() => undefined).then(() => resolve(img))
-    }
-    img.onerror = () => resolve(null)
-  })
+    return `/${folder}/frame-${frameNumber}-${seconds}s.webp`
+  }
 }
 
-function ensureScene(index: number) {
-  const scene = CIVILIZATION_SCENES[index]
-  if (!scene) return
-
-  const folder = scene.folder
-  if (completeScenes.has(folder) || scenePromises.has(folder)) return
-
-  const attempts = sceneAttempts.get(folder) ?? 0
-  if (attempts >= MAX_SCENE_ATTEMPTS) return
-
-  const frames =
-    sceneFrames.get(folder) ??
-    new Array<HTMLImageElement | undefined>(scene.frameCount)
-  sceneFrames.set(folder, frames)
-
-  const missing: number[] = []
-  for (let i = 0; i < scene.frameCount; i++) {
-    if (!frames[i]) missing.push(i)
+function windowFor(folder: string): FrameWindow {
+  let window = windows.get(folder)
+  if (!window) {
+    window = createFrameWindow(urlFor(folder), FRAME_RADIUS)
+    window.subscribe(() => onFrameReady?.())
+    windows.set(folder, window)
   }
+  return window
+}
 
-  if (missing.length === 0) {
-    completeScenes.add(folder)
-    return
-  }
+function localProgress(index: number, progress: number): number {
+  const bounds = SCENE_BOUNDS[index]
+  if (!bounds) return 0
+  return Math.min(
+    1,
+    Math.max(0, (progress - bounds.start) / (bounds.end - bounds.start))
+  )
+}
 
-  sceneAttempts.set(folder, attempts + 1)
+function wantedFrame(index: number, progress: number): number {
+  const bounds = SCENE_BOUNDS[index]
+  const local = localProgress(index, progress)
+  return Math.min(bounds.count - 1, Math.floor(local * bounds.count))
+}
 
-  const promise = Promise.all(
-    missing.map((frameIndex) =>
-      loadFrame(folder, frameIndex).then((img) => {
-        if (img) frames[frameIndex] = img
-      })
-    )
-  ).then(() => {
-    const loaded = frames.reduce((count, frame) => count + (frame ? 1 : 0), 0)
-    if (loaded === scene.frameCount) {
-      completeScenes.add(folder)
-    }
-    scenePromises.delete(folder)
-  })
-
-  scenePromises.set(folder, promise)
+function focusScene(index: number, progress: number) {
+  const bounds = SCENE_BOUNDS[index]
+  if (!bounds) return
+  windowFor(bounds.folder).focus(wantedFrame(index, progress), bounds.count)
 }
 
 function sceneImage(index: number, progress: number) {
   const bounds = SCENE_BOUNDS[index]
   if (!bounds) return null
-
-  const frames = sceneFrames.get(bounds.folder)
-  if (!frames || frames.length === 0) return null
-
-  const local = Math.min(
-    1,
-    Math.max(0, (progress - bounds.start) / (bounds.end - bounds.start))
+  return windowFor(bounds.folder).nearest(
+    wantedFrame(index, progress),
+    bounds.count
   )
-  const wanted = Math.min(frames.length - 1, Math.floor(local * frames.length))
+}
 
-  // while a scene is still loading, hold the closest frame we already have
-  for (let i = wanted; i >= 0; i--) {
-    if (frames[i]) return frames[i]!
+function evictDistantScenes(keep: Set<string>) {
+  for (const folder of [...windows.keys()]) {
+    if (!keep.has(folder)) {
+      windows.get(folder)!.dispose()
+      windows.delete(folder)
+    }
   }
-  for (let i = wanted + 1; i < frames.length; i++) {
-    if (frames[i]) return frames[i]!
-  }
-  return null
 }
 
 export interface AboutCanvasHandle {
@@ -180,20 +151,26 @@ export const AboutCanvas = forwardRef<AboutCanvasHandle>(
         }
       }
 
-      // the next scene starts loading as soon as the journey begins, so a whole
-      // scene of scrolling time is available before its frames are needed
-      ensureScene(sceneIndex)
-      if (p > 0) ensureScene(sceneIndex + 1)
-      if (blendIndex >= 0) {
-        ensureScene(blendIndex)
-        ensureScene(blendIndex + 1)
+      // keep the current scene (and, when blending, the two being dissolved)
+      // loaded; the next scene warms up a whole runway ahead of when it is seen
+      const keep = new Set<string>()
+      focusScene(sceneIndex, p)
+      keep.add(SCENE_BOUNDS[sceneIndex].folder)
+      if (p > 0 && sceneIndex + 1 < SCENE_BOUNDS.length) {
+        focusScene(sceneIndex + 1, p)
+        keep.add(SCENE_BOUNDS[sceneIndex + 1].folder)
       }
+      if (blendIndex >= 0) {
+        focusScene(blendIndex, p)
+        focusScene(blendIndex + 1, p)
+        keep.add(SCENE_BOUNDS[blendIndex].folder)
+        keep.add(SCENE_BOUNDS[blendIndex + 1].folder)
+      }
+      evictDistantScenes(keep)
 
       const fromImage =
         blendIndex >= 0 ? sceneImage(blendIndex, p) : sceneImage(sceneIndex, p)
       const toImage = blendIndex >= 0 ? sceneImage(blendIndex + 1, p) : null
-
-      if (!fromImage && !toImage) return
 
       // a slow, continuous push-in across the whole journey
       const zoom = 1 + p * 0.045
@@ -204,6 +181,10 @@ export const AboutCanvas = forwardRef<AboutCanvasHandle>(
       ctx.globalAlpha = 1
       ctx.fillStyle = BRAND_COLORS.navy
       ctx.fillRect(0, 0, width, height)
+
+      // while a frame is still in flight the navy ground stands in, so the
+      // canvas is never a transparent (black) flash
+      if (!fromImage && !toImage) return
 
       const drawCover = (img: HTMLImageElement, alpha: number) => {
         const scale = Math.max(width / img.width, height / img.height) * zoom
@@ -225,22 +206,22 @@ export const AboutCanvas = forwardRef<AboutCanvasHandle>(
     }, [])
 
     useEffect(() => {
-      ensureScene(0)
-
-      // paint the first frame as soon as it lands, so the section is never a
-      // blank rectangle while it scrolls into view
-      let raf = 0
-      const startedAt = performance.now()
-      const tick = () => {
-        draw(lastProgressRef.current)
-        const firstScene = sceneFrames.get(CIVILIZATION_SCENES[0].folder)
-        const stillWaiting =
-          !firstScene?.[0] && performance.now() - startedAt < 8000
-        if (stillWaiting) raf = requestAnimationFrame(tick)
+      // repaint the current frame the moment any freshly-decoded frame lands,
+      // so a scrub that is held still still advances to the newest pixels
+      onFrameReady = () => draw(lastProgressRef.current)
+      return () => {
+        onFrameReady = null
       }
-      raf = requestAnimationFrame(tick)
+    }, [draw])
 
-      return () => cancelAnimationFrame(raf)
+    useEffect(() => {
+      // paint the navy ground immediately, then the first frame the moment it
+      // is decoded — no 60 fps poll waiting for it to land
+      draw(0)
+      const firstFolder = SCENE_BOUNDS[0].folder
+      void windowFor(firstFolder)
+        .whenReady(0)
+        .then(() => draw(lastProgressRef.current))
     }, [draw])
 
     useEffect(() => {

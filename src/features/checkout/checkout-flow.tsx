@@ -353,7 +353,7 @@ export function CheckoutFlow() {
               <h2 className="font-primary text-xl text-sand">
                 {t("shippingTitle")}
               </h2>
-              <p className="font-primary text-sm text-sand/50">
+              <p className="font-primary text-sm text-sand/55">
                 {t("shippingNote")}
               </p>
 
@@ -524,7 +524,7 @@ export function CheckoutFlow() {
 }
 
 const inputClass =
-  "h-12 w-full rounded-[var(--store-radius-sm)] border border-sand/25 bg-sand/[0.05] px-4 font-primary text-base text-sand placeholder:text-sand/40 focus:border-gold focus:outline-none"
+  "h-12 w-full rounded-[var(--store-radius-sm)] border border-sand/25 bg-sand/[0.05] px-4 font-primary text-base text-sand placeholder:text-sand/55 focus:border-gold focus:outline-none"
 
 function Field({
   label,

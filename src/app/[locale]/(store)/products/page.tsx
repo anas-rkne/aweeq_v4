@@ -15,6 +15,7 @@ import {
   STORE_PAGE_SIZE,
   STORE_PRODUCT_TYPES,
 } from "@/lib/catalog"
+import { alternates } from "@/lib/seo"
 import {
   getCivilizations,
   getCollections,
@@ -50,6 +51,7 @@ export async function generateMetadata({
       locale === "ar"
         ? "اكتشف مجموعة 3WEEQ من العطور والقطع المحدودة المستوحاة من الحضارات القديمة."
         : "Discover 3WEEQ's collection of fragrances and limited pieces inspired by ancient civilizations.",
+    alternates: alternates(locale, "/products"),
   }
 }
 
@@ -251,7 +253,7 @@ export default async function ProductsPage({
                   type="search"
                   defaultValue={q}
                   placeholder={t("searchPlaceholder")}
-                  className="h-11 min-w-0 flex-1 bg-transparent font-primary text-sm text-sand placeholder:text-sand/45 focus:outline-none"
+                  className="h-11 min-w-0 flex-1 bg-transparent font-primary text-sm text-sand placeholder:text-sand/55 focus:outline-none"
                 />
                 <button
                   type="submit"
@@ -308,7 +310,7 @@ export default async function ProductsPage({
 
           {hasAnyFilter && (
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
-              <span className="font-primary text-[11px] uppercase tracking-[0.12em] text-sand/45">
+              <span className="font-primary text-[11px] uppercase tracking-[0.12em] text-sand/55">
                 {t("currentFilters")}
               </span>
               {q && (
@@ -394,7 +396,7 @@ export default async function ProductsPage({
 
           {totalPages > 1 && (
             <nav
-              aria-label={t("breadcrumb")}
+              aria-label={t("pagination")}
               className="mt-14 flex items-center justify-center gap-3"
             >
               {hasPrev ? (
@@ -405,9 +407,13 @@ export default async function ProductsPage({
                   {t("prev")}
                 </Link>
               ) : (
-                <span className="flex h-11 items-center rounded-[var(--store-radius-pill)] border border-sand/10 px-5 font-primary text-sm text-sand/25">
+                <button
+                  type="button"
+                  disabled
+                  className="flex h-11 cursor-not-allowed items-center rounded-[var(--store-radius-pill)] border border-sand/10 px-5 font-primary text-sm text-sand/25"
+                >
                   {t("prev")}
-                </span>
+                </button>
               )}
 
               <span className="font-primary text-small text-sand/60">
@@ -422,9 +428,13 @@ export default async function ProductsPage({
                   {t("next")}
                 </Link>
               ) : (
-                <span className="flex h-11 items-center rounded-[var(--store-radius-pill)] border border-sand/10 px-5 font-primary text-sm text-sand/25">
+                <button
+                  type="button"
+                  disabled
+                  className="flex h-11 cursor-not-allowed items-center rounded-[var(--store-radius-pill)] border border-sand/10 px-5 font-primary text-sm text-sand/25"
+                >
                   {t("next")}
-                </span>
+                </button>
               )}
             </nav>
           )}
@@ -452,7 +462,7 @@ function TypeTab({
   return (
     <Link
       href={href}
-      aria-current={active ? "true" : undefined}
+      aria-current={active ? "page" : undefined}
       className={`flex h-11 shrink-0 items-center gap-2 rounded-[var(--store-radius-pill)] border px-4 font-primary text-[13px] transition-colors duration-200 ${
         active
           ? "border-gold bg-gold text-royal-navy"
@@ -463,7 +473,7 @@ function TypeTab({
       {count !== undefined && count > 0 && (
         <span
           className={`font-secondary text-[11px] ${
-            active ? "text-royal-navy/60" : "text-sand/40"
+            active ? "text-royal-navy/60" : "text-sand/55"
           }`}
         >
           {count}
@@ -497,7 +507,7 @@ function FilterRow({
 
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-      <span className="font-primary text-[11px] uppercase tracking-[0.12em] text-sand/45">
+      <span className="font-primary text-[11px] uppercase tracking-[0.12em] text-sand/55">
         {label}
       </span>
 
@@ -526,7 +536,7 @@ function FilterLink({
   return (
     <Link
       href={href}
-      aria-current={active ? "true" : undefined}
+      aria-current={active ? "page" : undefined}
       className={`inline-flex min-h-11 items-center font-primary text-[13px] transition-colors duration-200 ${
         active ? "text-gold" : "text-sand/60 hover:text-gold"
       }`}

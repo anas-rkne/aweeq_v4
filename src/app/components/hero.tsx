@@ -19,7 +19,7 @@ export function Hero() {
   const imageRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const imagesRef = useRef<HTMLImageElement[]>([])
+  const imagesRef = useRef<Array<HTMLImageElement | null>>([])
   const rafRef = useRef<number | null>(null)
   const framePositionRef = useRef(0)
   const [framesReady, setFramesReady] = useState(false)
@@ -187,6 +187,11 @@ export function Hero() {
         rafRef.current = requestAnimationFrame(loop)
       } else {
         rafRef.current = null
+        /* the film has finished: only the final frame is ever drawn again
+           (on resize), so release the other 29 decoded bitmaps — the hero no
+           longer pins ~237 MiB of frames for the rest of the page */
+        const frames = imagesRef.current
+        for (let i = 0; i < FRAME_COUNT - 1; i++) frames[i] = null
       }
     }
 
@@ -348,12 +353,13 @@ export function Hero() {
                   className="hidden object-cover md:block"
                 />
 
-                <img
+                <Image
                   src="/images/hero/hero_img_mobile.webp"
                   alt={t("imageAlt")}
-                  className="block h-full w-full object-cover md:hidden"
+                  fill
                   loading="eager"
-                  fetchPriority="high"
+                  sizes="100vw"
+                  className="block h-full w-full object-cover md:hidden"
                 />
               </>
             )}

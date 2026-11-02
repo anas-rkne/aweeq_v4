@@ -8,6 +8,7 @@ import {
 import { notFound } from "next/navigation"
 import { BRAND_COLORS } from "@/shared/config/brand"
 import { routing } from "@/i18n/routing"
+import { siteUrl } from "@/shared/lib/seo"
 import { fontPreloads } from "../fonts"
 import "../globals.css"
 
@@ -22,19 +23,17 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: "Metadata" })
-  const siteUrl = (
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-  ).replace(/\/$/, "")
+  const base = siteUrl()
 
   return {
-    metadataBase: new URL(siteUrl),
+    metadataBase: new URL(base),
     title: t("title"),
     description: t("description"),
     alternates: {
       canonical: `/${locale}`,
       languages: {
-        ar: `${siteUrl}/ar`,
-        en: `${siteUrl}/en`,
+        ar: `${base}/ar`,
+        en: `${base}/en`,
       },
     },
     openGraph: {
@@ -43,12 +42,24 @@ export async function generateMetadata({
       locale: locale === "ar" ? "ar_AE" : "en_AE",
       title: t("title"),
       description: t("description"),
-      url: `${siteUrl}/${locale}`,
+      url: `${base}/${locale}`,
+      images: [
+        {
+          url: `${base}/images/hero/hero_img.webp`,
+          width: 2048,
+          height: 1152,
+          alt: t("title"),
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: t("title"),
       description: t("description"),
+      images: [`${base}/images/hero/hero_img.webp`],
+    },
+    icons: {
+      icon: "/favicon.ico",
     },
   }
 }
@@ -93,6 +104,28 @@ export default async function LocaleLayout({
             crossOrigin="anonymous"
           />
         ))}
+        {/* Site-wide entity markup: the brand identity Google uses for the
+            knowledge panel and sitelinks search box. Static and locale-free. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: "3WEEQ",
+                url: siteUrl(),
+                logo: `${siteUrl()}/images/logo.png`,
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                name: "3WEEQ",
+                url: siteUrl(),
+              },
+            ]),
+          }}
+        />
         {/* Without scripting the reveal observer never runs, so the content it
             would have hidden must be shown again. */}
         <noscript>

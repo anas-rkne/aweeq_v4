@@ -13,7 +13,7 @@ export default async function LocaleNotFound() {
       <h1 className="mt-4 font-primary text-3xl text-sand/80">
         {t("pageNotFound")}
       </h1>
-      <p className="mt-3 max-w-md font-primary text-sm leading-relaxed text-sand/45">
+      <p className="mt-3 max-w-md font-primary text-sm leading-relaxed text-sand/55">
         {t("pageNotFoundHint")}
       </p>
       <div className="mt-7 flex flex-wrap items-center justify-center gap-3">

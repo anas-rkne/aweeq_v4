@@ -316,6 +316,8 @@ export function TiltedGridHero({
                     <img
                       src={img.src}
                       alt={k === 0 ? (img.alt ?? "") : ""}
+                      width={1376}
+                      height={768}
                       draggable={false}
                       className="absolute top-0 max-w-none object-cover"
                       style={{

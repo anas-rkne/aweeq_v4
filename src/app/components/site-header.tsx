@@ -99,6 +99,8 @@ function MobileNav({
   const shellRef = useRef<HTMLDivElement>(null)
   const pictureRef = useRef<HTMLDivElement>(null)
   const linksRef = useRef<(HTMLAnchorElement | null)[]>([])
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!isOpen) return
@@ -140,6 +142,58 @@ function MobileNav({
     }
   }, [isOpen])
 
+  /* focus management: trap Tab inside the dialog, close on Escape, move focus
+     in on open and return it to the trigger on close */
+  useEffect(() => {
+    if (!isOpen) return
+
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+
+    const focusTimer = window.setTimeout(
+      () => closeButtonRef.current?.focus(),
+      40
+    )
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose()
+        return
+      }
+
+      if (event.key !== "Tab" || !shellRef.current) return
+
+      const focusable = Array.from(
+        shellRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => element.offsetParent !== null)
+
+      if (focusable.length === 0) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown)
+
+    return () => {
+      window.clearTimeout(focusTimer)
+      document.removeEventListener("keydown", onKeyDown)
+      previousFocusRef.current?.focus()
+    }
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   return (
@@ -169,10 +223,11 @@ function MobileNav({
       />
 
       <button
+        ref={closeButtonRef}
         type="button"
         onClick={onClose}
         aria-label={t("close")}
-        className="absolute end-6 top-6 z-10 text-sand/50 transition-colors duration-300 ease-out hover:text-gold"
+        className="absolute end-6 top-6 z-10 p-2 text-sand/50 transition-colors duration-300 ease-out hover:text-gold"
       >
         <svg
           viewBox="0 0 24 24"
@@ -267,11 +322,11 @@ export function SiteHeader() {
               aria-label={t("language")}
               className="whitespace-nowrap font-secondary text-[13px] text-sand/80 transition-colors duration-200 ease-out hover:text-gold"
             >
-              <span className={locale === "ar" ? "text-gold" : "text-sand/40"}>
+              <span className={locale === "ar" ? "text-gold" : "text-sand/55"}>
                 AR
               </span>
-              <span className="mx-0.5 text-sand/30 sm:mx-1">/</span>
-              <span className={locale === "en" ? "text-gold" : "text-sand/40"}>
+              <span className="mx-0.5 text-sand/55 sm:mx-1">/</span>
+              <span className={locale === "en" ? "text-gold" : "text-sand/55"}>
                 EN
               </span>
             </button>

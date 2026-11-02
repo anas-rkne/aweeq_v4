@@ -163,7 +163,7 @@ export function StoreHeader() {
   return (
     <>
       {/* only row one sticks: the announcement and the category row scroll away */}
-      <header className="sticky top-0 z-50 border-b border-sand/10 bg-royal-navy/95 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-sand/10 bg-royal-navy/95">
         {/* row one: the mark, the search, the tools */}
         <div className="mx-auto flex h-[var(--store-header-h)] max-w-[84rem] items-center gap-3 px-5 md:gap-6 md:px-10">
           <Link
@@ -200,7 +200,7 @@ export function StoreHeader() {
                 type="search"
                 placeholder={t("searchPlaceholder")}
                 autoComplete="off"
-                className="h-11 min-w-0 flex-1 bg-transparent font-primary text-sm text-sand placeholder:text-sand/45 focus:outline-none"
+                className="h-11 min-w-0 flex-1 bg-transparent font-primary text-sm text-sand placeholder:text-sand/55 focus:outline-none"
               />
               <button
                 type="submit"
@@ -222,7 +222,7 @@ export function StoreHeader() {
               <span className={isArabic ? "text-gold" : "text-sand/70"}>
                 AR
               </span>
-              <span className="mx-0.5 text-sand/30 sm:mx-1">/</span>
+              <span className="mx-0.5 text-sand/55 sm:mx-1">/</span>
               <span className={!isArabic ? "text-gold" : "text-sand/70"}>
                 EN
               </span>
@@ -482,11 +482,11 @@ function MobileSearch({
       role="dialog"
       aria-modal="true"
       aria-label={t("searchLabel")}
-      className="fixed inset-0 z-[100] bg-royal-navy/[0.98] backdrop-blur-md"
+      className="fixed inset-0 z-[100] bg-royal-navy/[0.98]"
     >
       <div className="mx-auto max-w-[84rem] px-5 py-5 md:px-10">
         <div className="flex items-center justify-between">
-          <span className="font-primary text-[11px] uppercase tracking-[0.16em] text-sand/50">
+          <span className="font-primary text-[11px] uppercase tracking-[0.16em] text-sand/55">
             {t("search")}
           </span>
           <button
@@ -501,7 +501,7 @@ function MobileSearch({
 
         <form action={action} method="get" role="search" className="mt-6">
           <div className="flex h-12 items-center gap-3 rounded-[var(--store-radius-sm)] border border-sand/20 bg-sand/[0.06] px-4">
-            <SearchIcon className="h-4 w-4 shrink-0 text-sand/50" />
+            <SearchIcon className="h-4 w-4 shrink-0 text-sand/55" />
             <label htmlFor="store-mobile-search" className="sr-only">
               {t("searchLabel")}
             </label>
@@ -512,7 +512,7 @@ function MobileSearch({
               type="search"
               placeholder={t("searchPlaceholder")}
               autoComplete="off"
-              className="min-w-0 flex-1 bg-transparent font-primary text-base text-sand placeholder:text-sand/40 focus:outline-none"
+              className="min-w-0 flex-1 bg-transparent font-primary text-base text-sand placeholder:text-sand/55 focus:outline-none"
             />
           </div>
 

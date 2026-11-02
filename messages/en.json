@@ -203,6 +203,7 @@
   },
   "Story": {
     "title": "Our Story | 3WEEQ",
+    "heading": "Our Story",
     "description": "The 3WEEQ journey through five civilizations — the Gulf, Babylon, Egypt, Greece, and China — in a sequence of cinematic scenes."
   },
   "Store": {
@@ -258,6 +259,7 @@
     "ctaCollections": "Discover the collections",
     "prev": "Previous",
     "next": "Next",
+    "pagination": "Pagination",
     "searchResults": "Search: {q}",
     "sort": "Sort",
     "sortNewest": "Newest",

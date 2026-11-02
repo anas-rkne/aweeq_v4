@@ -97,12 +97,12 @@ export function FirstChapter() {
           className="hidden object-cover md:block"
         />
 
-        <img
+        <Image
           src="/images/first_chapter/main_first_chapter_mobile_2.webp"
           alt={t("imageAlt")}
+          fill
+          sizes="100vw"
           className="block h-full w-full object-cover md:hidden"
-          loading="eager"
-          fetchPriority="high"
         />
 
         {/* the night laid over the stone, to take the glare out of it */}

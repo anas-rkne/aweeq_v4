@@ -1,6 +1,7 @@
 import { Link } from "@/i18n/navigation"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
+import { alternates } from "@/lib/seo"
 
 type PolicySection = {
   headingAr: string
@@ -281,6 +282,7 @@ export async function generateMetadata({
   return {
     title: `${locale === "ar" ? policy.titleAr : policy.titleEn} | 3WEEQ`,
     description: locale === "ar" ? policy.introAr : policy.introEn,
+    alternates: alternates(locale, `/policies/${slug}`),
   }
 }
 
@@ -304,7 +306,7 @@ export default async function PolicyPage({
       <div className="mx-auto max-w-3xl">
         <nav
           aria-label={storeT("breadcrumb")}
-          className="mb-10 flex items-center gap-2 font-primary text-xs text-sand/40"
+          className="mb-10 flex items-center gap-2 font-primary text-xs text-sand/55"
         >
           <Link href="/" className="transition-colors hover:text-gold">
             {storeT("home")}

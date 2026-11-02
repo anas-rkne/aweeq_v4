@@ -261,7 +261,7 @@ export function CartDrawer() {
               <h3 className="mt-5 font-primary text-lg text-sand">
                 {t("emptyTitle")}
               </h3>
-              <p className="mt-2 max-w-xs font-primary text-sm leading-7 text-sand/45">
+              <p className="mt-2 max-w-xs font-primary text-sm leading-7 text-sand/55">
                 {t("emptyMessage")}
               </p>
               <Link
@@ -324,7 +324,7 @@ export function CartDrawer() {
                             </p>
                           )}
                           {variantLabel && (
-                            <p className="mt-1 font-primary text-xs text-sand/45">
+                            <p className="mt-1 font-primary text-xs text-sand/55">
                               {variantLabel}
                             </p>
                           )}
@@ -373,7 +373,7 @@ export function CartDrawer() {
                           type="button"
                           onClick={() => void handleRemove(item.id)}
                           disabled={pending}
-                          className="inline-flex min-h-11 items-center font-primary text-[11px] text-sand/45 underline-offset-4 transition-colors hover:text-red-300 hover:underline disabled:opacity-40"
+                          className="inline-flex min-h-11 items-center font-primary text-[11px] text-sand/55 underline-offset-4 transition-colors hover:text-red-300 hover:underline disabled:opacity-40"
                         >
                           {t("remove")}
                         </button>
@@ -396,7 +396,7 @@ export function CartDrawer() {
                 {formatPrice(subtotal, currencyCode, isRtl ? "ar" : "en")}
               </span>
             </div>
-            <p className="mt-2 font-primary text-[11px] leading-5 text-sand/35">
+            <p className="mt-2 font-primary text-[11px] leading-5 text-sand/55">
               {t("shippingNote")}
             </p>
 

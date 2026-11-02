@@ -2,6 +2,7 @@ import Image from "next/image"
 import { Link } from "@/i18n/navigation"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
+import { alternates } from "@/lib/seo"
 import { JOURNAL_POSTS } from "@/components/journal-posts"
 
 export function generateStaticParams() {
@@ -23,6 +24,7 @@ export async function generateMetadata({
   return {
     title: `${locale === "ar" ? post.titleAr : post.titleEn} | 3WEEQ`,
     description: locale === "ar" ? post.excerptAr : post.excerptEn,
+    alternates: alternates(locale, `/journal/${slug}`),
     openGraph: {
       title: locale === "ar" ? post.titleAr : post.titleEn,
       description: locale === "ar" ? post.excerptAr : post.excerptEn,
@@ -56,7 +58,7 @@ export default async function JournalPostPage({
       <div className="mx-auto w-full max-w-5xl px-5 sm:px-8 md:px-12">
         <nav
           aria-label={storeT("breadcrumb")}
-          className="mb-8 flex flex-wrap items-center gap-2 font-primary text-xs text-sand/40"
+          className="mb-8 flex flex-wrap items-center gap-2 font-primary text-xs text-sand/55"
         >
           <Link href="/" className="transition-colors hover:text-gold">
             {storeT("home")}

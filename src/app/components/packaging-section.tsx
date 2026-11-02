@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useEffect, useRef } from "react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
@@ -203,11 +204,12 @@ export function PackagingSection() {
         <div className="ritual-scene ritual-scene-1 pointer-events-none absolute inset-0 z-10 flex items-center justify-center motion-reduce:hidden">
           <div className="ritual-s1-drop will-change-transform">
             <div className="ritual-s1box relative w-52 will-change-transform sm:w-64 lg:w-[340px]">
-              <img
+              <Image
                 src={ASSET.closed3d}
                 alt=""
+                width={612}
+                height={647}
                 loading="lazy"
-                decoding="async"
                 className="relative h-auto w-full"
                 style={{ filter: BOX_SHADOW }}
               />
@@ -222,11 +224,12 @@ export function PackagingSection() {
         {/* ===== scene 2 · the box faces you ===== */}
         <div className="ritual-scene ritual-scene-2 pointer-events-none absolute inset-0 z-10 flex items-center justify-center motion-reduce:hidden">
           <div className="ritual-s2box relative w-56 will-change-transform sm:w-72 lg:w-[380px]">
-            <img
+            <Image
               src={ASSET.closedFront}
               alt=""
+              width={612}
+              height={647}
               loading="lazy"
-              decoding="async"
               className="relative h-auto w-full"
               style={{ filter: BOX_SHADOW }}
             />
@@ -240,11 +243,12 @@ export function PackagingSection() {
         {/* ===== scene 3 · half open: the golden moment ===== */}
         <div className="ritual-scene ritual-scene-3 pointer-events-none absolute inset-0 z-20 flex items-center justify-center motion-reduce:hidden">
           <div className="ritual-s3box relative w-64 will-change-transform sm:w-80 lg:w-[440px]">
-            <img
+            <Image
               src={ASSET.halfOpen}
               alt=""
+              width={612}
+              height={647}
               loading="lazy"
-              decoding="async"
               className="relative h-auto w-full"
               style={{ filter: BOX_SHADOW }}
             />
@@ -260,11 +264,12 @@ export function PackagingSection() {
         <div className="ritual-scene ritual-scene-4 pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center gap-10 px-6 md:flex-row md:gap-16 lg:gap-24">
           <div className="relative flex items-center justify-center gap-5 sm:gap-8 lg:gap-10">
             <div className="ritual-bag relative w-24 will-change-transform sm:w-32 lg:w-[190px]">
-              <img
+              <Image
                 src={ASSET.handbag}
                 alt=""
+                width={2000}
+                height={2000}
                 loading="lazy"
-                decoding="async"
                 className="relative h-auto w-full"
                 style={{ filter: BOX_SHADOW }}
               />
@@ -275,11 +280,12 @@ export function PackagingSection() {
             </div>
 
             <div className="relative w-56 will-change-transform sm:w-72 lg:w-[380px]">
-              <img
+              <Image
                 src={ASSET.openFront}
                 alt=""
+                width={612}
+                height={647}
                 loading="lazy"
-                decoding="async"
                 className="relative h-auto w-full"
                 style={{ filter: BOX_SHADOW }}
               />

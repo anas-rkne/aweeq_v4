@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
+import { alternates } from "@/lib/seo"
 import { CheckoutFlow } from "@/features/checkout/checkout-flow"
 
 export async function generateMetadata({
@@ -16,6 +17,7 @@ export async function generateMetadata({
       locale === "ar"
         ? "إتمام عملية الشراء وإدخال تفاصيل الشحن والدفع الآمن."
         : "Complete your purchase and enter secure shipping and payment details.",
+    alternates: alternates(locale, "/checkout"),
     robots: { index: false, follow: false },
   }
 }

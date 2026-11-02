@@ -160,7 +160,7 @@ export function CartPageClient() {
           <h2 className="mt-6 font-primary text-2xl text-sand">
             {t("emptyTitle")}
           </h2>
-          <p className="mt-3 max-w-sm font-primary text-sm leading-7 text-sand/50">
+          <p className="mt-3 max-w-sm font-primary text-sm leading-7 text-sand/55">
             {t("emptyPage")}
           </p>
           <Link
@@ -222,12 +222,12 @@ export function CartPageClient() {
                           </p>
                         )}
                         {variantLabel && (
-                          <p className="mt-1.5 font-primary text-sm text-sand/45">
+                          <p className="mt-1.5 font-primary text-sm text-sand/55">
                             {variantLabel}
                           </p>
                         )}
                         {item.unit_price != null && (
-                          <p className="mt-1 font-secondary text-xs text-sand/35">
+                          <p className="mt-1 font-secondary text-xs text-sand/55">
                             {formatPrice(
                               item.unit_price,
                               currencyCode,
@@ -280,7 +280,7 @@ export function CartPageClient() {
                         type="button"
                         onClick={() => void handleRemove(item.id)}
                         disabled={pending}
-                        className="inline-flex min-h-11 items-center font-primary text-xs text-sand/45 underline-offset-4 transition-colors hover:text-red-300 hover:underline disabled:opacity-40"
+                        className="inline-flex min-h-11 items-center font-primary text-xs text-sand/55 underline-offset-4 transition-colors hover:text-red-300 hover:underline disabled:opacity-40"
                       >
                         {t("remove")}
                       </button>

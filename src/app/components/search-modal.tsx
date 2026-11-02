@@ -151,7 +151,7 @@ export function SearchModal({
             value={term}
             onChange={(event) => setTerm(event.target.value)}
             placeholder={t("placeholder")}
-            className="min-w-0 flex-1 bg-transparent px-4 py-3 font-primary text-sm text-sand placeholder:text-sand/35 focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent px-4 py-3 font-primary text-sm text-sand placeholder:text-sand/55 focus:outline-none"
           />
           <button
             type="submit"
@@ -162,7 +162,7 @@ export function SearchModal({
         </form>
 
         <div className="mt-5">
-          <p className="font-secondary text-[11px] tracking-[0.2em] text-sand/40">
+          <p className="font-secondary text-[11px] tracking-[0.2em] text-sand/55">
             {t("suggested")}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">

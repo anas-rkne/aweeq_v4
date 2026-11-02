@@ -23,7 +23,7 @@ export function SortSelect({ value }: { value: string }) {
     <div className="flex items-center gap-2">
       <label
         htmlFor="store-sort"
-        className="font-primary text-[11px] uppercase tracking-[0.12em] text-sand/50"
+        className="font-primary text-[11px] uppercase tracking-[0.12em] text-sand/55"
       >
         {t("sort")}
       </label>

@@ -119,7 +119,7 @@ export function NewsletterSection() {
                 disabled={isSubmitting}
                 aria-invalid={status === "error"}
                 aria-describedby="newsletter-message"
-                className="w-full border border-sand/30 border-e-0 bg-royal-navy/60 px-6 py-4 font-primary text-sand placeholder:text-sand/40 transition-colors focus:border-gold focus:bg-royal-navy/75 focus:text-sand focus:outline-none focus:ring-0 focus-visible:outline-none! focus-visible:ring-0! disabled:opacity-60"
+                className="w-full border border-sand/30 border-e-0 bg-royal-navy/60 px-6 py-4 font-primary text-sand placeholder:text-sand/55 transition-colors focus:border-gold focus:bg-royal-navy/75 focus:text-sand focus:outline-none focus:ring-0 focus-visible:outline-none! focus-visible:ring-0! disabled:opacity-60"
               />
               <span aria-hidden="true" className="focus-beam" />
             </div>
