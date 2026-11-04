@@ -203,7 +203,7 @@ export function PackagingSection() {
         {/* ===== scene 1 · the closed box, three-quarter view ===== */}
         <div className="ritual-scene ritual-scene-1 pointer-events-none absolute inset-0 z-10 flex items-center justify-center motion-reduce:hidden">
           <div className="ritual-s1-drop will-change-transform">
-            <div className="ritual-s1box relative w-52 will-change-transform sm:w-64 lg:w-[340px]">
+            <div className="ritual-s1box relative w-60 will-change-transform sm:w-80 lg:w-[460px]">
               <Image
                 src={ASSET.closed3d}
                 alt=""
@@ -279,7 +279,7 @@ export function PackagingSection() {
               />
             </div>
 
-            <div className="relative w-56 will-change-transform sm:w-72 lg:w-[380px]">
+            <div className="relative w-64 will-change-transform sm:w-96 lg:w-[500px]">
               <Image
                 src={ASSET.openFront}
                 alt=""

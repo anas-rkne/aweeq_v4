@@ -52,7 +52,7 @@ export function Footer({ className = "" }: { className?: string }) {
             className="inline-flex"
           >
             <Image
-              src="/images/logo-mark.png"
+              src="/images/logo-mark.webp"
               alt="3WEEQ"
               width={2785}
               height={841}

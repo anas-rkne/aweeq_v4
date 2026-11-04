@@ -256,6 +256,16 @@ const productTypes = [
     is_active: true,
   },
   {
+    id: "smokers",
+    code: "SMOKERS",
+    name_ar: "مخمرية",
+    name_en: "Smokers",
+    description_ar: "مخمرية ومباخر مصنوعة بحرفية تحمل روح الشرق.",
+    description_en: "Handcrafted burners that carry the soul of the East.",
+    sort_order: 3,
+    is_active: true,
+  },
+  {
     id: "jewelry",
     code: "JEWELRY",
     name_ar: "مجوهرات",

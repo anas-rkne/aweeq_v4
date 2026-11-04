@@ -109,7 +109,20 @@
   "StoreInvitation": {
     "title": "Discover a World of Civilizations",
     "body": "From the depths of Babylon to the spell of Egypt, from the marble of Greece to the silk of China. Step into the 3WEEQ store to own pieces that tell the stories of history.",
-    "cta": "Shop Now"
+    "cta": "Shop Now",
+    "comingSoon": "Coming soon"
+  },
+  "StoreCounter": {
+    "eyebrow": "The Collection",
+    "cta": "Enter the store",
+    "ending": "A world where civilizations are told in scent",
+    "explore": "Explore",
+    "pyramid": "Olfactory Pyramid",
+    "notes": {
+      "top": "Top",
+      "heart": "Heart",
+      "base": "Base"
+    }
   },
   "Packaging": {
     "eyebrow": "THE ART OF UNBOXING",
@@ -119,7 +132,14 @@
     "imageAlt": "RAFID packaging"
   },
   "Civilizations": {
+    "babylon": {
+      "chapter": "The First Chapter",
+      "title": "Babylon — Cradle of Civilizations",
+      "body": "RAFID, from the Ishtar Gate where the first writing was born.",
+      "cta": "Shop now"
+    },
     "gulf": {
+      "chapter": "The Origin",
       "title": "The Gulf — The Golden Coast",
       "body": "From the deep waters of the Gulf, where divers descended for pearls, and from the ports of frankincense and oud that bound the East to the world, 3WEEQ begins its tale. Fragrances that seal inside the bottle the salt of the sea, the warmth of the sands, and the spirit of ancestors.",
       "cta": "Join the Gulf waitlist"
@@ -145,7 +165,7 @@
   },
   "Beyond": {
     "title": "A Boutique Inspired by the Depth of Civilizations",
-    "body": "A complete experience spanning fragrances, incense, smokers, textiles, leather goods, and curated pieces from different cultures. We don't just make perfume; we craft a lifestyle worthy of you.",
+    "body": "From fragrance to incense, burners and woven cloth — pieces that carry the spirit of civilizations, made for your space.",
     "imageAlt": "The 3WEEQ boutique — a lifestyle inspired by civilizations",
     "items": {
       "perfumes": "Perfumes",
@@ -154,6 +174,12 @@
       "textiles": "Textiles",
       "leather": "Leather",
       "curated": "Curated"
+    },
+    "descriptions": {
+      "perfumes": "Fragrances that tell a civilization in every note.",
+      "incense": "Incense and oud that fill the room with the scent of history.",
+      "smokers": "Handcrafted burners that carry the soul of the East.",
+      "textiles": "Woven cloth with details worthy of your majlis."
     }
   },
   "Journal": {

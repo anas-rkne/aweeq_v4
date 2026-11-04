@@ -99,8 +99,9 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
         </div>
       </div>
 
-      {/* variant choice, as text not boxes */}
-      {product.variants.length > 0 && (
+      {/* variant choice, as text not boxes — only when a piece has more than
+          one size, otherwise the single 100 ml is simply stated below */}
+      {product.variants.length > 1 && (
         <fieldset className="mt-7">
           <legend className="mb-3 font-primary text-small text-royal-navy/70">
             {t("variant")}

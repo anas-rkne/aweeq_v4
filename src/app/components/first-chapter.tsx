@@ -91,18 +91,20 @@ export function FirstChapter() {
         <Image
           src="/images/first_chapter/main_first_chapter_2.webp"
           alt={t("imageAlt")}
-          fill
+          width={2720}
+          height={1536}
           quality={90}
           sizes="100vw"
-          className="hidden object-cover md:block"
+          className="absolute inset-0 hidden h-full w-full object-cover md:block"
         />
 
         <Image
           src="/images/first_chapter/main_first_chapter_mobile_2.webp"
           alt={t("imageAlt")}
-          fill
+          width={1760}
+          height={2336}
           sizes="100vw"
-          className="block h-full w-full object-cover md:hidden"
+          className="absolute inset-0 block h-full w-full object-cover md:hidden"
         />
 
         {/* the night laid over the stone, to take the glare out of it */}

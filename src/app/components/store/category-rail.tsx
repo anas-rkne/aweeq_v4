@@ -6,6 +6,7 @@ import {
   Landmark,
   Layers,
   LayoutGrid,
+  Sparkles,
 } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
@@ -14,6 +15,7 @@ import { STORE_PRODUCT_TYPES } from "@/lib/catalog"
 const ICONS = {
   fragrance: Droplet,
   incense: Flame,
+  smokers: Sparkles,
   jewelry: Gem,
   textile: Layers,
   leather: Briefcase,

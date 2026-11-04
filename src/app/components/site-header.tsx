@@ -390,14 +390,14 @@ export function SiteHeader() {
               className="inline-flex w-fit items-center"
             >
               <Image
-                src="/images/logo-mark.png"
+                src="/images/logo-mark.webp"
                 alt="3WEEQ"
                 width={2785}
                 height={841}
                 quality={90}
                 sizes="(min-width: 64rem) 7rem, 5rem"
                 preload
-                className="h-[20px] w-auto sm:h-[22px] md:h-8"
+                className="h-[20px] w-auto sm:h-[22px] md:h-12"
               />
             </a>
           </div>

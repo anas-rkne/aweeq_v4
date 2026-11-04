@@ -40,7 +40,8 @@ export function ProductGallery({ product }: ProductGalleryProps) {
       add(image.id, image.url, product.title)
     }
 
-    return list
+    /* the house keeps the plate to three photographs */
+    return list.slice(0, 3)
   }, [product])
 
   const [activeIndex, setActiveIndex] = useState(0)

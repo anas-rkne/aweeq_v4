@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 620" role="img">
+  <defs>
+    <linearGradient id="g100" x1="0.05" y1="0" x2="0.95" y2="1">
+      <stop offset="0" stop-color="#20486f"/>
+      <stop offset="0.32" stop-color="#0f2237"/>
+      <stop offset="0.7" stop-color="#0a1628"/>
+      <stop offset="1" stop-color="#050d18"/>
+    </linearGradient>
+    <linearGradient id="c100" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4dfba"/>
+      <stop offset="0.4" stop-color="#cd9e61"/>
+      <stop offset="1" stop-color="#7d5c30"/>
+    </linearGradient>
+    <linearGradient id="s100" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f6e6d6" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#f6e6d6" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#f6e6d6" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="126" y="14" width="88" height="58" rx="5" fill="url(#c100)"/>
+  <rect x="126" y="14" width="88" height="6" rx="3" fill="#f6e6d6" opacity="0.55"/>
+  <rect x="134" y="52" width="72" height="4" fill="#0a1628" opacity="0.32"/>
+
+  <rect x="146" y="72" width="48" height="26" fill="url(#g100)"/>
+  <rect x="140" y="96" width="60" height="10" fill="url(#c100)" opacity="0.92"/>
+
+  <path d="M86 106h168c14 0 24 10 24 24v360c0 16-12 28-28 28H90c-16 0-28-12-28-28V130c0-14 10-24 24-24Z" fill="url(#g100)"/>
+  <path d="M96 132h148v340c0 10-8 18-18 18H114c-10 0-18-8-18-18V132Z" fill="#2f4e78" opacity="0.2"/>
+  <path d="M96 300h148v172c0 10-8 18-18 18H114c-10 0-18-8-18-18V300Z" fill="#0d2b33" opacity="0.5"/>
+
+  <rect x="106" y="142" width="10" height="300" rx="5" fill="url(#s100)"/>
+  <rect x="222" y="142" width="4" height="270" rx="2" fill="#f6e6d6" opacity="0.09"/>
+
+  <rect x="132" y="212" width="76" height="108" rx="2" fill="none" stroke="#cd9e61" stroke-opacity="0.45"/>
+  <path d="M146 252h48M146 268h34M146 284h42" stroke="#cd9e61" stroke-opacity="0.5" stroke-width="1.5" stroke-linecap="round"/>
+
+  <path d="M62 518h216" stroke="#cd9e61" stroke-opacity="0.45" stroke-width="1.5"/>
+</svg>
