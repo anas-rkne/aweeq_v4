@@ -91,7 +91,7 @@ export function StoreCounter() {
         className="pointer-events-none absolute inset-0 z-0 opacity-10"
       >
         <Image
-          src="/images/hero-2/hero-2-bg.jpg"
+          src="/images/hero-2/hero-2-bg-v2.jpg"
           alt=""
           width={1408}
           height={768}

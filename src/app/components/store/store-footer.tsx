@@ -44,10 +44,10 @@ export async function StoreFooter() {
               className="inline-flex min-h-11 items-center"
             >
               <Image
-                src="/images/logo-mark.png"
+                src="/images/logo-mark.webp"
                 alt="3WEEQ"
-                width={2785}
-                height={841}
+                width={1310}
+                height={800}
                 quality={90}
                 sizes="9rem"
                 className="h-7 w-auto"

@@ -3,10 +3,10 @@ import { SectionFade } from "@/shared/ui/section-fade"
 import { ScrollGallery, type GalleryItem } from "@/components/scroll-gallery"
 
 const CATEGORIES = [
-  { id: "perfumes", image: "/images/beyond/11.webp" },
-  { id: "incense", image: "/images/beyond/22.webp" },
-  { id: "smokers", image: "/images/beyond/33.webp" },
-  { id: "textiles", image: "/images/beyond/44.webp" },
+  { id: "perfumes", image: "/images/beyond/11-v2.webp" },
+  { id: "incense", image: "/images/beyond/22-v2.webp" },
+  { id: "smokers", image: "/images/beyond/33-v2.webp" },
+  { id: "textiles", image: "/images/beyond/44-v2.webp" },
 ] as const
 
 export async function BeyondSection({ locale }: { locale: string }) {

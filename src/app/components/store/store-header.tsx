@@ -172,10 +172,10 @@ export function StoreHeader() {
             className="flex min-h-11 shrink-0 items-center"
           >
             <Image
-              src="/images/logo-mark.png"
+              src="/images/logo-mark.webp"
               alt="3WEEQ"
-              width={2785}
-              height={841}
+              width={1310}
+              height={800}
               quality={90}
               sizes="(min-width: 64rem) 7rem, 5rem"
               preload

@@ -43,9 +43,12 @@ const nextConfig: NextConfig = {
        the optimizer never answers with an error */
     qualities: [60, 70, 75, 80, 90],
     deviceSizes: [640, 750, 1024, 1280, 1536, 1920, 2560],
-    /* a month of cache: the hero frames are the site, they do not change
-       between deploys */
-    minimumCacheTTL: 60 * 60 * 24 * 30,
+    /* Optimized derivatives are keyed by URL, not by file content. A month of
+       cache therefore means a replaced image (same file name) keeps serving
+       the old bytes for a month — from this server's image cache and from the
+       visitor's browser. One minute is long enough to absorb traffic and short
+       enough that swapping a file under the same name takes effect on its own. */
+    minimumCacheTTL: 60,
   },
 };
 

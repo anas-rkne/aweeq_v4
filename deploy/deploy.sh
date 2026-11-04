@@ -31,6 +31,11 @@ npm --prefix medusa install --no-audit --no-fund
 echo "==> Building storefront"
 npm run build
 
+# The optimizer keeps optimized derivatives in .next/cache/images, keyed by URL.
+# A deploy must never serve bytes that were optimized from a previous checkout,
+# so the image cache is dropped with the build.
+rm -rf .next/cache/images
+
 echo "==> Building Medusa"
 # `tsc` reports pre-existing type errors in files unrelated to the current
 # change (payment providers, knex count<T>()). Medusa emits JS anyway because

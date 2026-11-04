@@ -27,11 +27,11 @@ gsap.registerPlugin(ScrollTrigger)
  */
 
 const ASSET = {
-  closed3d: "/images/packaging_images/img-a.webp",
-  closedFront: "/images/packaging_images/img-b.webp",
-  halfOpen: "/images/packaging_images/img-c.webp",
-  openFront: "/images/packaging_images/img-d.webp",
-  handbag: "/images/packaging_images/img-e.webp",
+  closed3d: "/images/packaging_images/img-a-v2.webp",
+  closedFront: "/images/packaging_images/img-b-v2.webp",
+  halfOpen: "/images/packaging_images/img-c-v2.webp",
+  openFront: "/images/packaging_images/img-d-v2.webp",
+  handbag: "/images/packaging_images/img-e-v2.webp",
 }
 
 const BOX_SHADOW = "drop-shadow(0px 18px 20px rgba(0,0,0,0.55))"
