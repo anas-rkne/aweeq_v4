@@ -127,11 +127,16 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
       {/* the facts of the chosen piece */}
       {selectedVariant && (
         <dl className="mt-7 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-royal-navy/15 pt-6 font-primary text-small">
-          {selectedVariant.size_ml != null && (
+          {/* the variant title is the measure itself ("100 ml", "100 gm",
+              "45 ml"); size_ml stays as the fallback for older pieces */}
+          {(selectedVariant.title || selectedVariant.size_ml != null) && (
             <>
               <dt className="text-royal-navy/60">{t("size")}</dt>
               <dd className="text-end text-royal-navy">
-                {selectedVariant.size_ml} ml
+                {selectedVariant.title ||
+                  (selectedVariant.size_ml != null
+                    ? `${selectedVariant.size_ml} ml`
+                    : "")}
               </dd>
             </>
           )}

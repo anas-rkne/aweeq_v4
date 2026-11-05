@@ -363,6 +363,47 @@ export class CatalogAdminService {
 
     const salesChannelId = await this.resolveSalesChannelId()
 
+    /* Every piece belongs to a civilization and to one of the store's types:
+       both columns are NOT NULL with a foreign key. Validate them here so the
+       Studio answers with a readable message instead of a raw database error. */
+    const civilizationId = String(input.civilization_id ?? "").trim()
+    const productTypeId = String(input.product_type_id ?? "").trim()
+
+    if (!civilizationId) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "civilization_id is required — choose the civilization this piece belongs to"
+      )
+    }
+    if (!productTypeId) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "product_type_id is required — choose the type (fragrance, incense, smokers, textile)"
+      )
+    }
+
+    const civilization = await this.db("catalog.civilization")
+      .where({ id: civilizationId })
+      .whereNull("deleted_at")
+      .first()
+    if (!civilization) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        `Unknown civilization "${civilizationId}"`
+      )
+    }
+
+    const productType = await this.db("catalog.product_type")
+      .where({ id: productTypeId })
+      .whereNull("deleted_at")
+      .first()
+    if (!productType) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        `Unknown product type "${productTypeId}"`
+      )
+    }
+
     let createdProductId: string | null = null
 
     try {
@@ -431,9 +472,9 @@ export class CatalogAdminService {
         await trx("catalog.product_profile")
           .insert({
             product_id: createdProductId,
-            civilization_id: input.civilization_id ?? null,
+            civilization_id: civilizationId,
             collection_id: input.collection_id ?? null,
-            product_type_id: input.product_type_id ?? null,
+            product_type_id: productTypeId,
             status: "draft",
             is_limited: Boolean(input.is_limited),
             is_serialized: Boolean(input.is_serialized),
@@ -554,6 +595,20 @@ export class CatalogAdminService {
     for (const key of keys) {
       if (input[key] !== undefined) {
         updates[key] = input[key]
+      }
+    }
+
+    /* both are NOT NULL with a foreign key — an empty value would surface as a
+       raw Postgres error, so name the field instead */
+    for (const [key, label] of [
+      ["civilization_id", "civilization"],
+      ["product_type_id", "product type"],
+    ] as const) {
+      if (input[key] !== undefined && !String(input[key] ?? "").trim()) {
+        throw new MedusaError(
+          MedusaError.Types.INVALID_DATA,
+          `${key} is required — this piece cannot be saved without a ${label}`
+        )
       }
     }
 

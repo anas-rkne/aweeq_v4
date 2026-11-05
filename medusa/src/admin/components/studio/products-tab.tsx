@@ -12,6 +12,12 @@ type ProductRow = {
   collection_handle: string | null
 }
 
+type Lookup = {
+  id: string
+  name_ar?: string
+  name_en?: string
+}
+
 const STATUS_LABELS: Record<string, string> = {
   draft: "مسودة",
   active: "منشور",
@@ -35,6 +41,33 @@ export function ProductsTab() {
   const [titleEn, setTitleEn] = useState("")
   const [price, setPrice] = useState("")
   const [sku, setSku] = useState("")
+  const [variantTitle, setVariantTitle] = useState("")
+  const [civilizationId, setCivilizationId] = useState("")
+  const [productTypeId, setProductTypeId] = useState("")
+  const [civilizations, setCivilizations] = useState<Lookup[]>([])
+  const [productTypes, setProductTypes] = useState<Lookup[]>([])
+
+  /* the product cannot be created without these two: both columns are NOT NULL.
+     Loading them up front means the form can ask for them at creation time
+     instead of failing on the insert. */
+  useEffect(() => {
+    void (async () => {
+      try {
+        const [civs, types] = await Promise.all([
+          studioFetch<{ civilizations: Lookup[] }>(
+            "/admin/threeweeq/civilizations"
+          ),
+          studioFetch<{ product_types: Lookup[] }>(
+            "/admin/threeweeq/product-types"
+          ),
+        ])
+        setCivilizations(civs.civilizations ?? [])
+        setProductTypes(types.product_types ?? [])
+      } catch {
+        /* the list still loads; creation reports what is missing */
+      }
+    })()
+  }, [])
 
   async function load() {
     setLoading(true)
@@ -82,6 +115,24 @@ export function ProductsTab() {
       return
     }
 
+    if (!civilizationId) {
+      setError("اختر الحضارة — لا يمكن إنشاء منتج بدونها.")
+      setBusy(false)
+      return
+    }
+
+    if (!productTypeId) {
+      setError("اختر النوع — لا يمكن إنشاء منتج بدونه.")
+      setBusy(false)
+      return
+    }
+
+    if (!variantTitle.trim()) {
+      setError("اكتب القياس كما سيظهر في المتجر: 45 ml / 100 gm / 100 ml.")
+      setBusy(false)
+      return
+    }
+
     try {
       const created = await studioFetch<{ product: { profile: { product_id: string } } }>(
         "/admin/threeweeq/products",
@@ -91,13 +142,17 @@ export function ProductsTab() {
             handle: handle.trim().toLowerCase(),
             title_ar: titleAr.trim(),
             title_en: titleEn.trim(),
+            civilization_id: civilizationId,
+            product_type_id: productTypeId,
             variants: [
               {
-                title: "100 ml",
+                title: variantTitle.trim(),
                 sku: sku || undefined,
                 price: Number(price),
-                size_ml: 100,
-                concentration: "extrait",
+                /* concentration is a fragrance word only — burners and
+                   incense carry none */
+                concentration:
+                  productTypeId === "fragrance" ? "extrait" : undefined,
               },
             ],
           }),
@@ -109,6 +164,7 @@ export function ProductsTab() {
       setTitleEn("")
       setPrice("")
       setSku("")
+      setVariantTitle("")
       setSuccess("تم إنشاء المنتج — أكمل الصور والنشر من صفحته.")
       await load()
 
@@ -179,6 +235,45 @@ export function ProductsTab() {
         <div>
           <label style={studioStyles.label}>Title (EN)</label>
           <input value={titleEn} onChange={(e) => setTitleEn(e.target.value)} style={studioStyles.input} />
+        </div>
+        <div>
+          <label style={studioStyles.label}>الحضارة *</label>
+          <select
+            value={civilizationId}
+            onChange={(e) => setCivilizationId(e.target.value)}
+            style={studioStyles.input}
+          >
+            <option value="">— اختر —</option>
+            {civilizations.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name_ar ?? item.name_en ?? item.id}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label style={studioStyles.label}>النوع *</label>
+          <select
+            value={productTypeId}
+            onChange={(e) => setProductTypeId(e.target.value)}
+            style={studioStyles.input}
+          >
+            <option value="">— اختر —</option>
+            {productTypes.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name_ar ?? item.name_en ?? item.id}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label style={studioStyles.label}>القياس (اسم المتغير) *</label>
+          <input
+            value={variantTitle}
+            onChange={(e) => setVariantTitle(e.target.value)}
+            placeholder="100 ml / 100 gm / 45 ml"
+            style={studioStyles.input}
+          />
         </div>
         <div>
           <label style={studioStyles.label}>SKU</label>
