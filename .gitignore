@@ -81,3 +81,11 @@ next-env.d.ts
 Thumbs.db
 .idea/
 .vscode/
+
+# audit & diagnostics artifacts (local only)
+.audit/
+diag-ending-*
+MOTIONSITES_SKILL_REPORT.md
+.claude/skills/motionsites-claude-skill
+
+# audit & diagnostics artifacts (local only).audit/diag-ending-*MOTIONSITES_SKILL_REPORT.md.claude/skills/motionsites-claude-skill

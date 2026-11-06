@@ -1,8 +1,8 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 @config "../../tailwind.config.js";
 
 /* ==========================================================================
-   Self-hosted brand fonts (local WOFF2 in /public/fonts — zero external
+   Self-hosted brand fonts (local WOFF2 in /public/fonts â€” zero external
    requests). Arabic (Lyon Arabic Display) covers every Arabic glyph; Latin
    (Ador Hairline) covers Latin glyphs, digits and punctuation. `unicode-range`
    keeps the two families from ever competing: each glyph resolves to its
@@ -38,7 +38,7 @@
 }
 
 @theme inline {
-  /* One breakpoint for the whole experience: phone composition → desktop at
+  /* One breakpoint for the whole experience: phone composition â†’ desktop at
      1024px (Tailwind's default `md` remapped onto the same 64rem line). */
   --breakpoint-md: 64rem;
 
@@ -49,13 +49,13 @@
 
   /* Official brand palette.
      Five brand colours, plus the semantic aliases the site's markup already
-     uses. Blue Slate is a glow/surface colour only — never a solid page
+     uses. Blue Slate is a glow/surface colour only â€” never a solid page
      background (2.14:1 against the base, too bright for a full field).
 
      Contrast measured against the site's dark base (#0a1628):
-       sand 100% 14.86 | sand 80% 9.73 | sand 70% 7.72 | sand 60% 5.97  → all sizes OK
-       gold 100%  7.48 | gold 90% 6.24 | gold 80% 5.18 | gold 70% 4.23  → all sizes OK
-       olive 100% 8.16 | sky 100% 5.66                                  → all sizes OK
+       sand 100% 14.86 | sand 80% 9.73 | sand 70% 7.72 | sand 60% 5.97  â†’ all sizes OK
+       gold 100%  7.48 | gold 90% 6.24 | gold 80% 5.18 | gold 70% 4.23  â†’ all sizes OK
+       olive 100% 8.16 | sky 100% 5.66                                  â†’ all sizes OK
      Running text sits at sand 80% (9.73:1) so the page never reads thin. */
   /* Five official brand colours. Mirrored in tailwind.config.js for tools
      that read the JS config; these CSS tokens remain the runtime source. */
@@ -84,7 +84,7 @@
   --color-navy-850: #050e18;
   --color-navy-800: #0a1420;
 
-  /* Type scale — one ladder used by every section. */
+  /* Type scale â€” one ladder used by every section. */
   --text-display: clamp(2.5rem, 6vw, 5rem);
   --text-display--line-height: 1.12;
   --text-lead: clamp(1.125rem, 1.4vw, 1.375rem);
@@ -141,8 +141,8 @@ body {
    bar and the secondary nav row scroll away; only this row sticks. */
 :root {
   --store-header-h: 4rem; /* 64px */
-  --store-radius: 0.75rem; /* 12px — cards and media wells */
-  --store-radius-sm: 0.5rem; /* 8px — fields and small controls */
+  --store-radius: 0.75rem; /* 12px â€” cards and media wells */
+  --store-radius-sm: 0.5rem; /* 8px â€” fields and small controls */
   --store-radius-pill: 999px; /* search field, category chips */
   --store-surface: rgb(246 230 214 / 0.04); /* a card on the navy ground */
   --store-surface-hover: rgb(246 230 214 / 0.07);
@@ -203,7 +203,7 @@ textarea {
    Arabic (Lyon Arabic Display) must never be letter-spaced: tracked Arabic
    breaks the cursive joins between letters and reads as broken type.
    `font-primary` is the Arabic-first family token, so its tracking is pinned
-   to 0. Latin display type uses `font-secondary` (Ador Hairline) instead —
+   to 0. Latin display type uses `font-secondary` (Ador Hairline) instead â€”
    that one keeps its tracking utilities.
    ========================================================================== */
 
@@ -223,20 +223,20 @@ textarea {
 
    The shadow layer is the one gradient the site is allowed: a neutral
    gradient (one colour, its alpha changing) that shapes the light on the
-   photograph so the type never stands on raw pixels. One ink — rgba(22,30,36)
-   — through four layers, because the site is judged on gradients that stay
+   photograph so the type never stands on raw pixels. One ink â€” rgba(22,30,36)
+   â€” through four layers, because the site is judged on gradients that stay
    one colour and change only their alpha; a tinted or hard-edged gradient
    reads as decoration and is rejected.
 
-     1. the light  — a wide ellipse over the arch, open in the middle so
+     1. the light  â€” a wide ellipse over the arch, open in the middle so
                      the gate keeps its glow, closing as it leaves
-     2. the shadow — a pool under the type column, soft enough that the
+     2. the shadow â€” a pool under the type column, soft enough that the
                      light above it survives
-     3. the lens  — a vignette that closes the corners of the frame
-     4. the floor  — the foot of the screen settles into the dark
+     3. the lens  â€” a vignette that closes the corners of the frame
+     4. the floor  â€” the foot of the screen settles into the dark
 
    On a phone the picture is read differently: the type sits at the top and
-   the gate stands clear in the middle, so the layers turn vertical — dark
+   the gate stands clear in the middle, so the layers turn vertical â€” dark
    under the type, open over the gate, dark again under the foot.
    ========================================================================== */
 
@@ -305,13 +305,13 @@ textarea {
    when the visitor asked for stillness.
 
     Contract:
-      hero type parts  — 0.8s, fade + 12px rise (8px on a phone), 0–240ms
-      hero photograph  — 0.8s, scale .98 → 1, no travel, then a slow drift
-      hero parallax    — pointer: picture −20px, type +10px, 1–1.2s,
+      hero type parts  â€” 0.8s, fade + 12px rise (8px on a phone), 0â€“240ms
+      hero photograph  â€” 0.8s, scale .98 â†’ 1, no travel, then a slow drift
+      hero parallax    â€” pointer: picture âˆ’20px, type +10px, 1â€“1.2s,
                          power2.out, written by GSAP; silent under
                          `prefers-reduced-motion: reduce`
-      scroll reveals   — 1s, 12px rise (8px on a phone), 0.1s after entering
-      button feedback  — scale 1.01 hover / 0.99 press, 0.25s
+      scroll reveals   â€” 1s, 12px rise (8px on a phone), 0.1s after entering
+      button feedback  â€” scale 1.01 hover / 0.99 press, 0.25s
     ========================================================================== */
 
 :root {
@@ -385,7 +385,7 @@ textarea {
 }
 
 /* hero-2: the strip no longer runs on a keyframe. it is driven by
-   store-invitation.tsx — drift, hover settle and drag with a fling — so the
+   store-invitation.tsx â€” drift, hover settle and drag with a fling â€” so the
    transform is written once per frame on the track element itself. only the
    compositor hint lives here. */
 .store-marquee {
@@ -436,7 +436,7 @@ textarea {
 
 /* The drift animates the `scale` property, not `transform`: the pointer
    parallax writes a `transform` (translation) on the same element, and the
-   two compose — translate first, then scale — so neither cancels the other.
+   two compose â€” translate first, then scale â€” so neither cancels the other.
    A CSS animation on `transform` would win over the inline style and the
    picture would sit still under the pointer. The base scale is the
    `scale-105` class on the element itself. */
@@ -455,7 +455,7 @@ textarea {
    Four civilizations, one picture at a time. The picture changes by itself
    every few seconds and nothing else on the screen moves: the photograph
    carries the transition name, so the browser captures it as a single image
-   and the swap is a dissolve between two pictures — the type, the buttons
+   and the swap is a dissolve between two pictures â€” the type, the buttons
    and the caption stand still.
 
    Everything here is motion, so it lives inside
@@ -529,185 +529,23 @@ textarea {
   }
 }
 
-/* ===== the boutique gallery =====
-   A faithful port of the "Scrolling Image Effects" layout (DivineBlow,
-   codepen.io/DivineBlow/pen/JjEZGme): a grid of editorial blocks, each an
-   image + a large overlapping title + a small description, the image tilting
-   in 3D and sliding inside its frame as it crosses the viewport. Only the
-   palette, the type and the language are the house's. */
-[data-boutique] {
-  --imgwidthmax: 450px;
-  --size-title: clamp(2.5rem, 5.5vw, 5rem);
-  --color-title: #cd9e61;
-  --color-description: rgba(246, 230, 214, 0.72);
-  /* one vertical rhythm: the gap before the first room, between rooms, and
-     after the last room are the same */
-  --boutique-gap: 18vh;
-}
+/* ===== the boutique belt =====
+   The four rooms are one horizontal track (see scroll-gallery.tsx). It is
+   moved by a single translate written from a rAF loop, doubled for a seamless
+   seam, and left alone entirely under prefers-reduced-motion. Nothing here
+   needs a transform, so the component owns the whole effect. */
 
-[data-boutique] .page {
-  display: grid;
-  padding: 5vw;
-  max-width: 1200px;
-  margin: 0 auto;
-  grid-template-columns: 100%;
-  grid-template-areas:
-    "header"
-    "grid";
-}
-
-[data-boutique] .page__head {
-  grid-area: header;
-  text-align: center;
-}
-
-[data-boutique] .page__title {
-  margin: 0 0 0.75rem;
-  font-family: var(--font-primary);
-  font-weight: 700;
-  font-size: clamp(1.75rem, 3.4vw, 3rem);
-  color: var(--color-brand-gold);
-}
-
-[data-boutique] .page__description {
-  margin: 0 auto;
-  max-width: 40rem;
-  font-family: var(--font-primary);
-  font-size: 1.05rem;
-  line-height: 1.8;
-  color: var(--color-description);
-}
-
-[data-boutique] .content {
-  grid-area: grid;
-  margin: var(--boutique-gap) 0;
-}
-
-[data-boutique] .content--padded {
-  padding: 0 10vw;
-}
-
-[data-boutique] .content__item {
-  --imgwidth: calc(var(--imgwidthmax) * var(--aspect-ratio));
-  width: var(--imgwidth);
-  max-width: 100%;
-  position: relative;
-  will-change: transform;
-  margin-bottom: var(--boutique-gap);
-  display: grid;
-  grid-template-columns: 50% 50%;
-}
-
-/* the last room carries no trailing gap, so the walk ends as it began */
-[data-boutique] .content__item:last-child {
-  margin-bottom: 0;
-}
-
-[data-boutique] .content__item--expand {
-  width: 100%;
-  grid-template-columns: minmax(0, var(--imgwidth)) 1fr;
-}
-
-[data-boutique] .content__item--expand:nth-child(even) {
-  grid-template-columns: 1fr minmax(0, var(--imgwidth));
-}
-
-[data-boutique] .content__item-imgwrap {
-  position: relative;
-  --imgwidth: 100%;
-  margin: 0 auto;
-  grid-area: 1 / 1 / 3 / 3;
-  overflow: hidden;
-  width: var(--imgwidth);
-  padding-bottom: calc(var(--imgwidth) / (var(--aspect-ratio)));
-  will-change: transform;
-}
-
-[data-boutique] .content__item--expand .content__item-imgwrap {
-  grid-area: 1 / 1 / 3 / 2;
-}
-
-[data-boutique] .content__item--expand:nth-child(even) .content__item-imgwrap {
-  grid-area: 1 / 2 / 3 / 3;
-  justify-self: end;
-}
-
-[data-boutique] .content__item-img {
-  --overflow: 40px;
-  height: calc(100% + (2 * var(--overflow)));
-  top: calc(-1 * var(--overflow));
-  width: 100%;
-  position: absolute;
-  background-size: cover;
-  background-position: 50% 0%;
-  will-change: transform;
-}
-
-[data-boutique] .content__item-title {
-  position: relative;
-  font-size: var(--size-title);
-  padding: 0 3vw;
-  margin: calc(var(--size-title) * -1 / 2) 0 0 0;
-  align-self: start;
-  line-height: 1;
-  font-family: var(--font-primary);
-  font-weight: 700;
-  color: var(--color-title);
-  will-change: transform;
-}
-
-[data-boutique] .content__item-description {
-  grid-area: 3 / 1 / 3 / 3;
-  width: 70%;
-  position: relative;
-  margin: 0;
-  padding: 1rem 0 0 0;
-  color: var(--color-description);
-  font-family: var(--font-primary);
-}
-
-[data-boutique] .content--alternate .content__item-title {
-  grid-area: 3 / 1 / 4 / 2;
-  justify-self: start;
-}
-
-[data-boutique] .content--alternate .content__item:nth-child(even) .content__item-title {
-  grid-area: 3 / 2 / 4 / 3;
-  justify-self: end;
-  width: auto;
-}
-
-[data-boutique] .content__item--expand .content__item-description {
-  grid-area: 1 / 2 / 3 / 3;
-  justify-self: start;
-  align-self: start;
-  padding: 0 2rem;
-  width: 250px;
-  font-size: 0.9rem;
-  line-height: 1.7;
-}
-
-[data-boutique] .content__item--expand:nth-child(even) .content__item-description {
-  grid-area: 1 / 1 / 3 / 2;
-  justify-self: end;
-  text-align: right;
-}
-
-@media screen and (max-width: 40em) {
-  [data-boutique] .content__item--expand .content__item-imgwrap,
-  [data-boutique] .content__item--expand:nth-child(even) .content__item-imgwrap {
-    grid-area: 1 / 1 / 3 / 3;
+/* motion asked to stay away: the belt becomes a plain horizontal strip the
+   reader can still swipe through — never a frozen crop of a longer row */
+@media (prefers-reduced-motion: reduce) {
+  [data-belts] {
+    overflow-x: auto;
+    scrollbar-width: none;
   }
-  [data-boutique] .content__item--expand .content__item-description,
-  [data-boutique] .content__item--expand:nth-child(even) .content__item-description {
-    grid-area: 3 / 1 / 4 / 3;
-    padding: 1rem 0;
-    width: 100%;
-    text-align: left;
+  [data-belts]::-webkit-scrollbar {
+    display: none;
   }
-  [data-boutique] .content--alternate .content__item-title,
-  [data-boutique] .content--alternate .content__item:nth-child(even) .content__item-title {
-    grid-area: 1 / 1 / 4 / 2;
+  [data-belts] > div {
+    transform: none !important;
   }
 }
-

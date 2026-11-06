@@ -1,16 +1,20 @@
 "use client"
 
-import { useEffect, useRef, type CSSProperties } from "react"
+import Image from "next/image"
+import { useEffect, useRef } from "react"
+import { useLocale } from "next-intl"
 
 /**
- * ScrollGallery — the boutique's four rooms, tilting in space as they pass.
+ * ScrollGallery — the boutique's four rooms on one endless belt.
  *
- * A faithful port of the "Scrolling Image Effects" layout (DivineBlow,
- * codepen.io/DivineBlow/pen/JjEZGme): an editorial grid of blocks, each an
- * image beside a large overlapping title and a small description. As the page
- * scrolls, each image rotates in 3D (`rotate3d`) and its content slides a
- * little inside its frame. The page's own Lenis drives the scroll, so this
- * only reads `window.scrollY` and paints each visible item.
+ * No grid, no tilt, no scroll choreography: a single horizontal track that
+ * carries the rooms past the reader at a constant, unhurried pace, doubled so
+ * the seam never shows. The belt pauses under the hand and under the keyboard
+ * so a room can actually be read, and it stands still for anyone who asked
+ * motion to stay out of the way (the copy is then simply laid out in place).
+ *
+ * Nothing here is scrubbed by scroll: the belt is time, not position, which is
+ * what makes it read as a carousel rather than another reveal.
  */
 
 export type GalleryItem = {
@@ -19,12 +23,8 @@ export type GalleryItem = {
   description: string
 }
 
-const OVERFLOW = 40
-const ASPECT = "1376/768"
-
-const map = (x: number, a: number, b: number, c: number, d: number) =>
-  (x - a) * (d - c) / (b - a) + c
-const lerp = (a: number, b: number, n: number) => (1 - n) * a + n * b
+/* px per second — slow enough to read a room as it passes */
+const SPEED = 54
 
 export function ScrollGallery({
   title,
@@ -35,142 +35,145 @@ export function ScrollGallery({
   description: string
   items: GalleryItem[]
 }) {
-  const rootRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const locale = useLocale()
+  /* the belt's geometry must be one fixed direction, or an RTL track anchors
+     to its right edge and the loop drives itself off the page. The rooms
+     themselves still read in the page's direction — see `dir` on each card. */
+  const textDir = locale === "ar" ? "rtl" : "ltr"
 
   useEffect(() => {
-    const root = rootRef.current
-    if (!root) return
+    const track = trackRef.current
+    if (!track) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
-    const elements = Array.from(
-      root.querySelectorAll<HTMLElement>("[data-item]")
-    )
+    const set = track.querySelector<HTMLElement>("[data-set]")
+    if (!set) return
 
-    const state = elements.map((el) => {
-      const image = el.querySelector<HTMLElement>("[data-img]")
-      const wrapper = el.querySelector<HTMLElement>("[data-imgwrap]")
-      const titleEl = el.querySelector<HTMLElement>("[data-title]")
+    const zone = track.parentElement ?? track
 
-      el.style.perspective = "1000px"
-      if (wrapper) wrapper.style.transformOrigin = "50% 100%"
-      if (titleEl) titleEl.style.transform = "translate3d(0,0,200px)"
+    let width = 0
+    let offset = 0
+    let last = 0
+    let paused = false
+    let frame = 0
 
-      return {
-        el,
-        image,
-        wrapper,
-        ry: Math.random() * 1 - 0.5,
-        rz: Math.random() * 1 - 0.5,
-        toValue: -(50 + Math.random() * 20),
-        height: 0,
-        top: 0,
-        innerY: 0,
-        rotation: 0,
-        visible: false,
+    const measure = () => {
+      width = set.getBoundingClientRect().width
+      /* a resize can leave the belt stranded past its own seam */
+      if (width > 0 && offset <= -width) offset = -(Math.abs(offset) % width)
+    }
+    measure()
+
+    const resize = new ResizeObserver(measure)
+    resize.observe(track)
+
+    const tick = (now: number) => {
+      if (!last) last = now
+      /* a tab that was asleep must not teleport the belt */
+      const dt = Math.min((now - last) / 1000, 0.064)
+      last = now
+
+      if (!paused && width > 0) {
+        offset -= SPEED * dt
+        if (offset <= -width) offset += width
+        track.style.transform = `translate3d(${offset.toFixed(2)}px, 0, 0)`
       }
-    })
 
-    const getSize = () => {
-      state.forEach((s) => {
-        const rect = s.el.getBoundingClientRect()
-        s.height = rect.height
-        s.top = window.scrollY + rect.top
-      })
+      frame = requestAnimationFrame(tick)
     }
-    getSize()
+    frame = requestAnimationFrame(tick)
 
-    let raf = 0
-    const render = () => {
-      state.forEach((s) => {
-        if (!s.visible) return
-        const y = map(
-          s.top - window.scrollY,
-          window.innerHeight,
-          -s.height,
-          -OVERFLOW,
-          OVERFLOW
-        )
-        s.innerY = lerp(
-          s.innerY,
-          Math.max(Math.min(y, OVERFLOW), -OVERFLOW),
-          0.1
-        )
-
-        const rot = map(
-          s.top - window.scrollY,
-          window.innerHeight * 1.5,
-          -s.height,
-          s.toValue,
-          -s.toValue
-        )
-        s.rotation = lerp(
-          s.rotation,
-          Math.min(Math.max(rot, s.toValue), -s.toValue),
-          0.1
-        )
-
-        if (s.image) {
-          s.image.style.transform = `translate3d(0, ${s.innerY}px, 0)`
-        }
-        if (s.wrapper) {
-          s.wrapper.style.transform = `rotate3d(1, ${s.ry}, ${s.rz}, ${s.rotation}deg)`
-        }
-      })
-      raf = requestAnimationFrame(render)
+    const hold = () => {
+      paused = true
     }
-    raf = requestAnimationFrame(render)
+    const release = () => {
+      paused = false
+    }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const s = state.find((x) => x.el === entry.target)
-          if (s) s.visible = entry.intersectionRatio > 0
-        })
-      },
-      { rootMargin: "160px" }
-    )
-    state.forEach((s) => observer.observe(s.el))
-
-    const onResize = () => getSize()
-    const ro = new ResizeObserver(onResize)
-    ro.observe(root)
-    window.addEventListener("resize", onResize)
-    void document.fonts?.ready.then(onResize)
+    zone.addEventListener("pointerenter", hold)
+    zone.addEventListener("pointerleave", release)
+    zone.addEventListener("focusin", hold)
+    zone.addEventListener("focusout", release)
 
     return () => {
-      cancelAnimationFrame(raf)
-      observer.disconnect()
-      ro.disconnect()
-      window.removeEventListener("resize", onResize)
+      cancelAnimationFrame(frame)
+      resize.disconnect()
+      zone.removeEventListener("pointerenter", hold)
+      zone.removeEventListener("pointerleave", release)
+      zone.removeEventListener("focusin", hold)
+      zone.removeEventListener("focusout", release)
     }
   }, [items])
 
   return (
-    <div ref={rootRef} data-boutique>
-      <div className="page">
-        <div className="page__head">
-          <h2 className="page__title">{title}</h2>
-          <p className="page__description">{description}</p>
-        </div>
+    <div className="py-20 md:py-28">
+      <div className="mx-auto max-w-4xl px-6 text-center">
+        <h2 className="font-secondary text-[1.9rem] leading-[1.2] text-gold sm:text-4xl md:text-5xl">
+          {title}
+        </h2>
+        <p className="mx-auto mt-4 max-w-2xl font-primary text-base leading-[1.85] text-sand/70 md:mt-5 md:text-lg">
+          {description}
+        </p>
+      </div>
 
-        <div className="content content--alternate content--padded">
-          {items.map((item) => (
+      {/* the belt. the edge fade is a mask, so the rooms dissolve into the
+          page instead of being sliced by the viewport */}
+      <div
+        data-belts
+        data-no-reveal
+        dir="ltr"
+        className="mt-12 overflow-hidden md:mt-16"
+        style={{
+          maskImage:
+            "linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%)",
+        }}
+      >
+        <div ref={trackRef} className="flex w-max will-change-transform">
+          {[0, 1].map((copy) => (
             <div
-              key={item.title}
-              data-item
-              className="content__item content__item--expand"
-              style={{ "--aspect-ratio": ASPECT } as CSSProperties}
+              key={copy}
+              data-set
+              aria-hidden={copy === 1 ? true : undefined}
+              className="flex shrink-0 gap-4 pe-4 md:gap-6 md:pe-6"
             >
-              <div data-imgwrap className="content__item-imgwrap">
-                <div
-                  data-img
-                  className="content__item-img"
-                  style={{ backgroundImage: `url(${item.image})` }}
-                />
-              </div>
-              <h3 data-title className="content__item-title">
-                {item.title}
-              </h3>
-              <p className="content__item-description">{item.description}</p>
+              {items.map((item) => (
+                <article
+                  key={`${copy}-${item.title}`}
+                  dir={textDir}
+                  className="group relative w-[74vw] shrink-0 sm:w-[54vw] lg:w-[33vw]"
+                >
+                  <div className="relative aspect-[16/10] overflow-hidden bg-royal-navy">
+                    <Image
+                      src={item.image}
+                      alt={item.title}
+                      fill
+                      sizes="(max-width: 640px) 74vw, (max-width: 1024px) 54vw, 33vw"
+                      className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.035]"
+                    />
+
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "linear-gradient(to top, rgba(3,10,19,0.94) 0%, rgba(3,10,19,0.55) 32%, rgba(3,10,19,0.05) 66%, rgba(3,10,19,0) 100%)",
+                      }}
+                    />
+
+                    <div className="absolute inset-x-0 bottom-0 p-5 md:p-7">
+                      <h3 className="font-secondary text-2xl leading-tight text-gold md:text-3xl">
+                        {item.title}
+                      </h3>
+                      <p className="mt-2 max-w-[38ch] font-primary text-[0.85rem] leading-[1.7] text-sand/75 md:text-sm">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              ))}
             </div>
           ))}
         </div>

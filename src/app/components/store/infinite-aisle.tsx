@@ -148,10 +148,21 @@ function cuneiformTexture(char: string, color: string): THREE.Texture {
 
 export const InfiniteAisle = forwardRef<
   AisleHandle,
-  { products: AisleProduct[] }
->(function InfiniteAisle({ products }, ref) {
+  {
+    products: AisleProduct[]
+    /* fires every paint with the per-piece reveal (0…1) so the parent can
+       drive the DOM product cards in lock-step with the float, without a
+       React re-render per frame */
+    onReveal?: (reveals: number[]) => void
+  }
+>(function InfiniteAisle({ products, onReveal }, ref) {
   const hostRef = useRef<HTMLDivElement>(null)
   const targetRef = useRef(0)
+  const onRevealRef = useRef(onReveal)
+
+  useEffect(() => {
+    onRevealRef.current = onReveal
+  }, [onReveal])
 
   useImperativeHandle(
     ref,
@@ -504,6 +515,8 @@ export const InfiniteAisle = forwardRef<
           piece.material.opacity = piece.material.map ? reveal : 0
         }
       })
+
+      onRevealRef.current?.(reveals.slice())
 
       /* the cuneiform signs: they brighten around the piece being passed,
          and drift a little on their own */

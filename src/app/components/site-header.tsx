@@ -395,9 +395,9 @@ export function SiteHeader() {
                 width={2785}
                 height={841}
                 quality={90}
-                sizes="(min-width: 64rem) 7rem, 5rem"
+                sizes="(min-width: 64rem) 11rem, 8rem"
                 preload
-                className="h-[20px] w-auto sm:h-[22px] md:h-12"
+                className="h-[28px] w-auto sm:h-[34px] md:h-[56px]"
               />
             </a>
           </div>

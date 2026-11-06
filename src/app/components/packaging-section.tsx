@@ -27,11 +27,11 @@ gsap.registerPlugin(ScrollTrigger)
  */
 
 const ASSET = {
-  closed3d: "/images/packaging_images/img-a-v2.webp",
-  closedFront: "/images/packaging_images/img-b-v2.webp",
-  halfOpen: "/images/packaging_images/img-c-v2.webp",
+  closed3d: "/images/packaging_images/img-a-v3.webp",
+  closedFront: "/images/packaging_images/img-b-v3.webp",
+  halfOpen: "/images/packaging_images/img-c-v3.webp",
   openFront: "/images/packaging_images/img-d-v2.webp",
-  handbag: "/images/packaging_images/img-e-v2.webp",
+  handbag: "/images/packaging_images/img-e-v3.webp",
 }
 
 const BOX_SHADOW = "drop-shadow(0px 18px 20px rgba(0,0,0,0.55))"
@@ -203,7 +203,7 @@ export function PackagingSection() {
         {/* ===== scene 1 · the closed box, three-quarter view ===== */}
         <div className="ritual-scene ritual-scene-1 pointer-events-none absolute inset-0 z-10 flex items-center justify-center motion-reduce:hidden">
           <div className="ritual-s1-drop will-change-transform">
-            <div className="ritual-s1box relative w-60 will-change-transform sm:w-80 lg:w-[460px]">
+            <div className="ritual-s1box relative w-80 will-change-transform sm:w-112 lg:w-[640px]">
               <Image
                 src={ASSET.closed3d}
                 alt=""
@@ -223,7 +223,7 @@ export function PackagingSection() {
 
         {/* ===== scene 2 · the box faces you ===== */}
         <div className="ritual-scene ritual-scene-2 pointer-events-none absolute inset-0 z-10 flex items-center justify-center motion-reduce:hidden">
-          <div className="ritual-s2box relative w-56 will-change-transform sm:w-72 lg:w-[380px]">
+          <div className="ritual-s2box relative w-72 will-change-transform sm:w-96 lg:w-[520px]">
             <Image
               src={ASSET.closedFront}
               alt=""
@@ -242,7 +242,7 @@ export function PackagingSection() {
 
         {/* ===== scene 3 · half open: the golden moment ===== */}
         <div className="ritual-scene ritual-scene-3 pointer-events-none absolute inset-0 z-20 flex items-center justify-center motion-reduce:hidden">
-          <div className="ritual-s3box relative w-64 will-change-transform sm:w-80 lg:w-[440px]">
+          <div className="ritual-s3box relative w-80 will-change-transform sm:w-112 lg:w-[600px]">
             <Image
               src={ASSET.halfOpen}
               alt=""
@@ -263,7 +263,7 @@ export function PackagingSection() {
             reading side ===== */}
         <div className="ritual-scene ritual-scene-4 pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center gap-10 px-6 md:flex-row md:gap-16 lg:gap-24">
           <div className="relative flex items-center justify-center gap-5 sm:gap-8 lg:gap-10">
-            <div className="ritual-bag relative w-24 will-change-transform sm:w-32 lg:w-[190px]">
+            <div className="ritual-bag relative w-40 will-change-transform sm:w-48 lg:w-[260px]">
               <Image
                 src={ASSET.handbag}
                 alt=""

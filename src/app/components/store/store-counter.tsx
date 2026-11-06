@@ -1,24 +1,27 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { SectionFade } from "@/shared/ui/section-fade"
+import type { Product } from "@/types"
+import { normalizeImageUrl } from "@/lib/format"
+import { HeroProductCard } from "./hero-product-card"
 import { InfiniteAisle, type AisleHandle, type AisleProduct } from "./infinite-aisle"
 
 /**
- * The pieces — three distinct products, one per stop in the mist. These are
- * placeholders; they are swapped for the real product photography the moment
- * it is ready, and the aisle keeps their true aspect ratio on its own.
- */
-const PRODUCTS: AisleProduct[] = [
-  { image: "/images/hero-2/transparent%20(3).webp", glow: "#cd9e61" },
-  { image: "/images/hero-2/transparent%20(4).webp", glow: "#2f4e78" },
-  { image: "/images/hero-2/transparent%20(5).webp", glow: "#8d7f92" },
-]
+ * each piece keeps its own halo colour — the same glow the WebGL scene casts,
+ * so the DOM card and the floating piece read as one object */
+const GLOW: Record<string, string> = {
+  mikhmaria: "#cd9e61",
+  bakhoor: "#2f4e78",
+  rafid: "#8d7f92",
+}
+
+const FALLBACK_GLOW = "#cd9e61"
 
 /** the civilizations banner, glued to the floor at the end */
 const ENDING_IMAGE = "/images/hero-2/last.webp"
@@ -31,14 +34,42 @@ const ENDING_IMAGE_MOBILE = "/images/hero-2/last-mobile.webp"
  *
  * A dive through the night. The scroll drives the camera (the WebGL scene
  * owns its own motion), and at the end the night clears for a line, a gold
- * button and the five-civilization image — the invitation to the store. On a
- * phone there is no WebGL: the same pieces rise out of the dark.
+ * button and the five-civilization image — the invitation to the store.
+ *
+ * The three pieces are now the three products themselves: each floats in the
+ * mist as before, but a buyable card (title, measure, price, add-to-cart and
+ * a details link) surfaces beside it as it comes into view — left, right,
+ * left on a desktop, and a bottom bar on a phone. On a phone there is still
+ * the WebGL float, but the card rides at the foot of the stage.
  */
-export function StoreCounter() {
+export function StoreCounter({ products }: { products: Product[] }) {
   const t = useTranslations("StoreCounter")
   const sectionRef = useRef<HTMLElement>(null)
   const aisleRef = useRef<AisleHandle>(null)
   const endingRef = useRef<HTMLDivElement>(null)
+  const cardEls = useRef<(HTMLDivElement | null)[]>([])
+
+  /* the WebGL layer only needs the photograph and its glow */
+  const aisleProducts = useMemo<AisleProduct[]>(
+    () =>
+      products.map((product) => ({
+        image: normalizeImageUrl(product.thumbnail) ?? "",
+        glow: GLOW[product.handle] ?? FALLBACK_GLOW,
+      })),
+    [products]
+  )
+
+  /* the cards follow the float, so reveal is driven from the scene's paint
+     loop — a direct style write, never a React re-render per frame */
+  const handleReveal = useCallback((reveals: number[]) => {
+    reveals.forEach((reveal, index) => {
+      const el = cardEls.current[index]
+      if (!el) return
+      const opacity = Math.max(0, Math.min(1, reveal))
+      el.style.opacity = String(opacity)
+      el.style.pointerEvents = opacity > 0.02 ? "auto" : "none"
+    })
+  }, [])
 
   useEffect(() => {
     const section = sectionRef.current
@@ -78,6 +109,14 @@ export function StoreCounter() {
     return () => ctx.revert()
   }, [])
 
+  /* the card positions: a phone shows each as a bottom bar; a desktop puts
+     them at the sides, alternating left / right / left */
+  const cardPosition = [
+    "left-4 right-4 bottom-5 md:left-10 md:right-auto md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:w-80",
+    "left-4 right-4 bottom-5 md:right-10 md:left-auto md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:w-80",
+    "left-4 right-4 bottom-5 md:left-10 md:right-auto md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:w-80",
+  ]
+
   return (
     <section
       id="store-invitation"
@@ -108,7 +147,25 @@ export function StoreCounter() {
         className="relative h-svh overflow-hidden"
       >
         {/* the WebGL scene */}
-        <InfiniteAisle ref={aisleRef} products={PRODUCTS} />
+        <InfiniteAisle
+          ref={aisleRef}
+          products={aisleProducts}
+          onReveal={handleReveal}
+        />
+
+        {/* the buyable cards, riding on the float */}
+        {products.map((product, index) => (
+          <div
+            key={product.id}
+            ref={(el) => {
+              cardEls.current[index] = el
+            }}
+            className={`pointer-events-none absolute z-10 ${cardPosition[index] ?? cardPosition[0]}`}
+            style={{ opacity: 0 }}
+          >
+            <HeroProductCard product={product} />
+          </div>
+        ))}
 
         {/* the clearing: the invitation to the store */}
         <div
@@ -168,41 +225,49 @@ export function StoreCounter() {
                 width={768}
                 height={1376}
                 sizes="100vw"
-                className="absolute inset-x-0 bottom-0 z-0 h-auto w-full"
+                className="absolute inset-x-0 bottom-0 z-0 mx-auto h-auto w-full max-w-[59svh]"
               />
             </div>
           </div>
         </div>
       </div>
 
-      {/* ===== reduced motion: the pieces stacked, still ===== */}
+      {/* ===== reduced motion: the pieces stacked, still, and buyable ===== */}
       <div
         data-stage="stack"
         className="hidden mx-auto w-full max-w-xl flex-col gap-0"
       >
-        {PRODUCTS.map((product) => (
-          <article
-            key={product.image}
-            data-piece
-            className="flex flex-col items-center px-6 py-14"
-          >
-            <div
-              className="relative mt-8 flex aspect-[3/4] w-full max-w-xs items-center justify-center"
-              style={{
-                background: `radial-gradient(ellipse 70% 55% at 50% 45%, ${product.glow}55 0%, rgba(10,22,40,0) 70%)`,
-              }}
+        {products.map((product, index) => {
+          const glow = aisleProducts[index]?.glow ?? FALLBACK_GLOW
+          return (
+            <article
+              key={product.id}
+              data-piece
+              className="flex flex-col items-center px-6 py-14"
             >
-              <Image
-                src={product.image}
-                alt=""
-                width={1200}
-                height={733}
-                sizes="(max-width: 1023px) 320px"
-                className="absolute inset-0 h-full w-full object-contain"
-              />
-            </div>
-          </article>
-        ))}
+              <div
+                className="relative mt-8 flex aspect-[3/4] w-full max-w-xs items-center justify-center"
+                style={{
+                  background: `radial-gradient(ellipse 70% 55% at 50% 45%, ${glow}55 0%, rgba(10,22,40,0) 70%)`,
+                }}
+              >
+                {aisleProducts[index]?.image ? (
+                  <Image
+                    src={aisleProducts[index].image}
+                    alt={product.title}
+                    width={1200}
+                    height={733}
+                    sizes="(max-width: 1023px) 320px"
+                    className="absolute inset-0 h-full w-full object-contain"
+                  />
+                ) : null}
+              </div>
+              <div className="mt-6 w-full max-w-sm">
+                <HeroProductCard product={product} />
+              </div>
+            </article>
+          )
+        })}
 
         {/* the invitation, at the end of the phone walk */}
         <article data-piece className="flex flex-col items-center px-6 py-20 text-center">
@@ -222,3 +287,5 @@ export function StoreCounter() {
     </section>
   )
 }
+
+export default StoreCounter
