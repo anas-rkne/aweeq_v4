@@ -5,6 +5,7 @@ import {
   ThreeweeqRepository,
   type Locale,
 } from "./repository"
+import { resolveRequestLocale } from "./locale"
 
 export const CATALOG_PRODUCT_FIELDS = [
   "id",
@@ -44,17 +45,7 @@ type Price = {
 }
 
 export function resolveLocale(req: MedusaRequest): Locale {
-  const queryLocale =
-    typeof req.query.locale === "string" ? req.query.locale : undefined
-  const headerValue = req.headers["x-locale"]
-  const headerLocale = Array.isArray(headerValue)
-    ? headerValue[0]
-    : headerValue
-  const value = queryLocale ?? headerLocale
-
-  return typeof value === "string" && value.toLowerCase().startsWith("en")
-    ? "en"
-    : "ar"
+  return resolveRequestLocale(req)
 }
 
 export function resolveCurrencyCode(

@@ -41,6 +41,70 @@ const EMIRATES = [
   { ar: "الفجيرة", en: "Fujairah" },
 ] as const
 
+/* Delivery policy: 30 AED across the emirates, 50 AED for the Western Region
+   (Al Dhafra) and the outer areas of Al Ain. The admin catalogue carries one
+   flat option per tier, so the checkout has to pick the right one from the
+   address instead of defaulting to the first option in the list. */
+const WESTERN_REGION_AREAS = [
+  "الظفرة",
+  "الغربية",
+  "الرويس",
+  "ليوا",
+  "غياثي",
+  "دلما",
+  "المرفأ",
+  "براكة",
+  "مدينة زايد",
+  "سلع",
+  "حبشان",
+  "الطويلة",
+  "مزيد",
+  "المطاوعة",
+  "اطراف العين",
+]
+
+const SHIPPING_STANDARD = 30
+const SHIPPING_WESTERN = 50
+
+/** Strip Arabic diacritics and unify alef/ta/ya so "أطراف العين" matches "اطراف العين". */
+function normalizeArabic(value: string) {
+  return value
+    .replace(/[\u064B-\u0652\u0670\u0640]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/[ىي]/g, "ي")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function isWesternRegion(emirate: string, area: string) {
+  const haystack = normalizeArabic(`${area} ${emirate}`)
+  return WESTERN_REGION_AREAS.some((keyword) =>
+    haystack.includes(normalizeArabic(keyword))
+  )
+}
+
+/** Free options are leftovers from seeding and must never reach the customer. */
+function usableOptions(options: ShippingOption[]) {
+  return options.filter((option) => Number(option.amount ?? 0) > 0)
+}
+
+function pickShippingOption(
+  options: ShippingOption[],
+  emirate: string,
+  area: string
+) {
+  const target = isWesternRegion(emirate, area)
+    ? SHIPPING_WESTERN
+    : SHIPPING_STANDARD
+
+  return (
+    options.find((option) => Number(option.amount) === target) ??
+    options[0] ??
+    null
+  )
+}
+
 export function CheckoutFlow() {
   const t = useTranslations("Checkout")
   const locale = useLocale()
@@ -76,13 +140,15 @@ export function CheckoutFlow() {
     setOptionsLoading(true)
     setError(null)
     try {
-      setOptions(await fetchShippingOptions(cartId, locale))
+      const list = usableOptions(await fetchShippingOptions(cartId, locale))
+      setOptions(list)
+      setSelectedOption(pickShippingOption(list, emirate, area)?.id ?? "")
     } catch {
       setError(t("genericError"))
     } finally {
       setOptionsLoading(false)
     }
-  }, [cartId, locale, options.length, optionsLoading, t])
+  }, [cartId, emirate, area, locale, options.length, optionsLoading, t])
 
   function shippingAddress() {
     // The form has one "full name" field; Medusa requires both first_name
@@ -141,11 +207,12 @@ export function CheckoutFlow() {
         locale,
       })
 
-      setOptions(prepared.shipping_options ?? [])
-      setSelectedOption((current) => current || prepared.shipping_options?.[0]?.id || "")
+      const list = usableOptions(prepared.shipping_options ?? [])
+      setOptions(list)
+      setSelectedOption(pickShippingOption(list, emirate, area)?.id ?? "")
       setStep("shipping")
 
-      if (!prepared.shipping_options?.length) {
+      if (!list.length) {
         setError(t("noShippingOptions"))
       }
     } catch (prepareError) {

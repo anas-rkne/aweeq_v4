@@ -19,12 +19,35 @@ function firstResult(value: any) {
   return Array.isArray(output) ? (output[0] ?? null) : (output ?? null)
 }
 
+/**
+ * The admin queries are written with Postgres' `$1` placeholders. knex only
+ * counts `?` when it compiles a raw query, and from 3.2 on it *refuses* a
+ * query whose placeholder count does not match its bindings ("Expected 1
+ * bindings, saw 0"), which surfaced as a bare "unknown error" in the Studio.
+ * Translate `$n` to `?` before handing the query to knex; a repeated `$n` is
+ * bound again in place, exactly like Postgres would do.
+ */
+function toPositionalPlaceholders(sql: string, bindings: unknown[]) {
+  if (!bindings.length) {
+    return { sql, bindings }
+  }
+
+  const positionalBindings: unknown[] = []
+  const positionalSql = sql.replace(/\$(\d+)/g, (_match, rawIndex: string) => {
+    positionalBindings.push(bindings[Number(rawIndex) - 1] ?? null)
+    return "?"
+  })
+
+  return { sql: positionalSql, bindings: positionalBindings }
+}
+
 async function rawRows(
   executor: any,
   sql: string,
   bindings: unknown[] = []
 ): Promise<AnyRow[]> {
-  const result = await executor.raw(sql, bindings as any)
+  const positional = toPositionalPlaceholders(sql, bindings)
+  const result = await executor.raw(positional.sql, positional.bindings as any)
   return (result?.rows ?? []) as AnyRow[]
 }
 

@@ -1,5 +1,20 @@
 export type StoreLocale = "ar" | "en"
 
+/* Mirrors the `remotePatterns` in next.config.ts: next/image only optimises
+   these hosts, anything else answers 400. */
+const ALLOWED_IMAGE_HOSTS = new Set<string>(
+  [process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL, process.env.NEXT_PUBLIC_SITE_URL]
+    .map((value) => {
+      if (!value) return null
+      try {
+        return new URL(value).hostname
+      } catch {
+        return null
+      }
+    })
+    .filter((host): host is string => Boolean(host))
+)
+
 export function formatPrice(
   amount: number | null | undefined,
   currencyCode: string = "aed",
@@ -87,14 +102,22 @@ export function normalizeImageUrl(url: string | null | undefined) {
   try {
     const parsed = new URL(trimmed)
 
+    /* the shop's own files are served from this origin */
     if (parsed.pathname.startsWith("/images/")) {
       return `${parsed.pathname}${parsed.search}`
     }
+
+    /* next/image only accepts the hosts declared in next.config. A stale
+       "http://localhost:9000/static/..." left over from a dev upload would
+       otherwise answer 400 on every render, so it is dropped here instead. */
+    if (ALLOWED_IMAGE_HOSTS.size && !ALLOWED_IMAGE_HOSTS.has(parsed.hostname)) {
+      return null
+    }
+
+    return trimmed
   } catch {
     return trimmed
   }
-
-  return trimmed
 }
 
 export function stripHtml(value: string | null | undefined) {

@@ -6,17 +6,10 @@ import {
   ThreeweeqRepository,
   type Locale,
 } from "../../../../lib/threeweeq/repository"
+import { resolveRequestLocale } from "../../../../lib/threeweeq/locale"
 
 function resolveLocale(req: MedusaRequest): Locale {
-  const queryLocale =
-    typeof req.query.locale === "string" ? req.query.locale : undefined
-  const headerValue = req.headers["x-locale"]
-  const headerLocale = Array.isArray(headerValue)
-    ? headerValue[0]
-    : headerValue
-  const value = queryLocale ?? headerLocale
-
-  return value === "en" ? "en" : "ar"
+  return resolveRequestLocale(req)
 }
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {

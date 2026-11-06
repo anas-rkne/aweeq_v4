@@ -75,30 +75,56 @@ function serializableAmount(value: unknown) {
   return value === undefined || value === null ? null : Number(value)
 }
 
+function optionAmount(option: any) {
+  return Number(
+    option?.amount ??
+      option?.calculated_price?.calculated_amount ??
+      option?.prices?.[0]?.amount ??
+      0
+  )
+}
+
 async function resolveShippingOptionId(
   req: MedusaRequest,
   cartId: string,
   requested?: string | null
 ) {
-  if (requested) {
-    return requested
-  }
-
   const result = await listShippingOptionsForCartWithPricingWorkflow(
     req.scope
   ).run({
     input: { cart_id: cartId },
   })
-  const options = unwrap(result) as any[]
+  const options = (unwrap(result) ?? []) as any[]
+  const list = Array.isArray(options) ? options : []
 
-  if (!Array.isArray(options) || !options.length) {
+  /* Free flat rates are leftovers from seeding. The shop charges 30 AED
+     across the emirates and 50 AED for the Western Region, so an option that
+     prices at zero must never be accepted — even from a hand-made request. */
+  const priced = list.filter((option) => optionAmount(option) > 0)
+
+  if (!priced.length) {
     throw new MedusaError(
       MedusaError.Types.INVALID_DATA,
       "No shipping options are available for this cart"
     )
   }
 
-  return String(options[0].id)
+  if (requested) {
+    const match = priced.find(
+      (option) => String(option.id) === String(requested)
+    )
+
+    if (!match) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "The selected shipping option is not available for this address"
+      )
+    }
+
+    return String(match.id)
+  }
+
+  return String(priced[0].id)
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
@@ -124,6 +150,13 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       message: "This cart has already been completed",
     })
     return
+  }
+
+  if (!cart.items?.length) {
+    throw new MedusaError(
+      MedusaError.Types.INVALID_DATA,
+      "Cannot start checkout with an empty cart"
+    )
   }
 
   const email = body.email?.trim() || cart.email || null
