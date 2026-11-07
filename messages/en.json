@@ -194,6 +194,8 @@
   "Newsletter": {
     "title": "Be Part of the Journey",
     "subtitle": "Be part of our journey. Be the first to know about upcoming releases.",
+    "fact": "Five civilizations · one letter",
+    "cta": "Subscribe",
     "emailLabel": "Your email address",
     "placeholder": "Your email address",
     "submit": "Subscribe to the newsletter",

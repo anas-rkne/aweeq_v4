@@ -1,23 +1,24 @@
 "use client"
 
-import dynamic from "next/dynamic"
+import Image from "next/image"
 import { useLocale, useTranslations } from "next-intl"
 import { useState, type FormEvent } from "react"
 import { SectionFade } from "@/shared/ui/section-fade"
-import { TextReveal } from "@/shared/ui/text-reveal"
-
-/* the bottle lives behind a dynamic import: three.js is a heavy guest, and
-   the page should not pay for it before the section is asked for */
-const BottleStage = dynamic(
-  () => import("@/components/bottle-stage").then((m) => m.BottleStage),
-  { ssr: false }
-)
 
 type FormStatus = "idle" | "submitting" | "success" | "error"
 
+/**
+ * NewsletterSection — the invitation stands on the brand plate.
+ *
+ * The plate (bg.webp) is the floor: it covers the section edge to edge and its
+ * transparent corners let the site's own cuneiform wall show through. The copy
+ * and the form sit centred on the plate, over a neutral night scrim.
+ */
 export function NewsletterSection() {
   const t = useTranslations("Newsletter")
   const locale = useLocale()
+  const isRtl = locale === "ar"
+
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<FormStatus>("idle")
   const [message, setMessage] = useState("")
@@ -45,14 +46,9 @@ export function NewsletterSection() {
       })
 
       if (!response.ok) {
-        const data = (await response.json().catch(() => null)) as {
-          error?: string
-        } | null
-
+        const data = (await response.json().catch(() => null)) as { error?: string } | null
         setStatus("error")
-        setMessage(
-          data?.error === "invalid_email" ? t("invalidEmail") : t("error")
-        )
+        setMessage(data?.error === "invalid_email" ? t("invalidEmail") : t("error"))
         return
       }
 
@@ -66,95 +62,127 @@ export function NewsletterSection() {
   }
 
   const isSubmitting = status === "submitting"
+  const done = status === "success"
 
   return (
     <section
       id="newsletter"
       data-cuneiform-surface
-      // the shared wall is the room: no photograph, the cuneiform carries it
-      className="relative isolate flex min-h-svh flex-col justify-center overflow-hidden"
+      className="relative isolate flex min-h-[92svh] w-full flex-col justify-end overflow-hidden"
     >
-      {/* the fog the journal leaves behind */}
-      <SectionFade edge="top" zIndex={6} />
+      {/* the plate: full width, full image, sitting on the floor of the section */}
+      <Image
+        src="/images/newsletter/bg.webp"
+        alt=""
+        width={1376}
+        height={768}
+        sizes="100vw"
+        loading="eager"
+        draggable={false}
+        className="pointer-events-none relative z-0 block h-auto w-full max-w-none select-none"
+      />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-[84rem] gap-12 px-6 py-24 md:grid-cols-2 md:items-center md:gap-16 md:px-16 md:py-32">
-        {/* ===== the words and the door: on the reading side on wide screens,
-            under the bottle on a phone ===== */}
-        <div className="order-2 flex flex-col items-center text-center md:order-1 md:items-start md:text-start">
-          <h2 className="font-secondary text-4xl leading-tight tracking-[-0.01em] text-gold md:text-5xl">
-            <TextReveal preset="words" blur>
-              {t("title")}
-            </TextReveal>
+      {/* the night the words sit in */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-10"
+        style={{
+          background:
+            "radial-gradient(ellipse 46% 40% at 50% 52%, rgba(3,10,19,0.74) 0%, rgba(3,10,19,0.48) 52%, rgba(3,10,19,0.12) 76%, rgba(3,10,19,0) 100%)",
+        }}
+      />
+
+      {/* ===== the invitation, centred on the plate ===== */}
+      <div className="absolute inset-0 z-20 mx-auto flex w-full max-w-5xl items-center justify-center px-6 ">
+        <div data-no-reveal className="w-full max-w-xl text-center">
+          <h2
+            className="font-secondary text-[clamp(2rem,3.6vw,3.1rem)] leading-[1.12] tracking-[-0.01em] text-sand"
+            style={{ textShadow: "0 2px 34px rgba(3,10,19,0.9)" }}
+          >
+            {t("title")}
           </h2>
 
-          <p className="mt-4 max-w-xl font-primary text-lg leading-[1.8] text-sand">
-            <TextReveal preset="block">{t("subtitle")}</TextReveal>
+          <p
+            className="mx-auto mt-5 max-w-lg font-primary text-base leading-[1.8] text-sand/85 sm:text-lg"
+            style={{ textShadow: "0 2px 26px rgba(3,10,19,0.95)" }}
+          >
+            {t("subtitle")}
           </p>
 
-          <form
-            onSubmit={handleSubmit}
-            noValidate
-            className="mt-10 flex w-full max-w-lg flex-row"
-          >
-            <label htmlFor="newsletter-email" className="sr-only">
-              {t("emailLabel")}
-            </label>
-
-            <div className="focus-beam-wrap relative min-w-0 flex-1">
-              <input
-                id="newsletter-email"
-                name="email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                placeholder={t("placeholder")}
-                value={email}
-                onChange={(event) => {
-                  setEmail(event.target.value)
-                  if (status !== "idle") {
-                    setStatus("idle")
-                    setMessage("")
-                  }
-                }}
-                disabled={isSubmitting}
-                aria-invalid={status === "error"}
-                aria-describedby="newsletter-message"
-                className="w-full border border-sand/30 border-e-0 bg-royal-navy/60 px-6 py-4 font-primary text-sand placeholder:text-sand/55 transition-colors focus:border-gold focus:bg-royal-navy/75 focus:text-sand focus:outline-none focus:ring-0 focus-visible:outline-none! focus-visible:ring-0! disabled:opacity-60"
-              />
-              <span aria-hidden="true" className="focus-beam" />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="shrink-0 cursor-pointer bg-gold px-6 py-4 font-primary text-lg font-bold text-royal-navy transition-colors hover:bg-sand disabled:cursor-not-allowed disabled:opacity-60 sm:px-8"
+          {done ? null : (
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              className="mx-auto mt-9 flex w-full max-w-lg flex-row"
             >
-              <span className="sr-only">
-                {isSubmitting ? t("submitting") : t("submit")}
-              </span>
-              <span aria-hidden="true">{isSubmitting ? "…" : "←"}</span>
-            </button>
-          </form>
+              <label htmlFor="newsletter-email" className="sr-only">
+                {t("emailLabel")}
+              </label>
+
+              <div className="focus-beam-wrap relative min-w-0 flex-1">
+                <input
+                  id="newsletter-email"
+                  name="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder={t("placeholder")}
+                  value={email}
+                  onChange={(event) => {
+                    setEmail(event.target.value)
+                    if (status !== "idle") {
+                      setStatus("idle")
+                      setMessage("")
+                    }
+                  }}
+                  disabled={isSubmitting}
+                  aria-invalid={status === "error"}
+                  aria-describedby="newsletter-message"
+                  className="w-full border border-sand/30 border-e-0 bg-[#050d18]/70 px-5 py-3.5 font-primary text-sand backdrop-blur-sm placeholder:text-sand/50 transition-colors focus:border-gold focus:bg-[#07111c]/85 focus:text-sand focus:outline-none focus:ring-0 focus-visible:outline-none! focus-visible:ring-0! disabled:opacity-60 md:px-6 md:py-4"
+                />
+                <span aria-hidden="true" className="focus-beam" />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="shrink-0 cursor-pointer bg-gold px-5 py-3.5 font-primary text-lg font-bold text-royal-navy transition-[transform,background-color] duration-150 ease-out hover:bg-sand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 md:py-4 sm:px-8"
+              >
+                <span className="sr-only">
+                  {isSubmitting ? t("submitting") : t("submit")}
+                </span>
+                <span aria-hidden="true">
+                  {isSubmitting ? "…" : isRtl ? "←" : "→"}
+                </span>
+              </button>
+            </form>
+          )}
 
           <p
             id="newsletter-message"
             aria-live="polite"
-            className={`mt-4 min-h-6 font-primary text-sm ${
-              status === "error" ? "text-gold" : "text-sand/80"
+            className={`mx-auto min-h-6 max-w-lg font-primary leading-[1.7] ${
+              done
+                ? "mt-9 text-[17px] text-sand"
+                : "mt-4 text-[13px] " + (status === "error" ? "text-gold" : "text-sand/60")
             }`}
+            style={{ textShadow: "0 2px 18px rgba(3,10,19,0.9)" }}
           >
             {message}
           </p>
-        </div>
 
-        {/* ===== the bottle: turns on its own, turns by the hand ===== */}
-        <div className="order-1 h-[36vh] min-h-72 md:order-2 md:h-[64vh] md:min-h-[28rem]">
-          <BottleStage className="h-full w-full" />
+          <p
+            className="mt-2 font-primary text-[13px] text-sand/50 md:mt-8"
+            style={{ textShadow: "0 2px 18px rgba(3,10,19,0.9)" }}
+          >
+            {t("fact")}
+          </p>
         </div>
       </div>
 
-      {/* the fog the footer sits in */}
-      <SectionFade edge="bottom" zIndex={6} />
+      {/* the mist that joins the section to the footer — the same divider used
+          between the other sections on this page */}
+      <SectionFade edge="bottom" />
     </section>
   )
 }
