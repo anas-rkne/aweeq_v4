@@ -197,10 +197,105 @@ function orderConfirmationEmail(event: OutboxEvent) {
   return { subject: copy.subject, html, text }
 }
 
+function shippedEmail(event: OutboxEvent) {
+  const payload = event.payload ?? {}
+  const locale = payload.locale === "en" ? "en" : "ar"
+  const orderNumber = payload.display_id
+    ? `#${payload.display_id}`
+    : payload.order_id ?? ""
+  const name = payload.customer_name?.trim()
+  const tracking = Array.isArray(payload.tracking_numbers)
+    ? payload.tracking_numbers
+        .filter((entry): entry is string => Boolean(entry))
+        .map((entry) => String(entry))
+    : []
+  const trackingUrl = "https://topex.ae/Home/tracking2"
+
+  const copy =
+    locale === "ar"
+      ? {
+          subject: `طلبك في الطريق ${orderNumber} — 3WEEQ`,
+          heading: "طلبك في الطريق",
+          greeting: name ? `مرحباً ${escapeHtml(name)}،` : "مرحباً،",
+          intro:
+            "خرج طلبك من المستودع مع شركة التوصيل. يمكنك متابعة الشحنة عبر الرابط أدناه.",
+          orderLabel: "رقم الطلب",
+          trackingLabel: "رقم التتبع",
+          trackingButton: "تتبع الشحنة",
+          window:
+            "التوصيل خلال 24 ساعة من الاستلام، يومياً من 10 صباحاً حتى 10 مساءً.",
+          footer: "لللاستفسار: care@3weeq.ae",
+          dir: "rtl",
+        }
+      : {
+          subject: `Your order is on the way ${orderNumber} — 3WEEQ`,
+          heading: "Your order is on the way",
+          greeting: name ? `Hello ${escapeHtml(name)},` : "Hello,",
+          intro:
+            "Your order has left our warehouse with the courier. Follow the shipment through the link below.",
+          orderLabel: "Order",
+          trackingLabel: "Tracking number",
+          trackingButton: "Track shipment",
+          window:
+            "Delivery within 24 hours of pickup, daily from 10 AM to 10 PM.",
+          footer: "Questions: care@3weeq.ae",
+          dir: "ltr",
+        }
+
+  const trackingLine = tracking.length
+    ? `<p style="margin:16px 0 0"><strong>${copy.trackingLabel}:</strong><br/>${tracking
+        .map((entry) => escapeHtml(entry))
+        .join("<br/>")}</p>`
+    : ""
+
+  const html = `<!doctype html>
+<html dir="${copy.dir}" lang="${locale}">
+  <body style="margin:0;background:#0b1020;padding:24px;font-family:Arial,Helvetica,sans-serif">
+    <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden">
+      <tr>
+        <td style="background:#0b1020;color:#cd9e61;padding:20px;font-size:20px;letter-spacing:4px">3WEEQ</td>
+      </tr>
+      <tr>
+        <td style="padding:24px;color:#1f2937;font-size:15px;line-height:1.7">
+          <h1 style="margin:0 0 12px;font-size:20px">${copy.heading}</h1>
+          <p style="margin:0 0 8px">${copy.greeting}</p>
+          <p style="margin:0 0 16px">${copy.intro}</p>
+          <p style="margin:0 0 4px"><strong>${copy.orderLabel}:</strong> ${escapeHtml(orderNumber)}</p>
+          ${trackingLine}
+          <p style="margin:24px 0 0">
+            <a href="${trackingUrl}" style="display:inline-block;background:#cd9e61;color:#0a1628;padding:12px 24px;border-radius:4px;text-decoration:none;font-weight:bold">${copy.trackingButton}</a>
+          </p>
+          <p style="margin:24px 0 0;color:#6b7280;font-size:13px">${copy.window}</p>
+          <p style="margin:4px 0 0;color:#6b7280;font-size:13px">${copy.footer}</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`
+
+  const text = [
+    copy.heading,
+    copy.greeting,
+    copy.intro,
+    `${copy.orderLabel}: ${orderNumber}`,
+    tracking.length
+      ? `${copy.trackingLabel}: ${tracking.join(", ")} — ${trackingUrl}`
+      : trackingUrl,
+    copy.window,
+    copy.footer,
+  ]
+    .filter(Boolean)
+    .join("\n")
+
+  return { subject: copy.subject, html, text }
+}
+
 function templateFor(event: OutboxEvent) {
   switch (event.event_type) {
     case "order.confirmation":
       return orderConfirmationEmail(event)
+    case "order.shipped":
+      return shippedEmail(event)
     default:
       return null
   }

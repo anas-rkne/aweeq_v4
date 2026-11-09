@@ -6,15 +6,16 @@ import {
   CollectionsTab,
   TypesTab,
 } from "../../components/studio/entities-tabs"
+import { TopexTab } from "../../components/studio/topex-tab"
 
 export const config = defineRouteConfig({
   label: "3WEEQ Studio",
 })
 
 function CatalogPage() {
-  const [tab, setTab] = useState<"products" | "collections" | "civilizations" | "types">(
-    "products"
-  )
+  const [tab, setTab] = useState<
+    "products" | "collections" | "civilizations" | "types" | "topex"
+  >("products")
 
   return (
     <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
@@ -27,6 +28,7 @@ function CatalogPage() {
             ["collections", "المجموعات"],
             ["civilizations", "الحضارات"],
             ["types", "الأنواع"],
+            ["topex", "توبكس"],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -52,6 +54,7 @@ function CatalogPage() {
       {tab === "collections" && <CollectionsTab />}
       {tab === "civilizations" && <CivilizationsTab />}
       {tab === "types" && <TypesTab />}
+      {tab === "topex" && <TopexTab />}
     </div>
   )
 }

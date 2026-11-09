@@ -17,11 +17,13 @@
     "@medusajs/framework": "2.22.0",
     "@medusajs/medusa": "2.22.0",
     "express": "^4.21.2",
+    "pdfmake": "0.2.20",
     "pg": "^8.16.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^20",
+    "@types/pdfmake": "0.2.10",
     "ts-node": "^10.9.2",
     "typescript": "^5"
   }

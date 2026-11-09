@@ -72,9 +72,11 @@ const POLICIES: Policy[] = [
         headingEn: "Delivery time",
         bodyAr: [
           "توصيل خلال 24 ساعة من استلام الطلب: نستلم اليوم ونوصّل في اليوم التالي. يتم الاستلام قبل السادسة مساءً، والطلبات بعد هذا الموعد تُستلم في اليوم التالي.",
+          "يتم التوصيل يومياً من العاشرة صباحاً حتى العاشرة مساءً حسب خط سير المندوب، دون تحديد موعد مسبق، ولا يتوفر توصيل في نفس اليوم.",
         ],
         bodyEn: [
           "Delivery within 24 hours of pickup: we collect today and deliver the next day. Pickup happens before 6 PM; orders placed after that are collected the following day.",
+          "Deliveries happen daily from 10 AM to 10 PM along the courier's route, without a pre-set appointment, and same-day delivery is not available.",
         ],
       },
       {
