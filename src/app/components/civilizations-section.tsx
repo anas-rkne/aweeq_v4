@@ -38,6 +38,25 @@ const BLOCKS: FrameBlock[] = [
 
 const TOTAL_FRAMES = BLOCKS.reduce((sum, block) => sum + block.count, 0)
 
+/* How far the portrait crop zooms in over the film (0 → 1). It is a fraction
+   of the cover scale, so the frame never stops filling the screen. */
+const KEN_BURNS_ZOOM = 0.1
+
+/* How far through its own block a frame is (0 → 1). The portrait crop uses it
+   as the Ken Burns zoom driver, so each civilization's film breathes in over
+   its own run instead of being swept across. */
+function blockProgress(index: number) {
+  let start = 0
+  for (const block of BLOCKS) {
+    const end = start + block.count
+    if (index < end) {
+      return (index - start) / Math.max(1, block.count - 1)
+    }
+    start = end
+  }
+  return 1
+}
+
 /* scroll-progress boundaries, one per scene */
 const GULF_END = 29 / TOTAL_FRAMES
 const CHINA_END = 58 / TOTAL_FRAMES
@@ -168,9 +187,13 @@ export function CivilizationsSection() {
       ctx.imageSmoothingEnabled = true
       ctx.imageSmoothingQuality = "high"
 
-      // cover, never letterbox: the frame fills the viewport and the excess
-      // is cropped evenly on both sides
-      const scale = Math.max(cw / img.width, ch / img.height)
+      // cover, never letterbox: the frame fills the viewport and the excess is
+      // cropped. on a wide screen it stays put; on a phone it breathes in with
+      // a slow Ken Burns zoom (see blockProgress) — a wide shot settling toward
+      // the heart of the scene, no sideways sweep.
+      const baseScale = Math.max(cw / img.width, ch / img.height)
+      const zoom = ch > cw ? 1 + KEN_BURNS_ZOOM * blockProgress(clamped) : 1
+      const scale = baseScale * zoom
       const width = img.width * scale
       const height = img.height * scale
 
