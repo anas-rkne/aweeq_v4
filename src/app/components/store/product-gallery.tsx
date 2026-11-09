@@ -10,31 +10,59 @@ interface ProductGalleryProps {
   product: Product
 }
 
+/* The file provider stores an upload as `{timestamp}-{original name}.{ext}`,
+   so the same photograph re-encoded (png ↔ webp) or re-uploaded keeps the same
+   name under a new timestamp. This returns that stable name, so the gallery can
+   tell "the cover again" from "a different shot". */
+function mediaIdentity(rawUrl: string | null | undefined) {
+  const url = normalizeImageUrl(rawUrl)
+  if (!url) {
+    return null
+  }
+
+  const segment = (url.split("?")[0].split("/").pop() ?? url)
+    .replace(/\.[a-zA-Z0-9]+$/, "")
+    .replace(/^\d+-/, "")
+
+  return segment || null
+}
+
 export function ProductGallery({ product }: ProductGalleryProps) {
   const t = useTranslations("Product")
   const images = useMemo(() => {
+    const coverUrl = normalizeImageUrl(product.thumbnail)
+    const coverIdentity = mediaIdentity(coverUrl)
     const seen = new Set<string>()
     const list: Array<{ id: string; url: string; alt: string }> = []
+
+    /* the cover is the plate, not a gallery thumbnail */
+    if (coverUrl) {
+      seen.add(coverUrl)
+      list.push({ id: "thumbnail", url: coverUrl, alt: product.title })
+    }
 
     const add = (id: string, rawUrl: string | null, alt: string) => {
       const url = normalizeImageUrl(rawUrl)
       if (!url || seen.has(url)) {
         return
       }
+      /* a re-encoded copy of the cover (png ↔ webp) is still the cover */
+      if (coverIdentity && mediaIdentity(rawUrl) === coverIdentity) {
+        return
+      }
       seen.add(url)
       list.push({ id, url, alt })
     }
 
-    add("thumbnail", product.thumbnail, product.title)
-
     for (const media of product.media ?? []) {
       // packaging shots live in their own wall (see product-packaging-gallery),
-      // and the hero-2 transparent cut-out belongs to the store invitation —
-      // neither belongs in the main gallery
+      // the hero-2 transparent cut-out belongs to the store invitation, and the
+      // `hero` row is the cover itself — none belongs in the main gallery
       if (
         media.role === "packaging" ||
         media.role === "video" ||
-        media.role === "float"
+        media.role === "float" ||
+        media.role === "hero"
       ) {
         continue
       }
