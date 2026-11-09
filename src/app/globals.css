@@ -395,6 +395,76 @@ textarea {
   will-change: transform;
 }
 
+/* The foot of the store invitation.
+   Its last picture — the five civilizations — is a wide plate that used to
+   stop dead on the section's own edge, so the eye caught a straight line
+   between the stone floor and the night that follows. `SectionFade` alone
+   cannot hide it: it has ~112px to work with, and the plate is still bright
+   where it is cut. So the plate dissolves itself, over the same smoothstep
+   `SectionFade` uses, and the picture simply loses its body before the section
+   ends — there is no edge left to see, pinned or scrolling.
+
+   Why percentages on a desktop and pixels on a phone: the desktop plate fills
+   its 36vh box edge to edge, so its own height is the right measure. The phone
+   composition is a tall 1:1.79 canvas whose upper half is empty (see
+   store-counter), anchored to the floor — a percentage there would start the
+   dissolve halfway up the buildings. */
+.ending-dissolve {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 40%,
+    rgba(0, 0, 0, 0.957) 42.4%,
+    rgba(0, 0, 0, 0.844) 49.6%,
+    rgba(0, 0, 0, 0.684) 59.2%,
+    rgba(0, 0, 0, 0.5) 70%,
+    rgba(0, 0, 0, 0.316) 80.8%,
+    rgba(0, 0, 0, 0.156) 90.4%,
+    rgba(0, 0, 0, 0.043) 97.6%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 40%,
+    rgba(0, 0, 0, 0.957) 42.4%,
+    rgba(0, 0, 0, 0.844) 49.6%,
+    rgba(0, 0, 0, 0.684) 59.2%,
+    rgba(0, 0, 0, 0.5) 70%,
+    rgba(0, 0, 0, 0.316) 80.8%,
+    rgba(0, 0, 0, 0.156) 90.4%,
+    rgba(0, 0, 0, 0.043) 97.6%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+@media (max-width: 47.999rem) {
+  .ending-dissolve {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 1) calc(100% - 200px),
+      rgba(0, 0, 0, 0.957) calc(100% - 192px),
+      rgba(0, 0, 0, 0.844) calc(100% - 168px),
+      rgba(0, 0, 0, 0.684) calc(100% - 136px),
+      rgba(0, 0, 0, 0.5) calc(100% - 100px),
+      rgba(0, 0, 0, 0.316) calc(100% - 68px),
+      rgba(0, 0, 0, 0.156) calc(100% - 32px),
+      rgba(0, 0, 0, 0.043) calc(100% - 8px),
+      rgba(0, 0, 0, 0) 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 1) calc(100% - 200px),
+      rgba(0, 0, 0, 0.957) calc(100% - 192px),
+      rgba(0, 0, 0, 0.844) calc(100% - 168px),
+      rgba(0, 0, 0, 0.684) calc(100% - 136px),
+      rgba(0, 0, 0, 0.5) calc(100% - 100px),
+      rgba(0, 0, 0, 0.316) calc(100% - 68px),
+      rgba(0, 0, 0, 0.156) calc(100% - 32px),
+      rgba(0, 0, 0, 0.043) calc(100% - 8px),
+      rgba(0, 0, 0, 0) 100%
+    );
+  }
+}
+
 /* Copy that sits straight on a photograph. It carries a halo of the base navy
    instead of the flat half-screen scrim it replaces: the picture stays whole,
    and the letters keep their edge against sky, stone and gilded walls alike.

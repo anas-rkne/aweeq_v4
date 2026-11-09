@@ -219,7 +219,7 @@ export function StoreCounter({ products }: { products: Product[] }) {
                 width={1955}
                 height={544}
                 sizes="100vw"
-                className="absolute inset-0 h-full w-full object-cover object-top"
+                className="ending-dissolve absolute inset-0 h-full w-full object-cover object-top"
               />
             </div>
             <div className="relative h-full w-full md:hidden">
@@ -234,7 +234,7 @@ export function StoreCounter({ products }: { products: Product[] }) {
                 width={768}
                 height={1376}
                 sizes="100vw"
-                className="absolute inset-x-0 bottom-0 z-0 mx-auto h-auto w-full max-w-[59svh]"
+                className="ending-dissolve absolute inset-x-0 bottom-0 z-0 mx-auto h-auto w-full max-w-[59svh]"
               />
             </div>
           </div>
