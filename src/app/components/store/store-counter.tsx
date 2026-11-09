@@ -8,7 +8,7 @@ import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { SectionFade } from "@/shared/ui/section-fade"
 import type { Product } from "@/types"
-import { normalizeImageUrl } from "@/lib/format"
+import { mediaProxyUrl } from "@/lib/format"
 import { HeroProductCard } from "./hero-product-card"
 import { InfiniteAisle, type AisleHandle, type AisleProduct } from "./infinite-aisle"
 
@@ -51,7 +51,9 @@ export function StoreCounter({ products }: { products: Product[] }) {
 
   /* the WebGL layer only needs the photograph and its glow. the float prefers
      the transparent "float" cut-out (hero-2 only) and falls back to the full
-     thumbnail when the piece has no cut-out yet. */
+     thumbnail when the piece has no cut-out yet. the texture is read through
+     our own origin (`mediaProxyUrl`) so the canvas is never tainted by a
+     missing CORS header on the file API. */
   const aisleProducts = useMemo<AisleProduct[]>(
     () =>
       products.map((product) => {
@@ -59,7 +61,7 @@ export function StoreCounter({ products }: { products: Product[] }) {
           (media) => media.role === "float"
         )
         return {
-          image: normalizeImageUrl(float?.url ?? product.thumbnail) ?? "",
+          image: mediaProxyUrl(float?.url ?? product.thumbnail) ?? "",
           glow: GLOW[product.handle] ?? FALLBACK_GLOW,
         }
       }),

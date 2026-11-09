@@ -1206,6 +1206,16 @@ export class CatalogAdminService {
     }
 
     if (input.product_id) {
+      /* one cover and one cut-out per piece: replacing either must not leave
+         the previous row behind, or the storefront would have two candidates
+         for the same slot */
+      if (input.role === "hero" || input.role === "float") {
+        await this.db("catalog.product_media")
+          .where({ product_id: input.product_id, role: input.role })
+          .whereNot({ media_id: id })
+          .del()
+      }
+
       await this.db("catalog.product_media")
         .insert({
           product_id: input.product_id,

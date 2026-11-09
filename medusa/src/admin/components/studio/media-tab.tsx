@@ -18,14 +18,17 @@ type MediaAsset = {
   alt_en?: string | null
 }
 
-/* The two kinds of image the storefront treats differently:
-   - preview  → the product shots (the main gallery on the piece's page)
+/* The three kinds of image the studio manages, each with its own slot:
+   - cover   → the one photograph that stands for the piece in the shop
+   - preview → the product shots (the gallery on the piece's page)
    - packaging → the packaging exhibition (its own wall on the piece's page)
-   `hero` is not an upload bucket: it is a marker on any preview image. */
-const PREVIEW_ROLES = ["gallery", "detail", "editorial", "hero"]
+   - float   → the hero-2 (store-invitation) transparent cut-out
+   `hero` is the legacy row role for a cover; `hero_media_id` is the marker
+   the storefront reads first. */
+const COVER_ROLES = ["hero"]
+const PREVIEW_ROLES = ["gallery", "detail", "editorial"]
 const PACKAGING_ROLES = ["packaging"]
-/* the hero-2 (store-invitation) transparent cut-out — one per product, never
-   shown in the product gallery or the packaging wall */
+/* one per product, never shown in the product gallery or the packaging wall */
 const FLOAT_ROLES = ["float"]
 
 export function MediaTab({
@@ -52,18 +55,24 @@ export function MediaTab({
     alt_en?: string
     role: string
   }) {
-    await studioFetch("/admin/threeweeq/media", {
-      method: "POST",
-      body: JSON.stringify({
-        product_id: productId,
-        url: input.url,
-        mime_type: input.mime_type,
-        bytes: input.bytes,
-        alt_ar: input.alt_ar || undefined,
-        alt_en: input.alt_en || undefined,
-        role: input.role,
-      }),
-    })
+    const created = await studioFetch<{ media?: { id?: string } }>(
+      "/admin/threeweeq/media",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          product_id: productId,
+          url: input.url,
+          mime_type: input.mime_type,
+          bytes: input.bytes,
+          alt_ar: input.alt_ar || undefined,
+          alt_en: input.alt_en || undefined,
+          role: input.role,
+        }),
+      }
+    )
+
+    /* the id lets the cover slot pin the picture it has just uploaded */
+    return created?.media?.id ?? null
   }
 
   async function setHero(mediaId: string) {
@@ -104,12 +113,20 @@ export function MediaTab({
     }
   }
 
-  const preview = media.filter((item) => PREVIEW_ROLES.includes(item.role ?? ""))
+  const cover = media.filter(
+    (item) => item.id === heroMediaId || COVER_ROLES.includes(item.role ?? "")
+  )
+  const coverIds = new Set(cover.map((item) => item.id))
+  const preview = media.filter(
+    (item) =>
+      PREVIEW_ROLES.includes(item.role ?? "") && !coverIds.has(item.id)
+  )
   const packaging = media.filter((item) => PACKAGING_ROLES.includes(item.role ?? ""))
   const float = media.filter((item) => FLOAT_ROLES.includes(item.role ?? ""))
   const other = media.filter(
     (item) =>
       !PREVIEW_ROLES.includes(item.role ?? "") &&
+      !COVER_ROLES.includes(item.role ?? "") &&
       !PACKAGING_ROLES.includes(item.role ?? "") &&
       !FLOAT_ROLES.includes(item.role ?? "")
   )
@@ -117,13 +134,31 @@ export function MediaTab({
   return (
     <div>
       <p style={{ fontSize: 13, color: "#6b7280", marginTop: 0 }}>
-        صُور المعاينة تظهر في معرض المنتج، وصُور التغليف تظهر في قسم التغليف الخاص
-        به. حدّد صورة المعاينة «رئيسية» لتكون غلاف القطعة.
+        كل قطعة لها ثلاثة أماكن مستقلة: <strong>الغلاف</strong> (الصورة الوحيدة
+        التي تمثّلها في المتجر)، و<strong>صور المنتج</strong> (معرض صفحة
+        القطعة)، و<strong>صورة هيرو 2 الشفافة</strong> (القصّ الذي يطفو في مشهد
+        الاستعراض). صورة التغليف لها قسمها الخاص.
       </p>
 
       <MediaGroup
-        title="صور المعاينة (معرض المنتج)"
-        subtitle="الصورة التي تحمل شارة «رئيسية» هي غلاف القطعة."
+        title="غلاف القطعة (الصورة الرئيسية)"
+        subtitle="الصورة الوحيدة التي تظهر في بطاقة المتجر وأول صفحة القطعة. رفع صورة هنا يجعلها الغلاف تلقائيًا."
+        role="gallery"
+        rows={cover}
+        heroMediaId={heroMediaId}
+        showHeroButton={false}
+        coverMode
+        busy={busy}
+        onAttach={attach}
+        onSetHero={setHero}
+        onRemove={remove}
+        onChanged={onChanged}
+        onError={onError}
+      />
+
+      <MediaGroup
+        title="صور المنتج (معرض القطعة)"
+        subtitle="بقية لقطات القطعة — تظهر في المعرض تحت الغلاف. اضغط «غلاف» على أي صورة لجعلها الصورة الرئيسية."
         role="gallery"
         rows={preview}
         heroMediaId={heroMediaId}
@@ -153,7 +188,7 @@ export function MediaTab({
 
       <MediaGroup
         title="صورة هيرو 2 (شفافة)"
-        subtitle="قصّ شفاف للمنتج يُستخدم في مشهد الاستعراض العائم فقط — صورة واحدة لكل قطعة."
+        subtitle="قصّ شفاف للمنتج (PNG بخلفية شفافة) يُستخدم في مشهد الاستعراض العائم فقط — صورة واحدة لكل قطعة، ولا تظهر في المتجر."
         role="float"
         rows={float}
         heroMediaId={null}
@@ -190,6 +225,7 @@ function MediaGroup({
   rows,
   heroMediaId,
   showHeroButton,
+  coverMode = false,
   busy,
   onAttach,
   onSetHero,
@@ -203,6 +239,7 @@ function MediaGroup({
   rows: MediaRow[]
   heroMediaId: string | null
   showHeroButton: boolean
+  coverMode?: boolean
   busy: boolean
   onAttach: (input: {
     url: string
@@ -211,7 +248,7 @@ function MediaGroup({
     alt_ar?: string
     alt_en?: string
     role: string
-  }) => Promise<void>
+  }) => Promise<string | null>
   onSetHero: (mediaId: string) => Promise<void>
   onRemove: (mediaId: string, mediaRole?: string) => Promise<void>
   onChanged: () => Promise<void> | void
@@ -224,6 +261,25 @@ function MediaGroup({
   const [busyLocal, setBusyLocal] = useState(false)
 
   const busyAll = busy || busyLocal
+
+  /* the cover slot uploads a normal preview shot and then pins it, so the
+     storefront reads one explicit `hero_media_id` instead of guessing */
+  async function attachAndMaybePin(input: {
+    url: string
+    mime_type?: string
+    bytes?: number
+    alt_ar?: string
+    alt_en?: string
+  }) {
+    const mediaId = await onAttach({
+      ...input,
+      role: coverMode ? "gallery" : role,
+    })
+
+    if (coverMode && mediaId) {
+      await onSetHero(mediaId)
+    }
+  }
 
   async function uploadAndAttach() {
     if (!file) {
@@ -246,13 +302,12 @@ function MediaGroup({
         throw new Error("لم يُرجع خادم الملفات رابطاً للصورة.")
       }
 
-      await onAttach({
+      await attachAndMaybePin({
         url: absoluteMediaUrl(created.url),
         mime_type: file.type,
         bytes: created.size ?? file.size,
         alt_ar: altAr,
         alt_en: altEn,
-        role,
       })
 
       setFile(null)
@@ -285,7 +340,10 @@ function MediaGroup({
     setBusyLocal(true)
     onError(null)
     try {
-      await onAttach({ url: asset.url, mime_type: asset.mime_type, role })
+      await attachAndMaybePin({
+        url: asset.url,
+        mime_type: asset.mime_type,
+      })
       await onChanged()
     } catch (error) {
       onError(error instanceof Error ? error.message : "تعذّر ربط الصورة")
@@ -443,7 +501,7 @@ function MediaGrid({
                 <span>{roleLabel(item.role)}</span>
                 {showHeroButton &&
                   (isHero ? (
-                    <span style={{ color: "#059669" }}>رئيسية</span>
+                    <span style={{ color: "#059669" }}>الغلاف</span>
                   ) : (
                     <button
                       type="button"
@@ -451,7 +509,7 @@ function MediaGrid({
                       onClick={() => onSetHero(item.id)}
                       style={{ ...studioStyles.buttonGray, padding: "2px 6px", fontSize: 11 }}
                     >
-                      رئيسية
+                      غلاف
                     </button>
                   ))}
               </div>
@@ -490,7 +548,7 @@ function roleLabel(role?: string) {
     case "editorial":
       return "تحريري"
     case "hero":
-      return "رئيسية"
+      return "غلاف"
     case "float":
       return "هيرو 2"
     case "video":

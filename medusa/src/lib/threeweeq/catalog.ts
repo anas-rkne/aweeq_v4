@@ -167,6 +167,36 @@ function buildPriceRange(
   }
 }
 
+/* Roles that may stand for the piece in the shop grid. The hero-2 cut-out
+   (`float`), the packaging shots and the video are not photographs of the
+   piece: falling back to them would put a transparent cut-out on the card. */
+const COVER_ROLES = ["hero", "gallery", "detail", "editorial"]
+
+/**
+ * The cover is the photograph the studio pinned as «غلاف القطعة»
+ * (`product_profile.hero_media_id`), then a row explicitly tagged `hero`,
+ * then the first preview shot. When a piece has no catalogue media at all the
+ * caller falls back to the core Medusa thumbnail and images.
+ */
+function resolveCoverMedia(
+  media: Array<{ id: string; role?: string; url?: string }>,
+  heroMediaId: string | null
+) {
+  const pinned = heroMediaId
+    ? media.find(
+        (item) =>
+          item.id === heroMediaId && COVER_ROLES.includes(item.role ?? "")
+      )
+    : undefined
+
+  return (
+    pinned ??
+    media.find((item) => item.role === "hero") ??
+    media.find((item) => COVER_ROLES.includes(item.role ?? "")) ??
+    null
+  )
+}
+
 export async function buildCatalogProducts(
   container: MedusaContainer,
   products: any[],
@@ -221,8 +251,10 @@ export async function buildCatalogProducts(
   return visibleProducts.map((product) => {
     const profile = profileByProduct.get(product.id)
     const productMedia = mediaByProduct[product.id] ?? []
-    const heroMedia =
-      productMedia.find((item) => item.role === "hero") ?? productMedia[0]
+    const heroMedia = resolveCoverMedia(
+      productMedia,
+      profile?.hero_media_id ?? null
+    )
 
     const variants = (product.variants ?? []).map((variant: any) => {
       const variantProfile = variantProfileByVariant.get(variant.id)
@@ -267,7 +299,7 @@ export async function buildCatalogProducts(
       seo_title: profile?.seo_title ?? null,
       seo_description: profile?.seo_description ?? null,
       status: product.status,
-      thumbnail: heroMedia?.url ?? product.thumbnail ?? null,
+      thumbnail: heroMedia?.url ?? product.thumbnail ?? product.images?.[0]?.url ?? null,
       media: productMedia,
       images: product.images ?? [],
       civilization: profile?.civilization_id

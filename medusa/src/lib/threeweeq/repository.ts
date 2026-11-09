@@ -1191,6 +1191,7 @@ export class ThreeweeqRepository {
         "p.edition_size",
         "p.max_per_customer",
         "p.launch_at",
+        "p.hero_media_id",
         "p.olfactory_pyramid",
         "p.specifications",
         "p.metadata",

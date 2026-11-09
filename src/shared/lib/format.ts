@@ -15,6 +15,15 @@ const ALLOWED_IMAGE_HOSTS = new Set<string>(
     .filter((host): host is string => Boolean(host))
 )
 
+/* The API origin that serves uploaded files under /static. */
+const BACKEND_HOST = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? "").hostname
+  } catch {
+    return null
+  }
+})()
+
 export function formatPrice(
   amount: number | null | undefined,
   currencyCode: string = "aed",
@@ -118,6 +127,39 @@ export function normalizeImageUrl(url: string | null | undefined) {
   } catch {
     return trimmed
   }
+}
+
+/**
+ * The same URL, but fetched through our own origin.
+ *
+ * `<img>` tags are happy with a cross-origin file, but a `<canvas>` is not:
+ * drawing a picture from a host that sends no CORS header taints the canvas
+ * and the WebGL texture comes out blank. The store invitation must use this,
+ * everything else can keep `normalizeImageUrl`.
+ */
+export function mediaProxyUrl(url: string | null | undefined) {
+  const normalized = normalizeImageUrl(url)
+
+  if (!normalized || normalized.startsWith("/")) {
+    return normalized
+  }
+
+  try {
+    const parsed = new URL(normalized)
+
+    if (
+      parsed.pathname.startsWith("/static/") &&
+      (!BACKEND_HOST || parsed.hostname === BACKEND_HOST)
+    ) {
+      return `/api/media/${parsed.pathname.slice("/static/".length)}${
+        parsed.search
+      }`
+    }
+  } catch {
+    /* fall through to the plain URL */
+  }
+
+  return normalized
 }
 
 export function stripHtml(value: string | null | undefined) {
