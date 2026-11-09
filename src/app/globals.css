@@ -110,6 +110,9 @@
 
 html {
   background-color: var(--background);
+  /* native controls (select dropdowns, scrollbars, form widgets) render dark,
+     matching the house palette instead of the browser's light defaults */
+  color-scheme: dark;
 }
 
 html,

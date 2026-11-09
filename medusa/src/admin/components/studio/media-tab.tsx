@@ -24,6 +24,9 @@ type MediaAsset = {
    `hero` is not an upload bucket: it is a marker on any preview image. */
 const PREVIEW_ROLES = ["gallery", "detail", "editorial", "hero"]
 const PACKAGING_ROLES = ["packaging"]
+/* the hero-2 (store-invitation) transparent cut-out — one per product, never
+   shown in the product gallery or the packaging wall */
+const FLOAT_ROLES = ["float"]
 
 export function MediaTab({
   productId,
@@ -103,10 +106,12 @@ export function MediaTab({
 
   const preview = media.filter((item) => PREVIEW_ROLES.includes(item.role ?? ""))
   const packaging = media.filter((item) => PACKAGING_ROLES.includes(item.role ?? ""))
+  const float = media.filter((item) => FLOAT_ROLES.includes(item.role ?? ""))
   const other = media.filter(
     (item) =>
       !PREVIEW_ROLES.includes(item.role ?? "") &&
-      !PACKAGING_ROLES.includes(item.role ?? "")
+      !PACKAGING_ROLES.includes(item.role ?? "") &&
+      !FLOAT_ROLES.includes(item.role ?? "")
   )
 
   return (
@@ -136,6 +141,21 @@ export function MediaTab({
         subtitle="العلبة والغلاف والتفاصيل التي تصل مع القطعة."
         role="packaging"
         rows={packaging}
+        heroMediaId={null}
+        showHeroButton={false}
+        busy={busy}
+        onAttach={attach}
+        onSetHero={setHero}
+        onRemove={remove}
+        onChanged={onChanged}
+        onError={onError}
+      />
+
+      <MediaGroup
+        title="صورة هيرو 2 (شفافة)"
+        subtitle="قصّ شفاف للمنتج يُستخدم في مشهد الاستعراض العائم فقط — صورة واحدة لكل قطعة."
+        role="float"
+        rows={float}
         heroMediaId={null}
         showHeroButton={false}
         busy={busy}
@@ -471,6 +491,8 @@ function roleLabel(role?: string) {
       return "تحريري"
     case "hero":
       return "رئيسية"
+    case "float":
+      return "هيرو 2"
     case "video":
       return "فيديو"
     default:

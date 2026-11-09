@@ -8,6 +8,7 @@ export interface ProductMedia {
     | "packaging"
     | "editorial"
     | "video"
+    | "float"
     | string
   sort_order?: number
   url: string

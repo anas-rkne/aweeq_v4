@@ -34,7 +34,7 @@ export default async function Home({
       {/* a plain block wrapper: a sticky stage needs a flow parent that is not
           a flex container, or its own height would come from the flex line */}
       <div className="relative">
-        <FeaturedFragrance frameCount={101} />
+        <FeaturedFragrance frameCount={26} />
       </div>
       <PackagingSection />
       {/* same wrapper for the film below: block parent, sticky stage */}

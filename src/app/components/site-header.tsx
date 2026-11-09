@@ -302,8 +302,8 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 bg-transparent px-4 pb-4 pt-5 sm:px-8 sm:pt-6 md:px-16 md:pb-5 md:pt-8">
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-4 md:gap-6">
+      <header className="fixed inset-x-0 top-0 z-50 h-[64px] bg-transparent px-4 sm:h-[76px] sm:px-8 md:h-[104px] md:px-16">
+        <div className="grid h-full grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-4 md:gap-6">
           {/* the tools, on the right side of the RTL bar */}
           <div className="flex shrink-0 items-center justify-start gap-2 sm:gap-3 md:gap-5">
             <button
@@ -392,12 +392,13 @@ export function SiteHeader() {
               <Image
                 src="/images/logo-mark.webp"
                 alt="3WEEQ"
-                width={2785}
-                height={841}
+                width={1310}
+                height={800}
                 quality={90}
-                sizes="(min-width: 64rem) 11rem, 8rem"
+                sizes="(min-width: 64rem) 10rem, 6rem"
                 preload
-                className="h-[28px] w-auto sm:h-[34px] md:h-[56px]"
+                className="h-[50px] w-auto sm:h-[64px] md:h-[96px]"
+
               />
             </a>
           </div>

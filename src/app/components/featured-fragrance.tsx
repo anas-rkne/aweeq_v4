@@ -16,7 +16,7 @@ interface FeaturedFragranceProps {
 }
 
 export function FeaturedFragrance({
-  frameCount = 101,
+  frameCount = 26,
 }: FeaturedFragranceProps) {
   const t = useTranslations("Featured")
   const locale = useLocale()
@@ -70,13 +70,13 @@ export function FeaturedFragrance({
     return () => observer.disconnect()
   }, [])
 
-  /* the film is 5.8 MB; it waits until its own section is near, then streams
-     only the frames around the scroll position instead of decoding all 101 */
+  /* the film streams only the frames around the scroll position instead of
+     decoding the whole sequence, so it waits until its section is near */
   useEffect(() => {
     if (!shouldLoad || windowRef.current) return
     windowRef.current = createFrameWindow((index) => {
       const num = String(index + 1).padStart(4, "0")
-      const seconds = (index * 0.1).toFixed(2)
+      const seconds = (index * 0.2).toFixed(2)
       return `/featured_frames/frame-${num}-${seconds}s.webp`
     }, 5)
   }, [shouldLoad])

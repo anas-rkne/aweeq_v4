@@ -379,13 +379,17 @@ export function CheckoutFlow() {
                     value={emirate}
                     onChange={(event) => setEmirate(event.target.value)}
                     autoComplete="address-level1"
-                    className={inputClass}
+                    className={`${inputClass} [color-scheme:dark]`}
                   >
-                    <option value="" disabled>
+                    <option value="" disabled className="bg-royal-navy text-sand/50">
                       {t("selectEmirate")}
                     </option>
                     {EMIRATES.map((entry) => (
-                      <option key={entry.ar} value={entry.ar}>
+                      <option
+                        key={entry.ar}
+                        value={entry.ar}
+                        className="bg-royal-navy text-sand"
+                      >
                         {locale === "en" ? entry.en : entry.ar}
                       </option>
                     ))}

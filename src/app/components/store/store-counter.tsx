@@ -49,13 +49,20 @@ export function StoreCounter({ products }: { products: Product[] }) {
   const endingRef = useRef<HTMLDivElement>(null)
   const cardEls = useRef<(HTMLDivElement | null)[]>([])
 
-  /* the WebGL layer only needs the photograph and its glow */
+  /* the WebGL layer only needs the photograph and its glow. the float prefers
+     the transparent "float" cut-out (hero-2 only) and falls back to the full
+     thumbnail when the piece has no cut-out yet. */
   const aisleProducts = useMemo<AisleProduct[]>(
     () =>
-      products.map((product) => ({
-        image: normalizeImageUrl(product.thumbnail) ?? "",
-        glow: GLOW[product.handle] ?? FALLBACK_GLOW,
-      })),
+      products.map((product) => {
+        const float = (product.media ?? []).find(
+          (media) => media.role === "float"
+        )
+        return {
+          image: normalizeImageUrl(float?.url ?? product.thumbnail) ?? "",
+          glow: GLOW[product.handle] ?? FALLBACK_GLOW,
+        }
+      }),
     [products]
   )
 
