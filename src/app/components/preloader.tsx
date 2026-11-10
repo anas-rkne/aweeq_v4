@@ -35,7 +35,6 @@ export function Preloader() {
   useEffect(() => {
     let disposed = false
     let tl: gsap.core.Timeline | null = null
-    let dustCtx: gsap.Context | null = null
     let previousOverflow = ""
 
     void (async () => {
@@ -120,7 +119,13 @@ export function Preloader() {
     return () => {
       disposed = true
       tl?.kill()
-      if (previousOverflow) document.body.style.overflow = previousOverflow
+      /* restore unconditionally: the previous value is normally "" and the
+         `if (previousOverflow)` guard used to skip it, leaving the body stuck
+         at `overflow: hidden` — which breaks every `position: sticky` stage
+         (the Rafid film, the packaging ritual, the civilizations film) and
+         leaves their reserved height as empty navy. Setting it back to ""
+         removes the inline style and returns the page to normal. */
+      document.body.style.overflow = previousOverflow
     }
   }, [])
 
@@ -143,22 +148,10 @@ export function Preloader() {
           <svg viewBox="0 0 240 240" className="h-[42vh] w-auto">
             <defs>
               <clipPath id="preloader-draw">
-                <rect
-                  ref={drawRectRef}
-                  x="0"
-                  y="0"
-                  width="0"
-                  height="240"
-                />
+                <rect ref={drawRectRef} x="0" y="0" width="0" height="240" />
               </clipPath>
               <clipPath id="preloader-gild">
-                <rect
-                  ref={gildRectRef}
-                  x="0"
-                  y="0"
-                  width="0"
-                  height="240"
-                />
+                <rect ref={gildRectRef} x="0" y="0" width="0" height="240" />
               </clipPath>
               <clipPath id="preloader-gleam">
                 <rect
