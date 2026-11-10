@@ -30,7 +30,7 @@ const ASSET = {
   closed3d: "/images/packaging_images/a.png",
   closedFront: "/images/packaging_images/b.png",
   halfOpen: "/images/packaging_images/c.png",
-  openFront: "/images/packaging_images/img-d-v2.webp",
+  openFront: "/images/packaging_images/img-d-v3.webp",
   handbag: "/images/packaging_images/e.png",
 }
 
@@ -279,7 +279,7 @@ export function PackagingSection() {
               />
             </div>
 
-            <div className="relative w-64 will-change-transform sm:w-96 lg:w-[500px]">
+            <div className="relative w-64 will-change-transform sm:w-96 lg:w-[300px]">
               <Image
                 src={ASSET.openFront}
                 alt=""

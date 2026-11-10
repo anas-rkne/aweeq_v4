@@ -62,6 +62,70 @@ function localProgress(index: number, progress: number): number {
   )
 }
 
+/* The cheetah is the through-line of the story: in every scene it walks into
+ * frame and settles, but a flat end-to-end sweep carries the phone crop past it
+ * once it arrives. These are the cheetah's horizontal positions (0 = left edge,
+ * 1 = right edge) keyed by local scene progress, so the camera can lock onto the
+ * animal and drift with it from the moment it enters to where it stops. Between
+ * keys the focus is interpolated; wide screens ignore it and stay centred. */
+const SCENE_FOCUS: Record<string, ReadonlyArray<readonly [number, number]>> = {
+  gulf: [
+    [0, 0.5], // the empty coast, held centred
+    [0.15, 0.44], // it approaches from the left
+    [0.25, 0.3], // it steps in (head ~0.31)
+    [0.5, 0.52], // it crosses the frame (head ~0.6)
+    [0.75, 0.55],
+    [1, 0.56], // it settles by the fortress
+  ],
+  babylon: [
+    [0, 0.5], // the gate, held centred
+    [0.15, 0.6], // drift toward the right as it approaches
+    [0.25, 0.92], // it enters from the right (rear only)
+    [0.375, 0.76], // it trots left (head ~0.78)
+    [0.5, 0.52], // it clears the columns (head ~0.47)
+    [0.75, 0.47],
+    [1, 0.47], // it pauses before the gate
+  ],
+  egypt: [
+    [0, 0.5], // the sphinx, held centred
+    [0.25, 0.2], // it climbs in from the left (head ~0.17)
+    [0.5, 0.32],
+    [0.75, 0.45],
+    [1, 0.43], // it sits on the rock (head ~0.42)
+  ],
+  greece: [
+    [0, 0.5], // the temple, held centred
+    [0.25, 0.3], // it pads along from the left (head ~0.31)
+    [0.5, 0.5],
+    [0.75, 0.56],
+    [1, 0.56], // it stands above the sea (head ~0.56)
+  ],
+  china: [
+    [0, 0.5], // the wall, held centred
+    [0.25, 0.72], // it comes down from the right (head ~0.72)
+    [0.5, 0.44],
+    [0.75, 0.42],
+    [1, 0.42], // it lies along the parapet
+  ],
+}
+
+function focusAt(index: number, local: number): number {
+  const scene = CIVILIZATION_SCENES[index]
+  const keys = scene ? SCENE_FOCUS[scene.id] : undefined
+  if (!keys || keys.length === 0) return 0.5
+
+  const t = Math.min(1, Math.max(0, local))
+  for (let i = 1; i < keys.length; i++) {
+    const [u1, x1] = keys[i]
+    const [u0, x0] = keys[i - 1]
+    if (t <= u1) {
+      const span = u1 - u0 || 1
+      return x0 + (x1 - x0) * ((t - u0) / span)
+    }
+  }
+  return keys[keys.length - 1][1]
+}
+
 function wantedFrame(index: number, progress: number): number {
   const bounds = SCENE_BOUNDS[index]
   const local = localProgress(index, progress)
@@ -168,8 +232,9 @@ export const AboutCanvas = forwardRef<AboutCanvasHandle>(
       }
       evictDistantScenes(keep)
 
-      const fromImage =
-        blendIndex >= 0 ? sceneImage(blendIndex, p) : sceneImage(sceneIndex, p)
+      // the scene being shown now (and, when dissolving, the one before it)
+      const fromScene = blendIndex >= 0 ? blendIndex : sceneIndex
+      const fromImage = sceneImage(fromScene, p)
       const toImage = blendIndex >= 0 ? sceneImage(blendIndex + 1, p) : null
 
       // a slow, continuous push-in across the whole journey
@@ -186,22 +251,37 @@ export const AboutCanvas = forwardRef<AboutCanvasHandle>(
       // canvas is never a transparent (black) flash
       if (!fromImage && !toImage) return
 
-      const drawCover = (img: HTMLImageElement, alpha: number) => {
+      // On a phone the 16:9 frame overflows the screen sideways, so the crop
+      // follows the cheetah through each scene (see SCENE_FOCUS) and holds it
+      // framed instead of sweeping past it. On a wide screen the frame fits
+      // and stays centred — nothing changes there.
+      const portrait = height > width
+
+      const drawCover = (
+        img: HTMLImageElement,
+        alpha: number,
+        sceneIndexOf: number
+      ) => {
         const scale = Math.max(width / img.width, height / img.height) * zoom
         const drawWidth = img.width * scale
         const drawHeight = img.height * scale
-        ctx.globalAlpha = alpha
-        ctx.drawImage(
-          img,
-          (width - drawWidth) / 2,
-          (height - drawHeight) / 2,
-          drawWidth,
-          drawHeight
+        /* On a phone the frame overflows sideways; centre the cheetah in that
+           crop so the camera locks onto it instead of sweeping past. On a wide
+           screen the focus is 0.5, which keeps the frame centred exactly as
+           before. The offset is clamped so the frame never uncovers an edge. */
+        const focus = portrait
+          ? focusAt(sceneIndexOf, localProgress(sceneIndexOf, p))
+          : 0.5
+        const x = Math.min(
+          0,
+          Math.max(width - drawWidth, width / 2 - focus * drawWidth)
         )
+        ctx.globalAlpha = alpha
+        ctx.drawImage(img, x, (height - drawHeight) / 2, drawWidth, drawHeight)
       }
 
-      if (fromImage) drawCover(fromImage, 1)
-      if (toImage) drawCover(toImage, blendAmount)
+      if (fromImage) drawCover(fromImage, 1, fromScene)
+      if (toImage) drawCover(toImage, blendAmount, blendIndex + 1)
       ctx.globalAlpha = 1
     }, [])
 

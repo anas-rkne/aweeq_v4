@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
+import gsap from "gsap"
 import { Link, usePathname, useRouter } from "@/i18n/navigation"
 import { STORE_PRODUCT_TYPES } from "@/lib/catalog"
 import { useCart } from "./cart-provider"
@@ -177,9 +178,9 @@ export function StoreHeader() {
               width={1310}
               height={800}
               quality={90}
-              sizes="(min-width: 64rem) 7rem, 5rem"
+              sizes="(min-width: 64rem) 6rem, 5rem"
               preload
-              className="h-7 w-auto md:h-8"
+              className="h-12 w-auto md:h-14"
             />
           </Link>
 
@@ -367,7 +368,52 @@ function MobileNav({
   const pathname = usePathname()
   const locale = useLocale()
   const isArabic = locale === "ar"
+  const router = useRouter()
+  const shellRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const linksRef = useRef<(HTMLAnchorElement | null)[]>([])
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
 
+  const switchLocale = () => {
+    const nextLocale = locale === "ar" ? "en" : "ar"
+    router.replace(`${pathname}${window.location.search}`, {
+      locale: nextLocale,
+    })
+  }
+
+  /* the shell fades in, the rooms rise one after another */
+  useEffect(() => {
+    if (!isOpen) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+
+    const ctx = gsap.context(() => {
+      gsap
+        .timeline()
+        .fromTo(
+          contentRef.current,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.4, ease: "power2.out" },
+          0
+        )
+        .fromTo(
+          linksRef.current,
+          { y: 26, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.55,
+            stagger: 0.07,
+            ease: "power2.out",
+          },
+          0.08
+        )
+    }, shellRef)
+
+    return () => ctx.revert()
+  }, [isOpen])
+
+  /* lock the page under the dialog */
   useEffect(() => {
     if (!isOpen) return
     const previous = document.body.style.overflow
@@ -377,68 +423,199 @@ function MobileNav({
     }
   }, [isOpen])
 
+  /* focus management: trap Tab inside, close on Escape, move focus in on open
+     and return it to the trigger on close */
   useEffect(() => {
     if (!isOpen) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose()
+
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+
+    const focusTimer = window.setTimeout(
+      () => closeButtonRef.current?.focus(),
+      40
+    )
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose()
+        return
+      }
+
+      if (event.key !== "Tab" || !shellRef.current) return
+
+      const focusable = Array.from(
+        shellRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => element.offsetParent !== null)
+
+      if (focusable.length === 0) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
+
     document.addEventListener("keydown", onKeyDown)
-    return () => document.removeEventListener("keydown", onKeyDown)
+
+    return () => {
+      window.clearTimeout(focusTimer)
+      document.removeEventListener("keydown", onKeyDown)
+      previousFocusRef.current?.focus()
+    }
   }, [isOpen, onClose])
 
   if (!isOpen) return null
 
   return (
     <div
+      ref={shellRef}
       role="dialog"
       aria-modal="true"
-      aria-label={t("mobileNav")}
+      aria-label={navT("menu")}
       className="fixed inset-0 z-[100] overflow-y-auto bg-royal-navy"
     >
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label={navT("close")}
-        className="absolute end-4 top-4 z-10 grid h-11 w-11 place-items-center text-sand/70 transition-colors duration-300 hover:text-gold"
-      >
-        <CloseIcon />
-      </button>
+      {/* the brand field: solid navy with the house glow, no photograph */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,var(--color-brand-slate)_0%,transparent_58%)] opacity-35"
+      />
 
-      <nav className="flex min-h-svh flex-col justify-center gap-1 px-6 py-20">
-        {NAV_LINKS.map((link) => (
+      <div ref={contentRef} className="relative flex min-h-svh flex-col">
+        {/* top bar: the mark and the close control */}
+        <div className="flex h-16 items-center justify-between px-5 sm:px-8">
           <Link
-            key={link.href}
-            href={link.href}
+            href="/"
             onClick={onClose}
-            aria-current={
-              isLinkCurrent(link.href, pathname) ? "page" : undefined
-            }
-            className={`flex min-h-14 items-center font-primary text-2xl transition-colors duration-300 ${
-              isLinkCurrent(link.href, pathname)
-                ? "text-gold"
-                : "text-sand/75 hover:text-gold"
-            }`}
+            aria-label={navT("logoLabel")}
+            className="inline-flex"
           >
-            {t(link.key)}
+            <Image
+              src="/images/logo-mark.webp"
+              alt="3WEEQ"
+              width={1310}
+              height={800}
+              quality={90}
+              sizes="6rem"
+              className="h-10 w-auto"
+            />
           </Link>
-        ))}
 
-        <span
-          aria-hidden="true"
-          className="my-4 block h-px w-full bg-sand/10"
-        />
-
-        {STORE_PRODUCT_TYPES.map((type) => (
-          <Link
-            key={type.code}
-            href={`/products?product_type=${type.code}`}
+          <button
+            ref={closeButtonRef}
+            type="button"
             onClick={onClose}
-            className="flex min-h-12 items-center font-primary text-base text-sand/60 transition-colors duration-300 hover:text-gold"
+            aria-label={navT("close")}
+            className="grid h-10 w-10 place-items-center rounded-full border border-sand/20 text-sand/70 transition-colors duration-300 ease-out hover:border-gold/60 hover:text-gold"
           >
-            {isArabic ? type.labelAr : type.labelEn}
-          </Link>
-        ))}
-      </nav>
+            <CloseIcon />
+          </button>
+        </div>
+
+        {/* the rooms */}
+        <nav
+          aria-label={navT("mainNav")}
+          className="flex flex-1 flex-col justify-center px-5 sm:px-8"
+        >
+          <ul className="w-full border-t border-sand/10">
+            {NAV_LINKS.map((link, index) => {
+              const current = isLinkCurrent(link.href, pathname)
+              return (
+                <li key={link.href} className="border-b border-sand/10">
+                  <Link
+                    ref={(element) => {
+                      linksRef.current[index] = element
+                    }}
+                    href={link.href}
+                    onClick={onClose}
+                    aria-current={current ? "page" : undefined}
+                    className="group flex items-center justify-between gap-6 py-5"
+                  >
+                    <span className="flex items-baseline gap-5">
+                      <span className="font-secondary text-[11px] tabular-nums tracking-[0.2em] text-gold/60">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span
+                        className={`font-primary text-[2rem] leading-none transition-colors duration-300 ease-out sm:text-5xl ${
+                          current
+                            ? "text-gold"
+                            : "text-sand group-hover:text-gold"
+                        }`}
+                      >
+                        {t(link.key)}
+                      </span>
+                    </span>
+
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.2}
+                      strokeLinecap="square"
+                      aria-hidden="true"
+                      className="h-5 w-5 shrink-0 text-gold/0 transition-colors duration-300 ease-out group-hover:text-gold rtl:-scale-x-100"
+                    >
+                      <path d="M9 6l6 6-6 6" />
+                    </svg>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+
+          {/* the categories, a quieter second list */}
+          <div className="mt-8">
+            <p className="font-primary text-[11px] uppercase tracking-[0.16em] text-gold/60">
+              {t("allCategories")}
+            </p>
+            <ul className="mt-2 grid grid-cols-2 gap-x-8 gap-y-1">
+              {STORE_PRODUCT_TYPES.map((type) => (
+                <li key={type.code}>
+                  <Link
+                    href={`/products?product_type=${type.code}`}
+                    onClick={onClose}
+                    className="flex min-h-11 items-center font-primary text-sm text-sand/70 transition-colors duration-200 hover:text-gold"
+                  >
+                    {isArabic ? type.labelAr : type.labelEn}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+
+        {/* footer: the line and the language */}
+        <div className="flex items-center justify-between gap-4 px-5 py-7 sm:px-8">
+          <p className="font-primary text-[11px] leading-relaxed text-sand/45">
+            {navT("navTagline")}
+          </p>
+
+          <button
+            type="button"
+            onClick={switchLocale}
+            aria-label={navT("language")}
+            className="whitespace-nowrap font-secondary text-[13px] text-sand/70 transition-colors duration-200 ease-out hover:text-gold"
+          >
+            <span className={locale === "ar" ? "text-gold" : "text-sand/55"}>
+              AR
+            </span>
+            <span className="mx-0.5 text-sand/55 sm:mx-1">/</span>
+            <span className={locale === "en" ? "text-gold" : "text-sand/55"}>
+              EN
+            </span>
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

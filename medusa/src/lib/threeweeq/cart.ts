@@ -26,7 +26,13 @@ export type CartLike = {
     quantity: number
     unit_price?: number | null
     total?: number | null
+    subtotal?: number | null
     title?: string | null
+    product_title?: string | null
+    product_handle?: string | null
+    variant_title?: string | null
+    thumbnail?: string | null
+    metadata?: Record<string, unknown> | null
   }>
   [key: string]: unknown
 }
@@ -179,6 +185,15 @@ export async function serializeCart(
   const productProfileByProduct = new Map<string, any>(
     productProfiles.map((profile: any) => [profile.product_id, profile])
   )
+  /* the line item only carries the core Medusa thumbnail; the boutique's real
+     cover lives on the custom product profile (hero_media_id). enrich here so
+     the cart and drawer show the same picture as the catalogue. */
+  const heroUrls = (await repository.getProductHeroUrls(
+    productIds
+  )) as Array<Record<string, any>>
+  const heroUrlByProduct = new Map<string, string>(
+    heroUrls.map((row: any) => [row.product_id, row.hero_url])
+  )
   const serialAvailability = (await repository.getSerialAvailability(
     variantIds
   )) as Map<string, number>
@@ -196,6 +211,10 @@ export async function serializeCart(
 
     return {
       ...item,
+      thumbnail:
+        heroUrlByProduct.get(item.product_id as string) ??
+        item.thumbnail ??
+        null,
       is_serialized: Boolean(variantProfile?.is_serialized),
       available_serial_units: availableSerialUnits,
       in_stock:

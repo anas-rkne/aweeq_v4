@@ -68,7 +68,7 @@ export function NewsletterSection() {
     <section
       id="newsletter"
       data-cuneiform-surface
-      className="relative isolate flex min-h-[92svh] w-full flex-col justify-end overflow-hidden"
+      className="relative isolate flex w-full flex-col justify-end overflow-hidden md:min-h-[92svh]"
     >
       {/* the plate: full width, full image, sitting on the floor of the section */}
       <Image
@@ -92,8 +92,11 @@ export function NewsletterSection() {
         }}
       />
 
-      {/* ===== the invitation, centred on the plate ===== */}
-      <div className="absolute inset-0 z-20 mx-auto flex w-full max-w-5xl items-center justify-center px-6 ">
+      {/* ===== the invitation =====
+          phones: sits in the flow directly above the plate, so the section is
+          only as tall as its content and the plate — no dead stage above.
+          md and up: absolutely centred on the plate, as on desktop. */}
+      <div className="relative z-20 order-first mx-auto w-full max-w-5xl px-6 pb-14 pt-16 sm:pt-20 md:absolute md:inset-0 md:order-0 md:flex md:items-center md:justify-center md:py-0">
         <div data-no-reveal className="w-full max-w-xl text-center">
           <h2
             className="font-secondary text-[clamp(2rem,3.6vw,3.1rem)] leading-[1.12] tracking-[-0.01em] text-sand"

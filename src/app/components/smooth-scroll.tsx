@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import Lenis from "lenis"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { setLenis } from "@/shared/lib/lenis-store"
 
 /**
  * Smooth scroll for the whole page.
@@ -39,6 +40,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       syncTouch: false,
       duration: 1.1,
     })
+    setLenis(lenis)
 
     const onScroll = () => ScrollTrigger.update()
     lenis.on("scroll", onScroll)
@@ -93,6 +95,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       ScrollTrigger.removeEventListener("refresh", syncLimit)
       window.removeEventListener("load", refresh)
       gsap.ticker.remove(raf)
+      setLenis(null)
       lenis.destroy()
     }
   }, [])

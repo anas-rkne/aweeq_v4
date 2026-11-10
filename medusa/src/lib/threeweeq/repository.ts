@@ -212,6 +212,18 @@ export class ThreeweeqRepository {
       )
   }
 
+  async getProductHeroUrls(productIds: string[]) {
+    if (!productIds.length) {
+      return []
+    }
+
+    return this.db("catalog.product_profile as p")
+      .leftJoin("catalog.media_asset as m", "m.id", "p.hero_media_id")
+      .whereIn("p.product_id", productIds)
+      .whereNull("p.deleted_at")
+      .select("p.product_id", "m.url as hero_url")
+  }
+
   /**
    * Storefront newsletter (footer + home section). Unlike the waitlist this is
    * not tied to a civilization, so it needs its own table; the unique index on

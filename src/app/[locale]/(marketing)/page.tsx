@@ -41,7 +41,9 @@ export default async function Home({
       <div className="relative">
         <CivilizationsSection />
       </div>
-      <BeyondSection locale={locale} />
+      <div className="relative">
+        <BeyondSection locale={locale} />
+      </div>
       <NewsletterSection />
       <Footer />
     </main>

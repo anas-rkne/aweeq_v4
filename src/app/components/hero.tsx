@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 import gsap from "gsap"
 import { Link } from "@/i18n/navigation"
+import { cropPan } from "@/shared/lib/crop-pan"
 import { RollingText } from "@/shared/ui/rolling-text"
 import { TextReveal } from "@/shared/ui/text-reveal"
 import { SectionFade } from "@/shared/ui/section-fade"
@@ -12,6 +13,11 @@ import { DarkGradientBg } from "./dark-gradient-bg"
 
 const FRAME_COUNT = 30
 const FRAME_INTERVAL = 100
+
+/* the parallax layer is rendered at 1.08× so the mouse movement never opens a
+   seam at the edges; the backing store is sized to match, so a frame drawn to
+   fill the *visible* viewport lives inside a box 1.08× smaller than the canvas. */
+const DISPLAY_SCALE = 1.08
 
 export function Hero() {
   const t = useTranslations("Hero")
@@ -107,13 +113,12 @@ export function Hero() {
     // the image layer is displayed at 1.08×. Render the backing store at that
     // size and at the device pixel ratio, so the browser never has to upscale
     // the frames.
-    const displayScale = 1.08
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
     const cssWidth = canvas.offsetWidth || window.innerWidth
     const cssHeight = canvas.offsetHeight || window.innerHeight
 
-    canvas.width = Math.round(cssWidth * displayScale * dpr)
-    canvas.height = Math.round(cssHeight * displayScale * dpr)
+    canvas.width = Math.round(cssWidth * DISPLAY_SCALE * dpr)
+    canvas.height = Math.round(cssHeight * DISPLAY_SCALE * dpr)
     drawFrameAt(framePositionRef.current)
   }
 
@@ -138,14 +143,24 @@ export function Hero() {
     ctx.imageSmoothingEnabled = true
     ctx.imageSmoothingQuality = "high"
 
-    const drawCover = (img: HTMLImageElement, alpha: number) => {
+    /* a 16:9 frame on a portrait phone is cut to a narrow slice, so the sides
+       of the scene would never be seen. the fix is the same one the Rafid film
+       uses (cropPan): keep the frame edge-to-edge with `cover`, but sweep the
+       crop window across it as the film plays — from the left edge toward the
+       centre over the intro, then hold centred. a wide screen already fits the
+       frame, so cropPan returns 0.5 and the desktop crop does not move. */
+    const progress = FRAME_COUNT > 1 ? position / (FRAME_COUNT - 1) : 0
+    const portrait = height > width
+    const pan = cropPan(progress, portrait)
+
+    const drawFrame = (img: HTMLImageElement, alpha: number) => {
       const scale = Math.max(width / img.width, height / img.height)
       const drawWidth = img.width * scale
       const drawHeight = img.height * scale
       ctx.globalAlpha = alpha
       ctx.drawImage(
         img,
-        (width - drawWidth) / 2,
+        (width - drawWidth) * pan,
         (height - drawHeight) / 2,
         drawWidth,
         drawHeight
@@ -153,7 +168,7 @@ export function Hero() {
     }
 
     ctx.clearRect(0, 0, width, height)
-    drawCover(current, 1)
+    drawFrame(current, 1)
 
     // keep the frame crisp for most of its 100 ms, then dissolve into the next
     // one in the last quarter — smooth, without the permanent softness of a
@@ -162,7 +177,7 @@ export function Hero() {
     const blendStart = 0.75
     if (next && mix > blendStart) {
       const t = (mix - blendStart) / (1 - blendStart)
-      drawCover(next, t * t * (3 - 2 * t))
+      drawFrame(next, t * t * (3 - 2 * t))
     }
 
     ctx.globalAlpha = 1

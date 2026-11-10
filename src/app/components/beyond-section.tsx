@@ -1,5 +1,4 @@
 import { getTranslations } from "next-intl/server"
-import { SectionFade } from "@/shared/ui/section-fade"
 import { ScrollGallery, type GalleryItem } from "@/components/scroll-gallery"
 
 const CATEGORIES = [
@@ -19,9 +18,14 @@ export async function BeyondSection({ locale }: { locale: string }) {
   }))
 
   return (
-    <section id="beyond" data-cuneiform-surface className="relative isolate">
-      <SectionFade edge="top" zIndex={15} />
-
+    /* the tall shell belongs to the document from the first paint; the sticky
+       stage inside ScrollGallery is what holds still while the rooms pass.
+       under reduced motion the shell collapses to the stage's own height. */
+    <section
+      id="beyond"
+      data-cuneiform-surface
+      className="relative isolate h-[280svh] motion-reduce:h-auto motion-reduce:min-h-svh"
+    >
       <ScrollGallery
         title={t("title")}
         description={t("body")}
