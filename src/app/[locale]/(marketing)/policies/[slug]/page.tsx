@@ -93,10 +93,10 @@ const POLICIES: Policy[] = [
         headingAr: "رسوم الشحن",
         headingEn: "Shipping fees",
         bodyAr: [
-          "30 درهمًا لكل الإمارات، و50 درهمًا للمنطقة الغربية وأطراف العين. الدفع بالبطاقة عند إتمام الطلب فقط؛ لا يتوفر الدفع عند الاستلام.",
+          "35 درهمًا لكل الإمارات، و50 درهمًا للمنطقة الغربية وأطراف العين. الدفع بالبطاقة عند إتمام الطلب فقط؛ لا يتوفر الدفع عند الاستلام.",
         ],
         bodyEn: [
-          "AED 30 across the emirates, and AED 50 for the Western Region and outer areas of Al Ain. Payment is by card at checkout only; cash on delivery is not available.",
+          "AED 35 across the emirates, and AED 50 for the Western Region and outer areas of Al Ain. Payment is by card at checkout only; cash on delivery is not available.",
         ],
       },
       {

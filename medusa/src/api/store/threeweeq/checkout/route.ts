@@ -97,7 +97,7 @@ async function resolveShippingOptionId(
   const options = (unwrap(result) ?? []) as any[]
   const list = Array.isArray(options) ? options : []
 
-  /* Free flat rates are leftovers from seeding. The shop charges 30 AED
+  /* Free flat rates are leftovers from seeding. The shop charges 35 AED
      across the emirates and 50 AED for the Western Region, so an option that
      prices at zero must never be accepted — even from a hand-made request. */
   const priced = list.filter((option) => optionAmount(option) > 0)

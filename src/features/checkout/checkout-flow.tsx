@@ -12,6 +12,12 @@ import {
   type CheckoutInitResponse,
   type ShippingOption,
 } from "./api"
+import {
+  ABU_DHABI,
+  ABU_DHABI_AREA_GROUPS,
+  OTHER_AREA,
+  shippingFeeFor,
+} from "./shipping-areas"
 
 const PENDING_CHECKOUT_KEY = "threeweeq_pending_checkout"
 const CHECKOUT_EMAIL_KEY = "threeweeq_checkout_email"
@@ -41,68 +47,42 @@ const EMIRATES = [
   { ar: "الفجيرة", en: "Fujairah" },
 ] as const
 
-/* Delivery policy: 30 AED across the emirates, 50 AED for the Western Region
-   (Al Dhafra) and the outer areas of Al Ain. The admin catalogue carries one
-   flat option per tier, so the checkout has to pick the right one from the
-   address instead of defaulting to the first option in the list. */
-const WESTERN_REGION_AREAS = [
-  "الظفرة",
-  "الغربية",
-  "الرويس",
-  "ليوا",
-  "غياثي",
-  "دلما",
-  "المرفأ",
-  "براكة",
-  "مدينة زايد",
-  "سلع",
-  "حبشان",
-  "الطويلة",
-  "مزيد",
-  "المطاوعة",
-  "اطراف العين",
-]
-
-const SHIPPING_STANDARD = 30
-const SHIPPING_WESTERN = 50
-
-/** Strip Arabic diacritics and unify alef/ta/ya so "أطراف العين" matches "اطراف العين". */
-function normalizeArabic(value: string) {
-  return value
-    .replace(/[\u064B-\u0652\u0670\u0640]/g, "")
-    .replace(/[أإآٱ]/g, "ا")
-    .replace(/ة/g, "ه")
-    .replace(/[ىي]/g, "ي")
-    .replace(/\s+/g, " ")
-    .trim()
-}
-
-function isWesternRegion(emirate: string, area: string) {
-  const haystack = normalizeArabic(`${area} ${emirate}`)
-  return WESTERN_REGION_AREAS.some((keyword) =>
-    haystack.includes(normalizeArabic(keyword))
-  )
-}
+/* Delivery is priced by zone, not by choice: Topex charges 35 AED across the
+   emirates and 50 AED for the Western Region and the outer areas of Al Ain.
+   The customer picks an area from a list and the checkout selects the matching
+   shipping option by itself — there is no tier to choose. */
 
 /** Free options are leftovers from seeding and must never reach the customer. */
 function usableOptions(options: ShippingOption[]) {
   return options.filter((option) => Number(option.amount ?? 0) > 0)
 }
 
-function pickShippingOption(
-  options: ShippingOption[],
-  emirate: string,
-  area: string
-) {
-  const target = isWesternRegion(emirate, area)
-    ? SHIPPING_WESTERN
-    : SHIPPING_STANDARD
+/**
+ * The option that matches the zone fee. When no option carries that exact
+ * amount — the admin rate has not been updated yet — it falls back to the
+ * highest option at or below the fee, so a customer is never overcharged and
+ * checkout still completes. The fee line always shows the option's real
+ * amount, not the constant.
+ */
+function pickShippingOption(options: ShippingOption[], fee: number | null) {
+  if (fee === null || options.length === 0) {
+    return null
+  }
 
-  return (
-    options.find((option) => Number(option.amount) === target) ??
-    options[0] ??
-    null
+  const byAmount = [...options].sort(
+    (a, b) => Number(a.amount) - Number(b.amount)
   )
+
+  const exact = byAmount.find(
+    (option) => Math.abs(Number(option.amount) - fee) < 0.5
+  )
+  if (exact) {
+    return exact
+  }
+
+  const atOrBelow = byAmount.filter((option) => Number(option.amount) <= fee)
+
+  return atOrBelow[atOrBelow.length - 1] ?? byAmount[0] ?? null
 }
 
 export function CheckoutFlow() {
@@ -119,7 +99,8 @@ export function CheckoutFlow() {
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
   const [emirate, setEmirate] = useState("")
-  const [area, setArea] = useState("")
+  const [areaOption, setAreaOption] = useState("")
+  const [areaCustom, setAreaCustom] = useState("")
   const [options, setOptions] = useState<ShippingOption[]>([])
   const [optionsLoading, setOptionsLoading] = useState(false)
   const [selectedOption, setSelectedOption] = useState("")
@@ -135,6 +116,29 @@ export function CheckoutFlow() {
   const shippingTotal = cart?.shipping_total ?? 0
   const items = cart?.items ?? []
 
+  /* Abu Dhabi is the only emirate with a priced list of areas; everywhere
+     else the area stays free text and the fee is the flat national rate. */
+  const isAbuDhabi = emirate === ABU_DHABI
+  const area = isAbuDhabi
+    ? areaOption === OTHER_AREA
+      ? areaCustom
+      : areaOption
+    : areaCustom
+
+  /* Shown as soon as the address can be priced, before the customer commits —
+     the fee is never a surprise. */
+  const zoneFee = emirate && area.trim() ? shippingFeeFor(emirate, area) : null
+  const selectedAmount = Number(
+    options.find((option) => option.id === selectedOption)?.amount ?? NaN
+  )
+  const shippingDisplay =
+    shippingTotal > 0
+      ? shippingTotal
+      : Number.isFinite(selectedAmount)
+        ? selectedAmount
+        : (zoneFee ?? 0)
+  const totalDisplay = shippingTotal > 0 ? total : subtotal + shippingDisplay
+
   const loadOptions = useCallback(async () => {
     if (!cartId || optionsLoading || options.length > 0) return
     setOptionsLoading(true)
@@ -142,7 +146,9 @@ export function CheckoutFlow() {
     try {
       const list = usableOptions(await fetchShippingOptions(cartId, locale))
       setOptions(list)
-      setSelectedOption(pickShippingOption(list, emirate, area)?.id ?? "")
+      setSelectedOption(
+        pickShippingOption(list, shippingFeeFor(emirate, area))?.id ?? ""
+      )
     } catch {
       setError(t("genericError"))
     } finally {
@@ -209,7 +215,9 @@ export function CheckoutFlow() {
 
       const list = usableOptions(prepared.shipping_options ?? [])
       setOptions(list)
-      setSelectedOption(pickShippingOption(list, emirate, area)?.id ?? "")
+      setSelectedOption(
+        pickShippingOption(list, shippingFeeFor(emirate, area))?.id ?? ""
+      )
       setStep("shipping")
 
       if (!list.length) {
@@ -373,11 +381,15 @@ export function CheckoutFlow() {
                 />
               </Field>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label={t("emirate")}>
                   <select
                     value={emirate}
-                    onChange={(event) => setEmirate(event.target.value)}
+                    onChange={(event) => {
+                      setEmirate(event.target.value)
+                      setAreaOption("")
+                      setAreaCustom("")
+                    }}
                     autoComplete="address-level1"
                     className={`${inputClass} [color-scheme:dark]`}
                   >
@@ -396,14 +408,67 @@ export function CheckoutFlow() {
                   </select>
                 </Field>
                 <Field label={t("area")}>
+                  {isAbuDhabi ? (
+                    <select
+                      value={areaOption}
+                      onChange={(event) => setAreaOption(event.target.value)}
+                      autoComplete="address-level2"
+                      className={`${inputClass} [color-scheme:dark]`}
+                    >
+                      <option value="" disabled className="bg-royal-navy text-sand/50">
+                        {t("selectArea")}
+                      </option>
+                      {ABU_DHABI_AREA_GROUPS.map((group) => (
+                        <optgroup
+                          key={group.ar}
+                          label={locale === "en" ? group.en : group.ar}
+                        >
+                          {group.areas.map((entry) => (
+                            <option
+                              key={entry.ar}
+                              value={entry.ar}
+                              className="bg-royal-navy text-sand"
+                            >
+                              {locale === "en" ? entry.en : entry.ar}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                      <option value={OTHER_AREA} className="bg-royal-navy text-sand">
+                        {t("areaOther")}
+                      </option>
+                    </select>
+                  ) : (
+                    <input
+                      value={areaCustom}
+                      onChange={(event) => setAreaCustom(event.target.value)}
+                      autoComplete="address-level2"
+                      className={inputClass}
+                    />
+                  )}
+                </Field>
+              </div>
+
+              {isAbuDhabi && areaOption === OTHER_AREA && (
+                <Field label={t("areaOtherLabel")}>
                   <input
-                    value={area}
-                    onChange={(event) => setArea(event.target.value)}
+                    value={areaCustom}
+                    onChange={(event) => setAreaCustom(event.target.value)}
+                    placeholder={t("areaOtherPlaceholder")}
                     autoComplete="address-level2"
                     className={inputClass}
                   />
                 </Field>
-              </div>
+              )}
+
+              {zoneFee !== null && (
+                <p className="font-primary text-sm text-sand/60">
+                  {t("shippingEstimate")}:{" "}
+                  <span className="font-secondary text-gold">
+                    {formatPrice(zoneFee, currencyCode, storeLocale)}
+                  </span>
+                </p>
+              )}
 
               {error && (
                 <p className="font-primary text-sm text-gold">{error}</p>
@@ -450,39 +515,31 @@ export function CheckoutFlow() {
                 </div>
               )}
 
-              <div className="space-y-3">
-                {options.map((option) => (
-                  <label
-                    key={option.id}
-                    className={`flex cursor-pointer items-center justify-between gap-4 border px-4 py-4 transition-colors ${
-                      selectedOption === option.id
-                        ? "border-gold bg-gold/10"
-                        : "border-sand/15 hover:border-gold/40"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="shipping-option"
-                        value={option.id}
-                        checked={selectedOption === option.id}
-                        onChange={() => setSelectedOption(option.id)}
-                        className="accent-[#cd9e61]"
-                      />
-                      <span className="font-primary text-sm text-sand">
-                        {option.name}
-                      </span>
+              {!optionsLoading && selectedOption && (
+                <div className="border border-gold/30 bg-gold/5 px-4 py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="font-primary text-sm text-sand">
+                      {t("shippingTo", { area })}
                     </span>
-                    <span className="font-secondary text-sm text-gold">
+                    <span className="font-secondary text-base text-gold">
                       {formatPrice(
-                        option.amount ?? 0,
-                        option.currency_code ?? currencyCode,
+                        shippingDisplay,
+                        currencyCode,
                         storeLocale
                       )}
                     </span>
-                  </label>
-                ))}
-              </div>
+                  </div>
+                  <p className="mt-2 font-primary text-xs leading-relaxed text-sand/55">
+                    {t("shippingAutoNote")}
+                  </p>
+                </div>
+              )}
+
+              {!optionsLoading && options.length > 0 && !selectedOption && (
+                <p className="font-primary text-sm text-gold">
+                  {t("shippingAreaUnavailable")}
+                </p>
+              )}
 
               {error && (
                 <p className="font-primary text-sm text-gold">{error}</p>
@@ -498,7 +555,7 @@ export function CheckoutFlow() {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || optionsLoading}
+                  disabled={loading || optionsLoading || !selectedOption}
                   className="flex-1 h-12 rounded-[var(--store-radius-sm)] border border-gold bg-gold px-6 font-primary text-sm font-bold text-royal-navy transition-colors hover:bg-sand disabled:opacity-60"
                 >
                   {t("continueToPayment")}
@@ -577,13 +634,15 @@ export function CheckoutFlow() {
               <div className="flex justify-between gap-4">
                 <dt className="text-royal-navy/60">{t("shippingLabel")}</dt>
                 <dd className="text-royal-navy">
-                  {formatPrice(shippingTotal, currencyCode, storeLocale)}
+                  {shippingDisplay > 0
+                    ? formatPrice(shippingDisplay, currencyCode, storeLocale)
+                    : t("shippingLater")}
                 </dd>
               </div>
               <div className="flex justify-between gap-4 border-t border-royal-navy/20 pt-3">
                 <dt className="text-royal-navy">{t("totalLabel")}</dt>
                 <dd className="font-secondary text-h3 leading-none text-royal-navy">
-                  {formatPrice(total, currencyCode, storeLocale)}
+                  {formatPrice(totalDisplay, currencyCode, storeLocale)}
                 </dd>
               </div>
             </dl>
