@@ -38,13 +38,23 @@ const BLOCKS: FrameBlock[] = [
 
 const TOTAL_FRAMES = BLOCKS.reduce((sum, block) => sum + block.count, 0)
 
-/* How far the portrait crop zooms in over the film (0 → 1). It is a fraction
-   of the cover scale, so the frame never stops filling the screen. */
-const KEN_BURNS_ZOOM = 0.1
+/** The Gulf block's frame count; its camera stays put for those frames. */
+const GULF_FRAMES = BLOCKS[0].count
+
+/** Where the Gulf camera sits. The cheetah walks toward the right edge during
+ *  the block, so this framing keeps its head in view from the first frame to
+ *  the last while the tower and the dhows stay around it. */
+const GULF_PAN = 0.57
+
+/** The Greece block starts right after Gulf + China + Egypt (frames 0…129). */
+const GREECE_START = BLOCKS[0].count + BLOCKS[1].count + BLOCKS[2].count
+
+/** Where the Greece camera sits: on the temple columns and the cheetah, with
+ *  the sea kept on the left as the shot widens. */
+const GREECE_PAN = 0.55
 
 /* How far through its own block a frame is (0 → 1). The portrait crop uses it
-   as the Ken Burns zoom driver, so each civilization's film breathes in over
-   its own run instead of being swept across. */
+   as the pan driver, so each civilization's film sweeps across its own run. */
 function blockProgress(index: number) {
   let start = 0
   for (const block of BLOCKS) {
@@ -188,18 +198,29 @@ export function CivilizationsSection() {
       ctx.imageSmoothingQuality = "high"
 
       // cover, never letterbox: the frame fills the viewport and the excess is
-      // cropped. on a wide screen it stays put; on a phone it breathes in with
-      // a slow Ken Burns zoom (see blockProgress) — a wide shot settling toward
-      // the heart of the scene, no sideways sweep.
-      const baseScale = Math.max(cw / img.width, ch / img.height)
-      const zoom = ch > cw ? 1 + KEN_BURNS_ZOOM * blockProgress(clamped) : 1
-      const scale = baseScale * zoom
+      // cropped. on a wide screen it stays centred; on a phone it pans across
+      // the frame (see blockProgress) so the scene is swept end to end.
+      const scale = Math.max(cw / img.width, ch / img.height)
       const width = img.width * scale
       const height = img.height * scale
+      /* The Gulf and Greece are framed once and the camera holds there for
+         their whole block: only the film advances, the crop never sweeps.
+         The other two civilizations keep their end-to-end sweep. Wide screens
+         are always centred, so nothing changes there. */
+      const gulfHold = clamped < GULF_FRAMES
+      const greeceHold = clamped >= GREECE_START
+      const pan =
+        ch > cw
+          ? gulfHold
+            ? GULF_PAN
+            : greeceHold
+              ? GREECE_PAN
+              : blockProgress(clamped)
+          : 0.5
 
       ctx.drawImage(
         img,
-        Math.round((cw - width) / 2),
+        Math.round((cw - width) * pan),
         Math.round((ch - height) / 2),
         Math.ceil(width),
         Math.ceil(height)

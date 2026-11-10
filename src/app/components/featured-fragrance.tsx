@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { BRAND_COLORS } from "@/shared/config/brand"
+import { cropPan } from "@/shared/lib/crop-pan"
 import { createFrameWindow, type FrameWindow } from "@/shared/lib/frame-window"
 import { SectionFade } from "@/shared/ui/section-fade"
 
@@ -15,13 +16,7 @@ interface FeaturedFragranceProps {
   frameCount?: number
 }
 
-/* How far the portrait crop zooms in over the film (0 → 1). It is a fraction
-   of the cover scale, so the frame never stops filling the screen. */
-const KEN_BURNS_ZOOM = 0.1
-
-export function FeaturedFragrance({
-  frameCount = 26,
-}: FeaturedFragranceProps) {
+export function FeaturedFragrance({ frameCount = 26 }: FeaturedFragranceProps) {
   const t = useTranslations("Featured")
   const locale = useLocale()
   const isArabic = locale === "ar"
@@ -115,17 +110,16 @@ export function FeaturedFragrance({
       }
 
       // the frame fills the section edge to edge: scale up until both axes
-      // are covered. on a wide screen the frame matches the viewport, so it
-      // stays put; on a phone the 16:9 frame is cropped to a narrow centre
-      // slice, so it breathes in with a slow Ken Burns zoom instead of a
-      // sideways sweep — a wide shot settling toward the heart of the scene,
-      // still no phone-sized re-render.
-      const baseScale = Math.max(cw / img.width, ch / img.height)
-      const zoom = ch > cw ? 1 + KEN_BURNS_ZOOM * (clamped / (frameCount - 1)) : 1
-      const scale = baseScale * zoom
+      // are covered, then centre the overflow. no letterbox, no margins.
+      const scale = Math.max(cw / img.width, ch / img.height)
       const w = img.width * scale
       const h = img.height * scale
-      ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h)
+      /* A wide screen already fits the 16:9 frame, so it stays centred and
+         nothing about it moves. A phone crops that frame to a narrow slice:
+         see cropPan — it sweeps to the bottle and then holds it framed. */
+      const progress = clamped / (frameCount - 1)
+      const pan = cropPan(progress, ch > cw)
+      ctx.drawImage(img, (cw - w) * pan, (ch - h) / 2, w, h)
       currentFrame = clamped
     }
 
