@@ -334,266 +334,285 @@ export function CheckoutFlow() {
 
         <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1.4fr_0.9fr] lg:items-start">
           <div>
-          {step === "details" && (
-            <form onSubmit={handleDetailsSubmit} className="space-y-5">
-              <h2 className="font-primary text-xl text-sand">{t("contact")}</h2>
+            {step === "details" && (
+              <form onSubmit={handleDetailsSubmit} className="space-y-5">
+                <h2 className="font-primary text-xl text-sand">
+                  {t("contact")}
+                </h2>
 
-              <Field label={t("email")}>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  autoComplete="email"
-                  placeholder={t("emailPlaceholder")}
-                  className={inputClass}
-                />
-              </Field>
-
-              <Field label={t("name")}>
-                <input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  autoComplete="name"
-                  className={inputClass}
-                />
-              </Field>
-
-              <Field label={t("phone")}>
-                <input
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  autoComplete="tel"
-                  inputMode="tel"
-                  className={inputClass}
-                />
-              </Field>
-
-              <h2 className="pt-2 font-primary text-xl text-sand">
-                {t("address")}
-              </h2>
-
-              <Field label={t("addressLine")}>
-                <input
-                  value={address}
-                  onChange={(event) => setAddress(event.target.value)}
-                  autoComplete="street-address"
-                  className={inputClass}
-                />
-              </Field>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label={t("emirate")}>
-                  <select
-                    value={emirate}
-                    onChange={(event) => {
-                      setEmirate(event.target.value)
-                      setAreaOption("")
-                      setAreaCustom("")
-                    }}
-                    autoComplete="address-level1"
-                    className={`${inputClass} [color-scheme:dark]`}
-                  >
-                    <option value="" disabled className="bg-royal-navy text-sand/50">
-                      {t("selectEmirate")}
-                    </option>
-                    {EMIRATES.map((entry) => (
-                      <option
-                        key={entry.ar}
-                        value={entry.ar}
-                        className="bg-royal-navy text-sand"
-                      >
-                        {locale === "en" ? entry.en : entry.ar}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label={t("area")}>
-                  {isAbuDhabi ? (
-                    <select
-                      value={areaOption}
-                      onChange={(event) => setAreaOption(event.target.value)}
-                      autoComplete="address-level2"
-                      className={`${inputClass} [color-scheme:dark]`}
-                    >
-                      <option value="" disabled className="bg-royal-navy text-sand/50">
-                        {t("selectArea")}
-                      </option>
-                      {ABU_DHABI_AREA_GROUPS.map((group) => (
-                        <optgroup
-                          key={group.ar}
-                          label={locale === "en" ? group.en : group.ar}
-                        >
-                          {group.areas.map((entry) => (
-                            <option
-                              key={entry.ar}
-                              value={entry.ar}
-                              className="bg-royal-navy text-sand"
-                            >
-                              {locale === "en" ? entry.en : entry.ar}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                      <option value={OTHER_AREA} className="bg-royal-navy text-sand">
-                        {t("areaOther")}
-                      </option>
-                    </select>
-                  ) : (
-                    <input
-                      value={areaCustom}
-                      onChange={(event) => setAreaCustom(event.target.value)}
-                      autoComplete="address-level2"
-                      className={inputClass}
-                    />
-                  )}
-                </Field>
-              </div>
-
-              {isAbuDhabi && areaOption === OTHER_AREA && (
-                <Field label={t("areaOtherLabel")}>
+                <Field label={t("email")}>
                   <input
-                    value={areaCustom}
-                    onChange={(event) => setAreaCustom(event.target.value)}
-                    placeholder={t("areaOtherPlaceholder")}
-                    autoComplete="address-level2"
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    autoComplete="email"
+                    placeholder={t("emailPlaceholder")}
                     className={inputClass}
                   />
                 </Field>
-              )}
 
-              {zoneFee !== null && (
-                <p className="font-primary text-sm text-sand/60">
-                  {t("shippingEstimate")}:{" "}
-                  <span className="font-secondary text-gold">
-                    {formatPrice(zoneFee, currencyCode, storeLocale)}
-                  </span>
-                </p>
-              )}
+                <Field label={t("name")}>
+                  <input
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    autoComplete="name"
+                    className={inputClass}
+                  />
+                </Field>
 
-              {error && (
-                <p className="font-primary text-sm text-gold">{error}</p>
-              )}
+                <Field label={t("phone")}>
+                  <input
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    autoComplete="tel"
+                    inputMode="tel"
+                    className={inputClass}
+                  />
+                </Field>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full h-12 rounded-[var(--store-radius-sm)] border border-gold bg-gold px-6 font-primary text-sm font-bold text-royal-navy transition-colors hover:bg-sand disabled:opacity-60"
-              >
-                {t("continue")}
-              </button>
-            </form>
-          )}
+                <h2 className="pt-2 font-primary text-xl text-sand">
+                  {t("address")}
+                </h2>
 
-          {step === "shipping" && (
-            <form onSubmit={handleShippingSubmit} className="space-y-5">
-              <h2 className="font-primary text-xl text-sand">
-                {t("shippingTitle")}
-              </h2>
-              <p className="font-primary text-sm text-sand/55">
-                {t("shippingNote")}
-              </p>
+                <Field label={t("addressLine")}>
+                  <input
+                    value={address}
+                    onChange={(event) => setAddress(event.target.value)}
+                    autoComplete="street-address"
+                    className={inputClass}
+                  />
+                </Field>
 
-              {optionsLoading && (
-                <div className="space-y-3">
-                  <div className="h-14 w-full animate-pulse bg-sand/5" />
-                  <div className="h-14 w-full animate-pulse bg-sand/5" />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field label={t("emirate")}>
+                    <select
+                      value={emirate}
+                      onChange={(event) => {
+                        setEmirate(event.target.value)
+                        setAreaOption("")
+                        setAreaCustom("")
+                      }}
+                      autoComplete="address-level1"
+                      className={`${inputClass} [color-scheme:dark]`}
+                    >
+                      <option
+                        value=""
+                        disabled
+                        className="bg-royal-navy text-sand/50"
+                      >
+                        {t("selectEmirate")}
+                      </option>
+                      {EMIRATES.map((entry) => (
+                        <option
+                          key={entry.ar}
+                          value={entry.ar}
+                          className="bg-royal-navy text-sand"
+                        >
+                          {locale === "en" ? entry.en : entry.ar}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label={t("area")}>
+                    {isAbuDhabi ? (
+                      <select
+                        value={areaOption}
+                        onChange={(event) => setAreaOption(event.target.value)}
+                        autoComplete="address-level2"
+                        className={`${inputClass} [color-scheme:dark]`}
+                      >
+                        <option
+                          value=""
+                          disabled
+                          className="bg-royal-navy text-sand/50"
+                        >
+                          {t("selectArea")}
+                        </option>
+                        {ABU_DHABI_AREA_GROUPS.map((group) => (
+                          <optgroup
+                            key={group.ar}
+                            label={`${locale === "en" ? group.en : group.ar} — ${
+                              locale === "en"
+                                ? `AED ${group.fee}`
+                                : `${group.fee} د.إ`
+                            }`}
+                          >
+                            {group.areas.map((entry) => (
+                              <option
+                                key={entry.ar}
+                                value={entry.ar}
+                                className="bg-royal-navy text-sand"
+                              >
+                                {locale === "en" ? entry.en : entry.ar}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                        <option
+                          value={OTHER_AREA}
+                          className="bg-royal-navy text-sand"
+                        >
+                          {t("areaOther")}
+                        </option>
+                      </select>
+                    ) : (
+                      <input
+                        value={areaCustom}
+                        onChange={(event) => setAreaCustom(event.target.value)}
+                        autoComplete="address-level2"
+                        className={inputClass}
+                      />
+                    )}
+                  </Field>
                 </div>
-              )}
 
-              {!optionsLoading && options.length === 0 && (
-                <div className="space-y-3">
+                {isAbuDhabi && areaOption === OTHER_AREA && (
+                  <Field label={t("areaOtherLabel")}>
+                    <input
+                      value={areaCustom}
+                      onChange={(event) => setAreaCustom(event.target.value)}
+                      placeholder={t("areaOtherPlaceholder")}
+                      autoComplete="address-level2"
+                      className={inputClass}
+                    />
+                  </Field>
+                )}
+
+                {zoneFee !== null && (
                   <p className="font-primary text-sm text-sand/60">
-                    {t("noShippingOptions")}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => void loadOptions()}
-                    className="border border-sand/20 px-5 py-2.5 font-primary text-sm text-sand/70 transition-colors hover:border-gold/50 hover:text-gold"
-                  >
-                    {t("retryShipping")}
-                  </button>
-                </div>
-              )}
-
-              {!optionsLoading && selectedOption && (
-                <div className="border border-gold/30 bg-gold/5 px-4 py-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="font-primary text-sm text-sand">
-                      {t("shippingTo", { area })}
+                    {t("shippingEstimate")}:{" "}
+                    <span className="font-secondary text-gold">
+                      {formatPrice(zoneFee, currencyCode, storeLocale)}
                     </span>
-                    <span className="font-secondary text-base text-gold">
-                      {formatPrice(
-                        shippingDisplay,
-                        currencyCode,
-                        storeLocale
-                      )}
-                    </span>
-                  </div>
-                  <p className="mt-2 font-primary text-xs leading-relaxed text-sand/55">
-                    {t("shippingAutoNote")}
                   </p>
-                </div>
-              )}
+                )}
 
-              {!optionsLoading && options.length > 0 && !selectedOption && (
-                <p className="font-primary text-sm text-gold">
-                  {t("shippingAreaUnavailable")}
-                </p>
-              )}
+                {error && (
+                  <p className="font-primary text-sm text-gold">{error}</p>
+                )}
 
-              {error && (
-                <p className="font-primary text-sm text-gold">{error}</p>
-              )}
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setStep("details")}
-                  className="h-11 rounded-[var(--store-radius-sm)] border border-sand/20 px-5 font-primary text-sm text-sand/70 transition-colors hover:border-gold/50 hover:text-gold"
-                >
-                  {t("back")}
-                </button>
                 <button
                   type="submit"
-                  disabled={loading || optionsLoading || !selectedOption}
-                  className="flex-1 h-12 rounded-[var(--store-radius-sm)] border border-gold bg-gold px-6 font-primary text-sm font-bold text-royal-navy transition-colors hover:bg-sand disabled:opacity-60"
-                >
-                  {t("continueToPayment")}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {step === "payment" && checkout && (
-            <div className="space-y-5">
-              <h2 className="font-primary text-xl text-sand">
-                {t("paymentTitle")}
-              </h2>
-
-              <div className="flex items-baseline justify-between border-b border-sand/10 pb-4">
-                <span className="font-primary text-sm text-sand/60">
-                  {t("total")}
-                </span>
-                <span className="font-secondary text-xl text-gold">
-                  {formatPrice(total, currencyCode, storeLocale)}
-                </span>
-              </div>
-
-              {checkout.redirect_url ? (
-                <button
-                  type="button"
-                  onClick={() => window.location.assign(checkout.redirect_url!)}
+                  disabled={loading}
                   className="w-full h-12 rounded-[var(--store-radius-sm)] border border-gold bg-gold px-6 font-primary text-sm font-bold text-royal-navy transition-colors hover:bg-sand disabled:opacity-60"
                 >
-                  {t("continueToPayment")}
+                  {t("continue")}
                 </button>
-              ) : (
-                <p className="font-primary text-sm text-gold">
-                  {t("paymentNotConfigured")}
+              </form>
+            )}
+
+            {step === "shipping" && (
+              <form onSubmit={handleShippingSubmit} className="space-y-5">
+                <h2 className="font-primary text-xl text-sand">
+                  {t("shippingTitle")}
+                </h2>
+                <p className="font-primary text-sm text-sand/55">
+                  {t("shippingNote")}
                 </p>
-              )}
-            </div>
-          )}
+
+                {optionsLoading && (
+                  <div className="space-y-3">
+                    <div className="h-14 w-full animate-pulse bg-sand/5" />
+                    <div className="h-14 w-full animate-pulse bg-sand/5" />
+                  </div>
+                )}
+
+                {!optionsLoading && options.length === 0 && (
+                  <div className="space-y-3">
+                    <p className="font-primary text-sm text-sand/60">
+                      {t("noShippingOptions")}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void loadOptions()}
+                      className="border border-sand/20 px-5 py-2.5 font-primary text-sm text-sand/70 transition-colors hover:border-gold/50 hover:text-gold"
+                    >
+                      {t("retryShipping")}
+                    </button>
+                  </div>
+                )}
+
+                {!optionsLoading && selectedOption && (
+                  <div className="border border-gold/30 bg-gold/5 px-4 py-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="font-primary text-sm text-sand">
+                        {t("shippingTo", { area })}
+                      </span>
+                      <span className="font-secondary text-base text-gold">
+                        {formatPrice(
+                          shippingDisplay,
+                          currencyCode,
+                          storeLocale
+                        )}
+                      </span>
+                    </div>
+                    <p className="mt-2 font-primary text-xs leading-relaxed text-sand/55">
+                      {t("shippingAutoNote")}
+                    </p>
+                  </div>
+                )}
+
+                {!optionsLoading && options.length > 0 && !selectedOption && (
+                  <p className="font-primary text-sm text-gold">
+                    {t("shippingAreaUnavailable")}
+                  </p>
+                )}
+
+                {error && (
+                  <p className="font-primary text-sm text-gold">{error}</p>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setStep("details")}
+                    className="h-11 rounded-[var(--store-radius-sm)] border border-sand/20 px-5 font-primary text-sm text-sand/70 transition-colors hover:border-gold/50 hover:text-gold"
+                  >
+                    {t("back")}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading || optionsLoading || !selectedOption}
+                    className="flex-1 h-12 rounded-[var(--store-radius-sm)] border border-gold bg-gold px-6 font-primary text-sm font-bold text-royal-navy transition-colors hover:bg-sand disabled:opacity-60"
+                  >
+                    {t("continueToPayment")}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {step === "payment" && checkout && (
+              <div className="space-y-5">
+                <h2 className="font-primary text-xl text-sand">
+                  {t("paymentTitle")}
+                </h2>
+
+                <div className="flex items-baseline justify-between border-b border-sand/10 pb-4">
+                  <span className="font-primary text-sm text-sand/60">
+                    {t("total")}
+                  </span>
+                  <span className="font-secondary text-xl text-gold">
+                    {formatPrice(total, currencyCode, storeLocale)}
+                  </span>
+                </div>
+
+                {checkout.redirect_url ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      window.location.assign(checkout.redirect_url!)
+                    }
+                    className="w-full h-12 rounded-[var(--store-radius-sm)] border border-gold bg-gold px-6 font-primary text-sm font-bold text-royal-navy transition-colors hover:bg-sand disabled:opacity-60"
+                  >
+                    {t("continueToPayment")}
+                  </button>
+                ) : (
+                  <p className="font-primary text-sm text-gold">
+                    {t("paymentNotConfigured")}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* the receipt stub: the total stays in view while the form scrolls */}
