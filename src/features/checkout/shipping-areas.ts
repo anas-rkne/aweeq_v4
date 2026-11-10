@@ -93,6 +93,15 @@ const WESTERN_KEYWORDS = [
   "Al Dhafra",
   "Western Region",
   "Remote Areas",
+  /* Al Dhafra localities covered by the region-wide 50 AED rate but not
+     printed one by one on the sheet. «مدينة زايد» is the current name of
+     «بدع زايد», so both spellings must land on the remote fee. */
+  "مدينة زايد",
+  "دلما",
+  "براكة",
+  "حبشان",
+  "الطويلة",
+  "مزيد",
 ]
 
 /** Strip Arabic diacritics and unify alef/ta/ya so "أطراف العين" matches "اطراف العين". */
@@ -107,6 +116,35 @@ export function normalizeArea(value: string) {
     .toLowerCase()
 }
 
+/** The address split into whole words, so «السادس» never matches «الساد». */
+function wordsOf(value: string) {
+  return normalizeArea(value)
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean)
+    .map((word) =>
+      /* «ليوا» and «الليوا», «سلع» and «السلع» are the same place. The Arabic
+         article is only stripped from Arabic words, never from «Al Sila». */
+      /^[\u0621-\u064A]/.test(word) && word.length > 3 && word.startsWith("ال")
+        ? word.slice(2)
+        : word
+    )
+}
+
+/** True when the keyword appears as consecutive whole words in the address. */
+function hasWords(haystack: string[], needle: string[]) {
+  if (needle.length === 0) {
+    return false
+  }
+
+  for (let start = 0; start + needle.length <= haystack.length; start += 1) {
+    if (needle.every((word, index) => haystack[start + index] === word)) {
+      return true
+    }
+  }
+
+  return false
+}
+
 export function isWesternRegion(emirate: string, area: string) {
   /* Both 50 AED zones sit inside the emirate of Abu Dhabi. Checking the
      emirate first keeps an area name that exists elsewhere — or a stray
@@ -116,10 +154,8 @@ export function isWesternRegion(emirate: string, area: string) {
     return false
   }
 
-  const haystack = normalizeArea(`${area} ${emirate}`)
-  return WESTERN_KEYWORDS.some((keyword) =>
-    haystack.includes(normalizeArea(keyword))
-  )
+  const address = wordsOf(`${area} ${emirate}`)
+  return WESTERN_KEYWORDS.some((keyword) => hasWords(address, wordsOf(keyword)))
 }
 
 /** The delivery fee for an address, in AED. */

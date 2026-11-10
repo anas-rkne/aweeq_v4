@@ -79,6 +79,29 @@ describe("shipping zones", () => {
     expect(isWesternRegion(ABU_DHABI, "Al Dhafra")).toBe(true)
   })
 
+  it("treats the rest of Al Dhafra as the Western Region it belongs to", () => {
+    expect(shippingFeeFor(ABU_DHABI, "مدينة زايد")).toBe(SHIPPING_WESTERN)
+    expect(shippingFeeFor(ABU_DHABI, "دلما")).toBe(SHIPPING_WESTERN)
+    expect(shippingFeeFor(ABU_DHABI, "براكة")).toBe(SHIPPING_WESTERN)
+    expect(shippingFeeFor(ABU_DHABI, "حبشان")).toBe(SHIPPING_WESTERN)
+  })
+
+  it("matches whole words, so a street never borrows a zone's price", () => {
+    /* «السادس» contains «الساد»; without whole-word matching a Sixth Street
+       address in Abu Dhabi city would be charged the remote 50 AED. */
+    expect(shippingFeeFor(ABU_DHABI, "الشارع السادس")).toBe(SHIPPING_STANDARD)
+    expect(shippingFeeFor(ABU_DHABI, "المنطقة السادسة")).toBe(SHIPPING_STANDARD)
+    expect(shippingFeeFor(ABU_DHABI, "مدينة محمد بن زايد")).toBe(
+      SHIPPING_STANDARD
+    )
+
+    /* The same names, written as words, still land on the right zone. */
+    expect(shippingFeeFor(ABU_DHABI, "منطقة الساد")).toBe(SHIPPING_WESTERN)
+    expect(shippingFeeFor(ABU_DHABI, "ليوا، أبوظبي")).toBe(SHIPPING_WESTERN)
+    expect(shippingFeeFor(ABU_DHABI, "الظفرة")).toBe(SHIPPING_WESTERN)
+    expect(shippingFeeFor(ABU_DHABI, "ظفرة")).toBe(SHIPPING_WESTERN)
+  })
+
   it("never applies the remote fee outside Abu Dhabi", () => {
     expect(isWesternRegion("دبي", "ليوا")).toBe(false)
     expect(isWesternRegion("الشارقة", "المنطقة الغربية")).toBe(false)

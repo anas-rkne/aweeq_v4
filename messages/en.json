@@ -412,7 +412,7 @@
     "shippingTitle": "Shipping method",
     "shippingNote": "Delivery within the UAE.",
     "shippingTo": "Delivery to {area}",
-    "shippingAutoNote": "The fee is set automatically by area: AED 35 across the Emirates, and AED 50 for the Western Region and outer Al Ain.",
+    "shippingAutoNote": "The fee is set automatically by area: AED 35 across the Emirates, and AED 50 for the Western Region and the outer areas of Al Ain.",
     "shippingAreaUnavailable": "Delivery is not available to this area right now. Change the area or contact us.",
     "shippingLater": "Calculated by area",
     "noShippingOptions": "No shipping options available right now. Please try again.",
