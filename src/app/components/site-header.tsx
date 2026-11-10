@@ -96,35 +96,44 @@ function MobileNav({
   const pathname = usePathname()
   const locale = useLocale()
   const t = useTranslations("Navbar")
+  const router = useRouter()
   const shellRef = useRef<HTMLDivElement>(null)
-  const pictureRef = useRef<HTMLDivElement>(null)
+
+  const switchLocale = () => {
+    const nextLocale = locale === "ar" ? "en" : "ar"
+    router.replace(`${pathname}${window.location.search}`, {
+      locale: nextLocale,
+    })
+  }
+  const contentRef = useRef<HTMLDivElement>(null)
   const linksRef = useRef<(HTMLAnchorElement | null)[]>([])
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!isOpen) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
     const ctx = gsap.context(() => {
       gsap
         .timeline()
         .fromTo(
-          pictureRef.current,
+          contentRef.current,
           { opacity: 0 },
-          { opacity: 1, duration: 0.5, ease: "power2.out" },
+          { opacity: 1, duration: 0.4, ease: "power2.out" },
           0
         )
         .fromTo(
           linksRef.current,
-          { y: 30, opacity: 0 },
+          { y: 26, opacity: 0 },
           {
             y: 0,
             opacity: 1,
-            duration: 0.6,
-            stagger: 0.1,
+            duration: 0.55,
+            stagger: 0.07,
             ease: "power2.out",
           },
-          0.15
+          0.08
         )
     }, shellRef)
 
@@ -204,71 +213,127 @@ function MobileNav({
       aria-label={t("menu")}
       className="fixed inset-0 z-[100] overflow-y-auto bg-royal-navy"
     >
-      <div ref={pictureRef} className="absolute inset-0" aria-hidden="true">
-        <Image
-          src="/images/hero/mobile-menu-bg.jpg"
-          alt=""
-          fill
-          sizes="100vw"
-          quality={80}
-          className="object-cover object-center brightness-[3.2] contrast-[1.1] saturate-[0.9]"
-        />
-      </div>
-
-      <div className="absolute inset-0 bg-royal-navy/45" aria-hidden="true" />
-
+      {/* the brand field: solid navy with the house glow, no photograph */}
       <div
-        className="absolute inset-0 bg-royal-navy/30"
         aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,var(--color-brand-slate)_0%,transparent_58%)] opacity-35"
       />
 
-      <button
-        ref={closeButtonRef}
-        type="button"
-        onClick={onClose}
-        aria-label={t("close")}
-        className="absolute end-6 top-6 z-10 p-2 text-sand/50 transition-colors duration-300 ease-out hover:text-gold"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.2}
-          strokeLinecap="square"
-          aria-hidden="true"
-          className="h-6 w-6"
-        >
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
+      <div ref={contentRef} className="relative flex min-h-svh flex-col">
+        {/* top bar: the mark and the close control */}
+        <div className="flex h-16 items-center justify-between px-5 sm:px-8">
+          <a
+            href={pathname === "/" ? "#hero" : `/${locale}`}
+            onClick={onClose}
+            aria-label={t("logoLabel")}
+            className="inline-flex"
+          >
+            <Image
+              src="/images/logo-mark.webp"
+              alt="3WEEQ"
+              width={1310}
+              height={800}
+              quality={90}
+              sizes="6rem"
+              className="h-10 w-auto"
+            />
+          </a>
 
-      <div className="relative z-10 flex min-h-svh items-center justify-center px-6 py-24">
-        <nav className="text-center">
-          <ul className="flex flex-col gap-10">
-            {NAV_LINKS.map((link, index) => (
-              <li key={link.href}>
-                <a
-                  ref={(element) => {
-                    linksRef.current[index] = element
-                  }}
-                  href={navHref(link.href, pathname, locale)}
-                  onClick={onClose}
-                  aria-current={
-                    isLinkCurrent(link, pathname) ? "page" : undefined
-                  }
-                  className={`inline-block font-primary text-4xl transition-colors duration-300 ease-out sm:text-5xl ${
-                    isLinkCurrent(link, pathname)
-                      ? "text-gold"
-                      : "text-sand/50 hover:text-gold"
-                  }`}
-                >
-                  {t(link.key)}
-                </a>
-              </li>
-            ))}
+          <button
+            ref={closeButtonRef}
+            type="button"
+            onClick={onClose}
+            aria-label={t("close")}
+            className="grid h-10 w-10 place-items-center rounded-full border border-sand/20 text-sand/70 transition-colors duration-300 ease-out hover:border-gold/60 hover:text-gold"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.2}
+              strokeLinecap="square"
+              aria-hidden="true"
+              className="h-5 w-5"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        {/* the rooms */}
+        <nav
+          aria-label={t("mainNav")}
+          className="flex flex-1 items-center px-5 sm:px-8"
+        >
+          <ul className="w-full border-t border-sand/10">
+            {NAV_LINKS.map((link, index) => {
+              const current = isLinkCurrent(link, pathname)
+              return (
+                <li key={link.href} className="border-b border-sand/10">
+                  <a
+                    ref={(element) => {
+                      linksRef.current[index] = element
+                    }}
+                    href={navHref(link.href, pathname, locale)}
+                    onClick={onClose}
+                    aria-current={current ? "page" : undefined}
+                    className="group flex items-center justify-between gap-6 py-5"
+                  >
+                    <span className="flex items-baseline gap-5">
+                      <span className="font-secondary text-[11px] tabular-nums tracking-[0.2em] text-gold/60">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span
+                        className={`font-primary text-[2rem] leading-none transition-colors duration-300 ease-out sm:text-5xl ${
+                          current
+                            ? "text-gold"
+                            : "text-sand group-hover:text-gold"
+                        }`}
+                      >
+                        {t(link.key)}
+                      </span>
+                    </span>
+
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.2}
+                      strokeLinecap="square"
+                      aria-hidden="true"
+                      className="h-5 w-5 shrink-0 text-gold/0 transition-colors duration-300 ease-out group-hover:text-gold rtl:-scale-x-100"
+                    >
+                      <path d="M9 6l6 6-6 6" />
+                    </svg>
+                  </a>
+                </li>
+              )
+            })}
           </ul>
         </nav>
+
+        {/* footer: the line and the language */}
+        <div className="flex items-center justify-between gap-4 px-5 py-7 sm:px-8">
+          <p className="font-primary text-[11px] leading-relaxed text-sand/45">
+            {t("navTagline")}
+          </p>
+
+          <button
+            type="button"
+            onClick={switchLocale}
+            aria-label={t("language")}
+            className="whitespace-nowrap font-secondary text-[13px] text-sand/70 transition-colors duration-200 ease-out hover:text-gold"
+          >
+            <span className={locale === "ar" ? "text-gold" : "text-sand/55"}>
+              AR
+            </span>
+            <span className="mx-0.5 text-sand/55 sm:mx-1">/</span>
+            <span className={locale === "en" ? "text-gold" : "text-sand/55"}>
+              EN
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -398,7 +463,6 @@ export function SiteHeader() {
                 sizes="(min-width: 64rem) 10rem, 6rem"
                 preload
                 className="h-[50px] w-auto sm:h-[64px] md:h-[96px]"
-
               />
             </a>
           </div>
