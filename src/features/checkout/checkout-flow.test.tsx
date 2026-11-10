@@ -201,6 +201,25 @@ describe("CheckoutFlow delivery zones", () => {
     expectFee(screen.getByText(/رسوم التوصيل لهذه المنطقة/), 35)
   })
 
+  test("prices an area typed under «other» by its own name", async () => {
+    renderCheckout()
+
+    fireEvent.change(screen.getByLabelText("الإمارة"), {
+      target: { value: "أبوظبي" },
+    })
+    fireEvent.change(screen.getByLabelText("المنطقة"), {
+      target: { value: "__other__" },
+    })
+
+    const custom = screen.getByLabelText("اسم المنطقة")
+
+    fireEvent.change(custom, { target: { value: "الظفرة" } })
+    expectFee(screen.getByText(/رسوم التوصيل لهذه المنطقة/), 50)
+
+    fireEvent.change(custom, { target: { value: "مدينة خليفة" } })
+    expectFee(screen.getByText(/رسوم التوصيل لهذه المنطقة/), 35)
+  })
+
   test("prices Hatta, in Dubai, at 35 and sends the 35 option", async () => {
     renderCheckout()
     fillDetails("دبي", "حتا")
