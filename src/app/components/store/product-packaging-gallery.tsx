@@ -35,7 +35,9 @@ export function ProductPackagingGallery({
       if (event.key === "Escape") {
         setActive(null)
       } else if (event.key === "ArrowRight") {
-        setActive((value) => (value === null ? value : (value + 1) % images.length))
+        setActive((value) =>
+          value === null ? value : (value + 1) % images.length
+        )
       } else if (event.key === "ArrowLeft") {
         setActive((value) =>
           value === null ? value : (value - 1 + images.length) % images.length
@@ -61,9 +63,7 @@ export function ProductPackagingGallery({
         : null
 
     const focusTimer = window.setTimeout(() => {
-      dialogRef.current
-        ?.querySelector<HTMLElement>("button")
-        ?.focus()
+      dialogRef.current?.querySelector<HTMLElement>("button")?.focus()
     }, 40)
 
     function onTab(event: KeyboardEvent) {
@@ -193,8 +193,7 @@ export function ProductPackagingGallery({
                   type="button"
                   onClick={() =>
                     setActive(
-                      (value) =>
-                        (value! - 1 + images.length) % images.length
+                      (value) => (value! - 1 + images.length) % images.length
                     )
                   }
                   aria-label={t("prevImage")}

@@ -79,9 +79,13 @@ export function Preloader() {
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setHidden(true)
-      setGone(true)
-      return
+      /* Hand the page back without the inscription. Deferred one tick so the
+         state update is not synchronous inside the effect body. */
+      const id = window.setTimeout(() => {
+        setHidden(true)
+        setGone(true)
+      }, 0)
+      return () => window.clearTimeout(id)
     }
 
     let disposed = false
@@ -274,13 +278,7 @@ export function Preloader() {
                 </clipPath>
               ))}
               <clipPath id="preloader-gild">
-                <rect
-                  ref={gildRectRef}
-                  x="0"
-                  y="0"
-                  width="0"
-                  height="180"
-                />
+                <rect ref={gildRectRef} x="0" y="0" width="0" height="180" />
               </clipPath>
               <clipPath id="preloader-gleam">
                 <rect

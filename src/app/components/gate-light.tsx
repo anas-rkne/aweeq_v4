@@ -174,7 +174,9 @@ export function GateLight() {
     const section = canvas.closest("section")
     if (!section) return
 
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
     if (reduced) return
 
     const gl = canvas.getContext("webgl2", {
@@ -187,10 +189,7 @@ export function GateLight() {
     } as WebGLContextAttributes)
     if (!gl) return
 
-    const compile = (
-      type: number,
-      source: string
-    ): WebGLShader | null => {
+    const compile = (type: number, source: string): WebGLShader | null => {
       const shader = gl.createShader(type)
       if (!shader) return null
       gl.shaderSource(shader, source)

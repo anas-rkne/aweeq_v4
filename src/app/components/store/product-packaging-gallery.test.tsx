@@ -5,9 +5,10 @@ import { NextIntlClientProvider } from "next-intl"
 import { ProductPackagingGallery } from "./product-packaging-gallery"
 
 vi.mock("next/image", () => ({
-  default: ({ src, alt }: { src: string; alt?: string }) =>
+  default: ({ src, alt }: { src: string; alt?: string }) => (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt ?? ""} />,
+    <img src={src} alt={alt ?? ""} />
+  ),
 }))
 
 const messages = {
@@ -37,7 +38,9 @@ function renderGallery() {
 describe("ProductPackagingGallery", () => {
   test("renders one button per image", () => {
     renderGallery()
-    expect(screen.getAllByRole("button", { name: /عرض الصورة/ })).toHaveLength(3)
+    expect(screen.getAllByRole("button", { name: /عرض الصورة/ })).toHaveLength(
+      3
+    )
   })
 
   test("opens the lightbox and navigates with arrows", () => {

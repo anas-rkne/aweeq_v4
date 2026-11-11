@@ -42,7 +42,9 @@ export function BottleStage({ className = "" }: { className?: string }) {
   useEffect(() => {
     const host = hostRef.current
     if (!host) return
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
 
     let disposed = false
     let started = false

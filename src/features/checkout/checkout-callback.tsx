@@ -54,8 +54,7 @@ export function CheckoutCallback() {
           router.replace(`/order/${response.order_id}`)
         }
       } catch (completeError) {
-        const raw =
-          completeError instanceof Error ? completeError.message : ""
+        const raw = completeError instanceof Error ? completeError.message : ""
 
         // A piece can sell out between the payment page and the order being
         // placed. Say that plainly instead of showing Medusa's raw message.

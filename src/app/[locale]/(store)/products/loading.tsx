@@ -19,7 +19,10 @@ export default function ProductsLoading() {
         {/* the category circles */}
         <div className="mt-10 flex gap-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex w-20 shrink-0 flex-col items-center gap-2">
+            <div
+              key={i}
+              className="flex w-20 shrink-0 flex-col items-center gap-2"
+            >
               <div className="h-16 w-16 animate-pulse rounded-full bg-sand/[0.07]" />
               <div className="h-3 w-14 animate-pulse bg-sand/[0.07]" />
             </div>

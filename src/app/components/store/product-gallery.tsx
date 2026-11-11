@@ -84,7 +84,9 @@ export function ProductGallery({ product }: ProductGalleryProps) {
     return (
       <div className="rounded-[var(--store-radius)] border border-sand/10 bg-[var(--store-surface)] p-2">
         <div className="flex aspect-square w-full items-center justify-center rounded-[calc(var(--store-radius)-0.25rem)] bg-[var(--store-well)]">
-          <span className="font-primary text-3xl text-royal-navy/30">3WEEQ</span>
+          <span className="font-primary text-3xl text-royal-navy/30">
+            3WEEQ
+          </span>
         </div>
       </div>
     )

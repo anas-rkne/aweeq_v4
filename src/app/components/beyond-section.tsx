@@ -26,11 +26,7 @@ export async function BeyondSection({ locale }: { locale: string }) {
       data-cuneiform-surface
       className="relative isolate h-[280svh] motion-reduce:h-auto motion-reduce:min-h-svh"
     >
-      <ScrollGallery
-        title={t("title")}
-        description={t("body")}
-        items={items}
-      />
+      <ScrollGallery title={t("title")} description={t("body")} items={items} />
     </section>
   )
 }

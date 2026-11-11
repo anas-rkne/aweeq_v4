@@ -40,10 +40,7 @@ export function AboutSection() {
 
     gsap.registerPlugin(ScrollTrigger)
 
-    const totalFrames = scenes.reduce(
-      (acc, scene) => acc + scene.frameCount,
-      0
-    )
+    const totalFrames = scenes.reduce((acc, scene) => acc + scene.frameCount, 0)
     const totalRunway = totalFrames * 70
 
     room.style.height = `${totalRunway}px`
@@ -151,10 +148,7 @@ export function AboutSection() {
           }}
         />
 
-        <AboutSceneOverlay
-          ref={textRef}
-          scene={scenes[currentSceneIndex]}
-        />
+        <AboutSceneOverlay ref={textRef} scene={scenes[currentSceneIndex]} />
       </section>
 
       <div id="about-room" ref={roomRef} aria-hidden="true" />

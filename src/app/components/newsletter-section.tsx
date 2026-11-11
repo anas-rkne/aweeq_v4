@@ -46,9 +46,13 @@ export function NewsletterSection() {
       })
 
       if (!response.ok) {
-        const data = (await response.json().catch(() => null)) as { error?: string } | null
+        const data = (await response.json().catch(() => null)) as {
+          error?: string
+        } | null
         setStatus("error")
-        setMessage(data?.error === "invalid_email" ? t("invalidEmail") : t("error"))
+        setMessage(
+          data?.error === "invalid_email" ? t("invalidEmail") : t("error")
+        )
         return
       }
 
@@ -167,7 +171,8 @@ export function NewsletterSection() {
             className={`mx-auto min-h-6 max-w-lg font-primary leading-[1.7] ${
               done
                 ? "mt-9 text-[17px] text-sand"
-                : "mt-4 text-[13px] " + (status === "error" ? "text-gold" : "text-sand/60")
+                : "mt-4 text-[13px] " +
+                  (status === "error" ? "text-gold" : "text-sand/60")
             }`}
             style={{ textShadow: "0 2px 18px rgba(3,10,19,0.9)" }}
           >

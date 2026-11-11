@@ -4,11 +4,7 @@ import { ProductCard } from "@/components/store/product-card"
 import { CategoryRail } from "@/components/store/category-rail"
 import { asString, STORE_PRODUCT_TYPES } from "@/lib/catalog"
 import { alternates } from "@/lib/seo"
-import {
-  getCollections,
-  getProducts,
-  type StoreLocale,
-} from "@/lib/api"
+import { getCollections, getProducts, type StoreLocale } from "@/lib/api"
 
 type ProductsSearchParams = {
   product_type?: string | string[]
@@ -59,7 +55,8 @@ export default async function ProductsPage({
 
   const buildHref = (patch: Partial<ProductsSearchParams>) => {
     const search = new URLSearchParams()
-    const nextType = patch.product_type !== undefined ? patch.product_type : productType
+    const nextType =
+      patch.product_type !== undefined ? patch.product_type : productType
     const nextCollection =
       patch.collection !== undefined ? patch.collection : collection
     if (nextType) search.set("product_type", String(nextType))
@@ -126,7 +123,9 @@ export default async function ProductsPage({
 
           {selectedType && (
             <p className="mt-6 font-primary text-small text-sand/60">
-              {t("searchResults", { q: isArabic ? selectedType.labelAr : selectedType.labelEn })}
+              {t("searchResults", {
+                q: isArabic ? selectedType.labelAr : selectedType.labelEn,
+              })}
             </p>
           )}
 

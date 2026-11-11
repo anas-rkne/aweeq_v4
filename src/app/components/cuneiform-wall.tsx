@@ -351,7 +351,9 @@ export function CuneiformWall() {
     let vao: WebGLVertexArrayObject | null = null
     let texture: WebGLTexture | null = null
 
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
 
     let width = 0
     let height = 0
@@ -483,14 +485,7 @@ export function CuneiformWall() {
       texture = gl.createTexture()
       gl.bindTexture(gl.TEXTURE_2D, texture)
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        atlas
-      )
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlas)
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
@@ -506,7 +501,10 @@ export function CuneiformWall() {
         gl.texParameterf(
           gl.TEXTURE_2D,
           anisotropic.TEXTURE_MAX_ANISOTROPY_EXT,
-          Math.min(4, gl.getParameter(anisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT))
+          Math.min(
+            4,
+            gl.getParameter(anisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT)
+          )
         )
       }
 

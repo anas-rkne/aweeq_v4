@@ -96,7 +96,11 @@ export async function CategoryRail({
                         : `border-transparent ${TINTS[index % TINTS.length]} group-hover:border-sand/20`
                     }`}
                   >
-                    <Icon className="h-6 w-6" strokeWidth={1.1} aria-hidden="true" />
+                    <Icon
+                      className="h-6 w-6"
+                      strokeWidth={1.1}
+                      aria-hidden="true"
+                    />
                   </span>
 
                   <span

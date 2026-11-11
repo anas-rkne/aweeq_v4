@@ -1,11 +1,6 @@
 "use client"
 
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-} from "react"
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react"
 import * as THREE from "three"
 
 /**
@@ -227,7 +222,10 @@ export const InfiniteAisle = forwardRef<
         powerPreference: "high-performance",
       })
       r.setPixelRatio(
-        Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.5 : 2)
+        Math.min(
+          window.devicePixelRatio || 1,
+          window.innerWidth < 768 ? 1.5 : 2
+        )
       )
       r.toneMapping = THREE.ACESFilmicToneMapping
       r.outputColorSpace = THREE.SRGBColorSpace
@@ -413,7 +411,6 @@ export const InfiniteAisle = forwardRef<
         })
       })()
 
-
       /* ---- the stars: faint gold points high in the night ---- */
       const starGeo = new THREE.BufferGeometry()
       const starCount = 120
@@ -421,8 +418,7 @@ export const InfiniteAisle = forwardRef<
       for (let i = 0; i < starCount; i++) {
         starPos[i * 3] = (Math.random() - 0.5) * 13
         starPos[i * 3 + 1] = 2.2 + Math.random() * 3.2
-        starPos[i * 3 + 2] =
-          CAM_START_Z - Math.random() * (CAM_START_Z - END_Z)
+        starPos[i * 3 + 2] = CAM_START_Z - Math.random() * (CAM_START_Z - END_Z)
       }
       starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3))
       stars = new THREE.Points(

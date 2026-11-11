@@ -30,7 +30,10 @@ export default async function CollectionsPage({
 }) {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: "Store" })
-  const invitationT = await getTranslations({ locale, namespace: "StoreInvitation" })
+  const invitationT = await getTranslations({
+    locale,
+    namespace: "StoreInvitation",
+  })
   const isArabic = locale === "ar"
   const collections = await getCollections(isArabic ? "ar" : "en")
 

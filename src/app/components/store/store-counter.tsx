@@ -10,7 +10,11 @@ import { SectionFade } from "@/shared/ui/section-fade"
 import type { Product } from "@/types"
 import { mediaProxyUrl } from "@/lib/format"
 import { HeroProductCard } from "./hero-product-card"
-import { InfiniteAisle, type AisleHandle, type AisleProduct } from "./infinite-aisle"
+import {
+  InfiniteAisle,
+  type AisleHandle,
+  type AisleProduct,
+} from "./infinite-aisle"
 
 /**
  * each piece keeps its own halo colour — the same glow the WebGL scene casts,
@@ -83,7 +87,9 @@ export function StoreCounter({ products }: { products: Product[] }) {
   useEffect(() => {
     const section = sectionRef.current
     if (!section) return
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
     if (reduced) return
 
     gsap.registerPlugin(ScrollTrigger)
@@ -151,10 +157,7 @@ export function StoreCounter({ products }: { products: Product[] }) {
       <SectionFade edge="top" zIndex={20} />
 
       {/* ===== the dive through the night (all screens) ===== */}
-      <div
-        data-stage="shelf"
-        className="relative h-svh overflow-hidden"
-      >
+      <div data-stage="shelf" className="relative h-svh overflow-hidden">
         {/* the WebGL scene */}
         <InfiniteAisle
           ref={aisleRef}
@@ -279,7 +282,10 @@ export function StoreCounter({ products }: { products: Product[] }) {
         })}
 
         {/* the invitation, at the end of the phone walk */}
-        <article data-piece className="flex flex-col items-center px-6 py-20 text-center">
+        <article
+          data-piece
+          className="flex flex-col items-center px-6 py-20 text-center"
+        >
           <p className="max-w-md font-primary text-2xl font-bold leading-snug text-sand">
             {t("ending")}
           </p>

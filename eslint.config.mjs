@@ -20,6 +20,9 @@ const eslintConfig = defineConfig([
     // Backend & E2E tests have separate linting paths
     "medusa/**",
     "e2e/**",
+    // Local diagnostic scripts (diag-*.js) are throwaway debugging helpers,
+    // not application source — keep them out of lint.
+    "diag-*.js",
   ]),
 ]);
 

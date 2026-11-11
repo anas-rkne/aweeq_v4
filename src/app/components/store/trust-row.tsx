@@ -30,7 +30,11 @@ export async function TrustRow() {
           const body = (
             <>
               <span className="grid h-10 w-10 place-items-center rounded-full bg-gold/10 text-gold">
-                <Icon className="h-5 w-5" strokeWidth={1.2} aria-hidden="true" />
+                <Icon
+                  className="h-5 w-5"
+                  strokeWidth={1.2}
+                  aria-hidden="true"
+                />
               </span>
               <span className="mt-3 block font-primary text-[13px] font-bold leading-5 text-sand">
                 {t(`trust.${item.key}.title`)}

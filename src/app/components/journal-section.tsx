@@ -117,7 +117,6 @@ export function JournalSection() {
                   sizes="(min-width: 64rem) 30vw, (min-width: 48rem) 45vw, 100vw"
                   className="object-cover object-center transition-transform duration-[900ms] ease-out-expo group-hover:scale-[1.035]"
                 />
-
               </SpotlightCard>
 
               <div className="mt-5 flex items-start justify-between gap-5">

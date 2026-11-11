@@ -9,11 +9,7 @@ import React, {
   useRef,
 } from "react"
 import { createFrameWindow, type FrameWindow } from "@/shared/lib/frame-window"
-import {
-  frameUrlFor,
-  type ResolvedScene,
-  type StoryMode,
-} from "./about-data"
+import { frameUrlFor, type ResolvedScene, type StoryMode } from "./about-data"
 import { BRAND_COLORS } from "@/shared/config/brand"
 
 /* One streaming window per scene source, created lazily and dropped the moment
@@ -151,10 +147,7 @@ function focusScene(bounds: SceneBounds, progress: number) {
 }
 
 function sceneImage(bounds: SceneBounds, progress: number) {
-  return windowFor(bounds).nearest(
-    wantedFrame(bounds, progress),
-    bounds.count
-  )
+  return windowFor(bounds).nearest(wantedFrame(bounds, progress), bounds.count)
 }
 
 function evictDistantScenes(keep: Set<string>) {

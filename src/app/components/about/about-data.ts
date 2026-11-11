@@ -190,8 +190,7 @@ export function frameUrlFor(
     const number = startFrame + index
     const seconds =
       folder === MOBILE_FRAMES_FOLDER
-        ? MOBILE_LAST_FRAME_SECONDS[number] ??
-          ((number - 1) * 0.1).toFixed(2)
+        ? (MOBILE_LAST_FRAME_SECONDS[number] ?? ((number - 1) * 0.1).toFixed(2))
         : ((number - 1) * 0.1).toFixed(2)
     return `/${folder}/frame-${String(number).padStart(4, "0")}-${seconds}s.webp`
   }

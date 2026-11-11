@@ -250,7 +250,11 @@ export function ScrollGallery({
         const txt = txtLayers[i]
         if (txt) {
           /* the caption leans a little into the travel, a nearer layer still */
-          const p = gsap.utils.clamp(-m.width * 0.015, m.width * 0.015, t * 0.03)
+          const p = gsap.utils.clamp(
+            -m.width * 0.015,
+            m.width * 0.015,
+            t * 0.03
+          )
           txt.style.transform = `translate3d(${p.toFixed(2)}px, 0, 0)`
         }
 

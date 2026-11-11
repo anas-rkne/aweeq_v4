@@ -156,7 +156,9 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
           {selectedVariant.sku && (
             <>
               <dt className="text-royal-navy/60">{t("sku")}</dt>
-              <dd className="text-end text-royal-navy">{selectedVariant.sku}</dd>
+              <dd className="text-end text-royal-navy">
+                {selectedVariant.sku}
+              </dd>
             </>
           )}
           {isSerialized && (
