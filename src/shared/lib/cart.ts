@@ -136,6 +136,15 @@ export function cartErrorMessage(error: unknown) {
     return `الحد الأقصى للشراء من هذه القطعة هو ${limit[1]} قطعة.`
   }
 
+  const left = message.match(/only (\d+) left in stock/i)
+  if (left) {
+    return `بقي ${left[1]} فقط من هذه القطعة في المخزن.`
+  }
+
+  if (/out of stock/i.test(message)) {
+    return "نفدت الكمية من هذه القطعة."
+  }
+
   if (
     /requested quantity is no longer available/i.test(message) ||
     /insufficient/i.test(message)

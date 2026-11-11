@@ -8,6 +8,7 @@ import {
   ThreeweeqRepository,
   type Locale,
 } from "./repository"
+import { getVariantStock } from "./inventory"
 
 export const CART_COOKIE = "threeweeq_cart_id"
 
@@ -449,6 +450,20 @@ export async function assertCartItemRules(
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
         "The requested quantity is no longer available"
+      )
+    }
+  } else {
+    /* Shelf stock: a tracked piece cannot be added beyond what is left after
+       the orders already reserved. Untracked pieces report managed: false and
+       keep the old behaviour. */
+    const stock = await getVariantStock(container, input.variantId)
+
+    if (stock?.managed && input.requestedQuantity > stock.available) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        stock.available > 0
+          ? `Only ${stock.available} left in stock for this item`
+          : "This item is out of stock"
       )
     }
   }

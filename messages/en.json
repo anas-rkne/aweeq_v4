@@ -428,6 +428,7 @@
     "processing": "Processing...",
     "paymentError": "Payment failed. Please try again.",
     "genericError": "Something went wrong. Please try again.",
+    "soldOutDuringPayment": "One of the pieces sold out while you were paying, so the order was not completed. You were not charged; any pending hold on your card is released automatically.",
     "invalidEmail": "Enter a valid email address.",
     "requiredFields": "Complete the required fields.",
     "verifying": "Verifying your payment...",

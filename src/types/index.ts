@@ -48,6 +48,8 @@ export interface ProductVariant {
   is_serialized?: boolean
   edition_size?: number | null
   available_serial_units?: number | null
+  /** Shelf quantity left. `null` means the piece is sold without a limit. */
+  stock_quantity?: number | null
   in_stock: boolean
   manage_inventory?: boolean
   allow_backorder?: boolean
@@ -221,6 +223,7 @@ export interface CartItem {
   metadata?: Record<string, unknown> | null
   is_serialized: boolean
   available_serial_units: number | null
+  stock_quantity?: number | null
   in_stock: boolean
   max_per_customer: number | null
   variant_profile: CartVariantProfile | null

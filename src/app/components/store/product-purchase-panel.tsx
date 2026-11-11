@@ -45,13 +45,18 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
     const limits = [
       product.max_per_customer,
       selectedVariant?.available_serial_units,
+      selectedVariant?.stock_quantity,
     ].filter(
       (value): value is number =>
         typeof value === "number" && Number.isFinite(value)
     )
 
     return limits.length > 0 ? Math.max(1, Math.min(...limits)) : 10
-  }, [product.max_per_customer, selectedVariant?.available_serial_units])
+  }, [
+    product.max_per_customer,
+    selectedVariant?.available_serial_units,
+    selectedVariant?.stock_quantity,
+  ])
 
   async function handleAddToCart() {
     if (!selectedVariant || !selectedVariant.in_stock || isAdding) {

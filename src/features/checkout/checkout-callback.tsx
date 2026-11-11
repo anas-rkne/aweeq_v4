@@ -54,11 +54,17 @@ export function CheckoutCallback() {
           router.replace(`/order/${response.order_id}`)
         }
       } catch (completeError) {
-        setMessage(
-          completeError instanceof Error
-            ? completeError.message
-            : t("genericError")
-        )
+        const raw =
+          completeError instanceof Error ? completeError.message : ""
+
+        // A piece can sell out between the payment page and the order being
+        // placed. Say that plainly instead of showing Medusa's raw message.
+        if (/insufficient|out of stock|no longer available/i.test(raw)) {
+          setMessage(t("soldOutDuringPayment"))
+        } else {
+          setMessage(raw || t("genericError"))
+        }
+
         setState("error")
       }
     }

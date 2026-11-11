@@ -431,6 +431,9 @@ export function ProductEditor({
         <VariantsTab
           productId={productId}
           variants={product.core?.variants ?? []}
+          serializedVariantIds={(product.variantProfiles ?? [])
+            .filter((profile) => Boolean(profile.is_serialized))
+            .map((profile) => String(profile.variant_id))}
           onChanged={load}
           onError={setError}
         />

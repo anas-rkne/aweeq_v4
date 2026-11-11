@@ -190,6 +190,7 @@ export function stockLabel(
     in_stock: boolean
     available_serial_units?: number | null
     is_serialized?: boolean
+    stock_quantity?: number | null
   },
   locale: StoreLocale = "ar"
 ) {
@@ -204,6 +205,17 @@ export function stockLabel(
     return locale === "ar"
       ? `متاح ${variant.available_serial_units} قطعة مرقّمة`
       : `${variant.available_serial_units} numbered pieces available`
+  }
+
+  // The owner asked to nudge the shopper only when a piece is nearly gone.
+  if (!variant.is_serialized && typeof variant.stock_quantity === "number") {
+    if (variant.stock_quantity === 1) {
+      return locale === "ar" ? "آخر قطعة" : "Last piece"
+    }
+
+    if (variant.stock_quantity === 2) {
+      return locale === "ar" ? "آخر قطعتين" : "Last 2 pieces"
+    }
   }
 
   return locale === "ar" ? "متاح" : "Available"

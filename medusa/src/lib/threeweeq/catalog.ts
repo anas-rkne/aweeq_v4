@@ -6,6 +6,7 @@ import {
   type Locale,
 } from "./repository"
 import { resolveRequestLocale } from "./locale"
+import { getVariantStockMap } from "./inventory"
 
 export const CATALOG_PRODUCT_FIELDS = [
   "id",
@@ -247,6 +248,7 @@ export async function buildCatalogProducts(
   const serialAvailability = (await repository.getSerialAvailability(
     variantIds
   )) as Map<string, number>
+  const variantStock = await getVariantStockMap(container, variantIds)
 
   return visibleProducts.map((product) => {
     const profile = profileByProduct.get(product.id)
@@ -263,6 +265,16 @@ export async function buildCatalogProducts(
       const availableSerialUnits = isSerialized
         ? (serialAvailability.get(variant.id) ?? 0)
         : null
+      const stock = variantStock.get(variant.id)
+      // A serialized piece is sold by its hand-written numbers, everything
+      // else by the shelf quantity the Studio writes. Untracked pieces are
+      // always available, exactly like Medusa treats `manage_inventory: false`.
+      const stockQuantity = stock?.managed ? stock.available : null
+      const inStock = isSerialized
+        ? (availableSerialUnits ?? 0) > 0
+        : stockQuantity == null
+          ? true
+          : stockQuantity > 0
 
       return {
         id: variant.id,
@@ -274,9 +286,9 @@ export async function buildCatalogProducts(
         is_serialized: isSerialized,
         edition_size: variantProfile?.edition_size ?? null,
         available_serial_units: availableSerialUnits,
-        in_stock:
-          availableSerialUnits == null ? true : availableSerialUnits > 0,
-        manage_inventory: Boolean(variant.manage_inventory),
+        stock_quantity: stockQuantity,
+        in_stock: inStock,
+        manage_inventory: Boolean(stock?.managed ?? variant.manage_inventory),
         allow_backorder: Boolean(variant.allow_backorder),
         price,
         metadata: {

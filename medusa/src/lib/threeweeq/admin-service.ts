@@ -9,6 +9,12 @@ import {
   updateProductsWorkflow,
 } from "@medusajs/medusa/core-flows"
 import { ThreeweeqRepository } from "./repository"
+import {
+  LOW_STOCK_THRESHOLD,
+  getVariantStockMap,
+  listLowStockItems,
+  setVariantStock,
+} from "./inventory"
 
 type AnyRow = Record<string, any>
 
@@ -62,6 +68,31 @@ function positiveNumber(value: unknown): number | null {
   const parsed = Number(value)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
+
+/**
+ * The Studio sends the stock field as a string from an <input>. An empty field
+ * means "stop tracking" (null); `undefined` means "do not touch it".
+ */
+function parseStockQuantity(value: unknown): number | null | undefined {
+  if (value === undefined) {
+    return undefined
+  }
+
+  if (value === null || value === "") {
+    return null
+  }
+
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new MedusaError(
+      MedusaError.Types.INVALID_DATA,
+      "Stock quantity must be zero or a positive whole number"
+    )
+  }
+
+  return Math.trunc(parsed)
+}
+
 
 /**
  * Admin-side orchestration for the 3WEEQ catalog. Combines Medusa core
@@ -302,6 +333,7 @@ export class CatalogAdminService {
           "variants.id",
           "variants.title",
           "variants.sku",
+          "variants.manage_inventory",
           "variants.prices.id",
           "variants.prices.amount",
           "variants.prices.currency_code",
@@ -321,6 +353,27 @@ export class CatalogAdminService {
         amount: Number(price.amount ?? 0),
       })),
     }))
+
+    /* Shelf stock lives in the Inventory module, so it is read separately and
+       merged onto the variants the editor already shows. */
+    if (coreVariants.length) {
+      const stock = await getVariantStockMap(
+        this.container,
+        coreVariants.map((variant: AnyRow) => variant.id)
+      )
+
+      for (const variant of coreVariants) {
+        const entry = stock.get(variant.id)
+        variant.manage_inventory = Boolean(
+          entry?.managed ?? variant.manage_inventory
+        )
+        variant.stock_quantity = entry?.managed ? entry.available : null
+        variant.stock_reserved = entry?.reserved ?? 0
+        variant.low_stock =
+          Boolean(entry?.managed) &&
+          (entry?.available ?? 0) <= LOW_STOCK_THRESHOLD
+      }
+    }
 
     return {
       profile: profile[0],
@@ -386,6 +439,16 @@ export class CatalogAdminService {
 
     const salesChannelId = await this.resolveSalesChannelId()
 
+    /* A quantity typed at creation time turns stock tracking on for that
+       variant; an empty field leaves the piece untracked (always available). */
+    const stockByTitle = new Map<string, number>()
+    for (const variant of variants) {
+      const quantity = parseStockQuantity(variant.stock_quantity)
+      if (typeof quantity === "number") {
+        stockByTitle.set(String(variant.title ?? "").trim(), quantity)
+      }
+    }
+
     /* Every piece belongs to a civilization and to one of the store's types:
        both columns are NOT NULL with a foreign key. Validate them here so the
        Studio answers with a readable message instead of a raw database error. */
@@ -448,7 +511,9 @@ export class CatalogAdminService {
               variants: variants.map((variant: AnyRow) => ({
                 title: String(variant.title ?? ""),
                 sku: variant.sku ? String(variant.sku) : undefined,
-                manage_inventory: false,
+                manage_inventory: stockByTitle.has(
+                  String(variant.title ?? "").trim()
+                ),
                 allow_backorder: false,
                 options: { Size: String(variant.title ?? "") },
                 prices: [
@@ -569,6 +634,12 @@ export class CatalogAdminService {
         null,
         { handle, title_ar: titleAr, title_en: titleEn }
       )
+
+      for (const [title, quantity] of stockByTitle) {
+        const variantId = variantIdByTitle.get(title)
+        if (!variantId) continue
+        await setVariantStock(this.container, { variantId, quantity })
+      }
 
       await this.revalidateProduct(createdProductId, handle)
 
@@ -918,6 +989,22 @@ export class CatalogAdminService {
       price: amount,
     })
 
+    const stockQuantity = parseStockQuantity(input.stock_quantity)
+
+    if (typeof stockQuantity === "number") {
+      if (input.is_serialized) {
+        throw new MedusaError(
+          MedusaError.Types.INVALID_DATA,
+          "This variant is serialized: its availability comes from the numbered units, not from a stock quantity."
+        )
+      }
+
+      await setVariantStock(this.container, {
+        variantId,
+        quantity: stockQuantity,
+      })
+    }
+
     const { core: refreshed } = await this.getProductAdmin(productId)
     await this.revalidateProduct(productId, refreshed?.handle ?? null)
 
@@ -998,6 +1085,23 @@ export class CatalogAdminService {
     await this.db("catalog.variant_profile")
       .where({ variant_id: variantId })
       .update(profileUpdate)
+
+    const stockQuantity = parseStockQuantity(input.stock_quantity)
+
+    if (profile.is_serialized) {
+      if (typeof stockQuantity === "number") {
+        throw new MedusaError(
+          MedusaError.Types.INVALID_DATA,
+          "This variant is serialized: its availability comes from the numbered units, not from a stock quantity."
+        )
+      }
+      // null / undefined: leave the numbered pieces untouched.
+    } else if (stockQuantity !== undefined) {
+      await setVariantStock(this.container, {
+        variantId,
+        quantity: stockQuantity,
+      })
+    }
 
     await this.audit("update", "variant", variantId, profile, input)
 
@@ -1140,6 +1244,16 @@ export class CatalogAdminService {
     )
 
     return { variant_id: variantId, by_status: rows }
+  }
+
+  /* ============================ inventory ============================ */
+
+  /** Pieces at or below the low-stock threshold, for the Studio banner. */
+  async listLowStock(threshold?: number) {
+    const limit = threshold ?? LOW_STOCK_THRESHOLD
+    const items = await listLowStockItems(this.container, limit)
+
+    return { threshold: limit, items, count: items.length }
   }
 
   /* ============================ media ============================ */

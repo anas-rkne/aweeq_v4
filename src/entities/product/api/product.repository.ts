@@ -45,7 +45,7 @@ export async function fetchProductsRepository(params?: {
 
   try {
     const data = await medusaFetch<ProductListResponse>(endpoint, {
-      next: { tags: ["products"], revalidate: 300 },
+      next: { tags: ["products"], revalidate: 120 },
     })
     return { ok: true, data }
   } catch (error) {
@@ -71,7 +71,7 @@ export async function fetchProductByHandleRepository(
 
   try {
     const data = await medusaFetch<ProductResponse>(endpoint, {
-      next: { tags: [`product:${handle}`, "products"], revalidate: 600 },
+      next: { tags: [`product:${handle}`, "products"], revalidate: 60 },
     })
     return { ok: true, data: data.product }
   } catch (error) {
