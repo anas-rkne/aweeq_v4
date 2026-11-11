@@ -335,7 +335,11 @@ export function CheckoutFlow() {
         <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1.4fr_0.9fr] lg:items-start">
           <div>
             {step === "details" && (
-              <form onSubmit={handleDetailsSubmit} className="space-y-5">
+              <form
+                onSubmit={handleDetailsSubmit}
+                noValidate
+                className="space-y-5"
+              >
                 <h2 className="font-primary text-xl text-sand">
                   {t("contact")}
                 </h2>
