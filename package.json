@@ -20,6 +20,7 @@
     "medusa:build": "npm --prefix medusa run build",
     "medusa:migrate": "npm --prefix medusa run db:migrate",
     "medusa:seed": "npm --prefix medusa run seed",
+    "medusa:cleanup": "npm --prefix medusa run cleanup",
     "check:env": "node deploy/check-env.mjs",
     "check:health": "bash deploy/healthcheck.sh"
   },

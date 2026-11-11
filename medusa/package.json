@@ -8,7 +8,8 @@
     "start": "medusa start",
     "db:migrate": "medusa db:migrate",
     "db:rollback": "medusa db:rollback",
-    "seed": "medusa exec ./src/scripts/seed.ts"
+    "seed": "medusa exec ./src/scripts/seed.ts",
+    "cleanup": "medusa exec ./src/scripts/cleanup-legacy-rafid.ts"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "2.22.0",
