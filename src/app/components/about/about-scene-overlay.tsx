@@ -2,18 +2,17 @@
 
 import React, { forwardRef } from "react"
 import { useLocale } from "next-intl"
-import { CIVILIZATION_SCENES } from "./about-data"
+import type { ResolvedScene } from "./about-data"
 
 interface AboutSceneOverlayProps {
-  currentSceneIndex: number
+  scene: ResolvedScene | undefined
 }
 
 export const AboutSceneOverlay = forwardRef<
   HTMLDivElement,
   AboutSceneOverlayProps
->(function AboutSceneOverlay({ currentSceneIndex }, ref) {
+>(function AboutSceneOverlay({ scene }, ref) {
   const locale = useLocale()
-  const scene = CIVILIZATION_SCENES[currentSceneIndex]
   if (!scene) return null
   const title = locale === "ar" ? scene.titleAr : scene.title
   const body = locale === "ar" ? scene.body : scene.bodyEn

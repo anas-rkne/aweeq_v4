@@ -5,26 +5,18 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
 } from "react"
 import { createFrameWindow, type FrameWindow } from "@/shared/lib/frame-window"
-import { CIVILIZATION_SCENES } from "./about-data"
+import {
+  frameUrlFor,
+  type ResolvedScene,
+  type StoryMode,
+} from "./about-data"
 import { BRAND_COLORS } from "@/shared/config/brand"
 
-const TOTAL_FRAMES = CIVILIZATION_SCENES.reduce(
-  (acc, scene) => acc + scene.frameCount,
-  0
-)
-
-let frameAccumulator = 0
-const SCENE_BOUNDS = CIVILIZATION_SCENES.map((scene) => {
-  const start = frameAccumulator / TOTAL_FRAMES
-  frameAccumulator += scene.frameCount
-  const end = frameAccumulator / TOTAL_FRAMES
-  return { start, end, count: scene.frameCount, folder: scene.folder }
-})
-
-/* One streaming window per scene folder, created lazily and dropped the moment
+/* One streaming window per scene source, created lazily and dropped the moment
  * the scene leaves the runway (see evictDistantScenes). Frames stay at native
  * resolution, but only the ~13 around the current position are decoded at a
  * time — so a full scroll of the story holds tens of MiB, not 1.6 GiB. */
@@ -35,30 +27,57 @@ const windows = new Map<string, FrameWindow>()
    any scene) can ask the canvas to repaint even while the scroll is still */
 let onFrameReady: (() => void) | null = null
 
-function urlFor(folder: string) {
-  return (index: number) => {
-    const frameNumber = String(index + 1).padStart(4, "0")
-    const seconds = (index * 0.1).toFixed(2)
-    return `/${folder}/frame-${frameNumber}-${seconds}s.webp`
-  }
+interface SceneBounds {
+  start: number
+  end: number
+  count: number
+  folder: string
+  startFrame: number
 }
 
-function windowFor(folder: string): FrameWindow {
-  let window = windows.get(folder)
-  if (!window) {
-    window = createFrameWindow(urlFor(folder), FRAME_RADIUS)
-    window.subscribe(() => onFrameReady?.())
-    windows.set(folder, window)
-  }
-  return window
+function sourceKey(bounds: SceneBounds) {
+  return `${bounds.folder}#${bounds.startFrame}`
 }
 
-function localProgress(index: number, progress: number): number {
-  const bounds = SCENE_BOUNDS[index]
-  if (!bounds) return 0
+function boundsFor(scenes: ResolvedScene[]): SceneBounds[] {
+  const total = scenes.reduce((acc, scene) => acc + scene.frameCount, 0) || 1
+  let accumulated = 0
+  return scenes.map((scene) => {
+    const start = accumulated / total
+    accumulated += scene.frameCount
+    return {
+      start,
+      end: accumulated / total,
+      count: scene.frameCount,
+      folder: scene.folder,
+      startFrame: scene.startFrame,
+    }
+  })
+}
+
+function windowFor(bounds: SceneBounds): FrameWindow {
+  const key = sourceKey(bounds)
+  let frameWindow = windows.get(key)
+  if (!frameWindow) {
+    frameWindow = createFrameWindow(
+      frameUrlFor(bounds.folder, bounds.startFrame),
+      FRAME_RADIUS
+    )
+    frameWindow.subscribe(() => onFrameReady?.())
+    windows.set(key, frameWindow)
+  }
+  return frameWindow
+}
+
+function localProgress(bounds: SceneBounds, progress: number): number {
+  const span = bounds.end - bounds.start || 1
+  return Math.min(1, Math.max(0, (progress - bounds.start) / span))
+}
+
+function wantedFrame(bounds: SceneBounds, progress: number): number {
   return Math.min(
-    1,
-    Math.max(0, (progress - bounds.start) / (bounds.end - bounds.start))
+    bounds.count - 1,
+    Math.floor(localProgress(bounds, progress) * bounds.count)
   )
 }
 
@@ -67,7 +86,9 @@ function localProgress(index: number, progress: number): number {
  * once it arrives. These are the cheetah's horizontal positions (0 = left edge,
  * 1 = right edge) keyed by local scene progress, so the camera can lock onto the
  * animal and drift with it from the moment it enters to where it stops. Between
- * keys the focus is interpolated; wide screens ignore it and stay centred. */
+ * keys the focus is interpolated. This only applies to the wide landscape
+ * frames on a portrait screen; the dedicated phone frames are already composed
+ * for the phone, so they stay centred. */
 const SCENE_FOCUS: Record<string, ReadonlyArray<readonly [number, number]>> = {
   gulf: [
     [0, 0.5], // the empty coast, held centred
@@ -109,9 +130,8 @@ const SCENE_FOCUS: Record<string, ReadonlyArray<readonly [number, number]>> = {
   ],
 }
 
-function focusAt(index: number, local: number): number {
-  const scene = CIVILIZATION_SCENES[index]
-  const keys = scene ? SCENE_FOCUS[scene.id] : undefined
+function focusAt(sceneId: string, local: number): number {
+  const keys = SCENE_FOCUS[sceneId]
   if (!keys || keys.length === 0) return 0.5
 
   const t = Math.min(1, Math.max(0, local))
@@ -126,32 +146,22 @@ function focusAt(index: number, local: number): number {
   return keys[keys.length - 1][1]
 }
 
-function wantedFrame(index: number, progress: number): number {
-  const bounds = SCENE_BOUNDS[index]
-  const local = localProgress(index, progress)
-  return Math.min(bounds.count - 1, Math.floor(local * bounds.count))
+function focusScene(bounds: SceneBounds, progress: number) {
+  windowFor(bounds).focus(wantedFrame(bounds, progress), bounds.count)
 }
 
-function focusScene(index: number, progress: number) {
-  const bounds = SCENE_BOUNDS[index]
-  if (!bounds) return
-  windowFor(bounds.folder).focus(wantedFrame(index, progress), bounds.count)
-}
-
-function sceneImage(index: number, progress: number) {
-  const bounds = SCENE_BOUNDS[index]
-  if (!bounds) return null
-  return windowFor(bounds.folder).nearest(
-    wantedFrame(index, progress),
+function sceneImage(bounds: SceneBounds, progress: number) {
+  return windowFor(bounds).nearest(
+    wantedFrame(bounds, progress),
     bounds.count
   )
 }
 
 function evictDistantScenes(keep: Set<string>) {
-  for (const folder of [...windows.keys()]) {
-    if (!keep.has(folder)) {
-      windows.get(folder)!.dispose()
-      windows.delete(folder)
+  for (const key of [...windows.keys()]) {
+    if (!keep.has(key)) {
+      windows.get(key)!.dispose()
+      windows.delete(key)
     }
   }
 }
@@ -160,130 +170,149 @@ export interface AboutCanvasHandle {
   draw: (progress: number) => void
 }
 
+interface AboutCanvasProps {
+  scenes: ResolvedScene[]
+  mode: StoryMode
+}
+
 /** The canvas paints the frame for the current scroll progress. It is driven
  *  imperatively from the section's ScrollTrigger, so scrolling never causes a
  *  React render. Adjacent scenes are cross-faded over a short window at their
  *  handover, which keeps the journey feeling like one continuous shot. */
-export const AboutCanvas = forwardRef<AboutCanvasHandle>(
-  function AboutCanvas(_props, ref) {
+export const AboutCanvas = forwardRef<AboutCanvasHandle, AboutCanvasProps>(
+  function AboutCanvas({ scenes, mode }, ref) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const lastProgressRef = useRef(0)
+    const bounds = useMemo(() => boundsFor(scenes), [scenes])
 
-    const draw = useCallback((progress: number) => {
-      lastProgressRef.current = progress
+    const draw = useCallback(
+      (progress: number) => {
+        lastProgressRef.current = progress
 
-      const canvas = canvasRef.current
-      if (!canvas) return
-      const ctx = canvas.getContext("2d", { alpha: false })
-      if (!ctx) return
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const ctx = canvas.getContext("2d", { alpha: false })
+        if (!ctx) return
 
-      const cssWidth = canvas.clientWidth || window.innerWidth
-      const cssHeight = canvas.clientHeight || window.innerHeight
-      if (cssWidth === 0 || cssHeight === 0) return
+        const cssWidth = canvas.clientWidth || window.innerWidth
+        const cssHeight = canvas.clientHeight || window.innerHeight
+        if (cssWidth === 0 || cssHeight === 0) return
 
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      const pixelWidth = Math.round(cssWidth * dpr)
-      const pixelHeight = Math.round(cssHeight * dpr)
-      if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-        canvas.width = pixelWidth
-        canvas.height = pixelHeight
-      }
-
-      const width = canvas.width
-      const height = canvas.height
-      const p = Math.min(1, Math.max(0, progress))
-
-      let sceneIndex = CIVILIZATION_SCENES.length - 1
-      for (let i = 0; i < SCENE_BOUNDS.length; i++) {
-        if (p < SCENE_BOUNDS[i].end) {
-          sceneIndex = i
-          break
+        const dpr = Math.min(window.devicePixelRatio || 1, 2)
+        const pixelWidth = Math.round(cssWidth * dpr)
+        const pixelHeight = Math.round(cssHeight * dpr)
+        if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+          canvas.width = pixelWidth
+          canvas.height = pixelHeight
         }
-      }
 
-      /* a short dissolve centred on each handover */
-      const blend = 0.02
-      let blendIndex = -1
-      let blendAmount = 0
-      for (let i = 0; i < SCENE_BOUNDS.length - 1; i++) {
-        const boundary = SCENE_BOUNDS[i].end
-        if (Math.abs(p - boundary) <= blend) {
-          blendIndex = i
-          const raw = (p - (boundary - blend)) / (blend * 2)
-          blendAmount = raw * raw * (3 - 2 * raw)
-          break
+        const width = canvas.width
+        const height = canvas.height
+        const p = Math.min(1, Math.max(0, progress))
+
+        let sceneIndex = bounds.length - 1
+        for (let i = 0; i < bounds.length; i++) {
+          if (p < bounds[i].end) {
+            sceneIndex = i
+            break
+          }
         }
-      }
 
-      // keep the current scene (and, when blending, the two being dissolved)
-      // loaded; the next scene warms up a whole runway ahead of when it is seen
-      const keep = new Set<string>()
-      focusScene(sceneIndex, p)
-      keep.add(SCENE_BOUNDS[sceneIndex].folder)
-      if (p > 0 && sceneIndex + 1 < SCENE_BOUNDS.length) {
-        focusScene(sceneIndex + 1, p)
-        keep.add(SCENE_BOUNDS[sceneIndex + 1].folder)
-      }
-      if (blendIndex >= 0) {
-        focusScene(blendIndex, p)
-        focusScene(blendIndex + 1, p)
-        keep.add(SCENE_BOUNDS[blendIndex].folder)
-        keep.add(SCENE_BOUNDS[blendIndex + 1].folder)
-      }
-      evictDistantScenes(keep)
+        /* a short dissolve centred on each handover */
+        const blend = 0.02
+        let blendIndex = -1
+        let blendAmount = 0
+        for (let i = 0; i < bounds.length - 1; i++) {
+          const boundary = bounds[i].end
+          if (Math.abs(p - boundary) <= blend) {
+            blendIndex = i
+            const raw = (p - (boundary - blend)) / (blend * 2)
+            blendAmount = raw * raw * (3 - 2 * raw)
+            break
+          }
+        }
 
-      // the scene being shown now (and, when dissolving, the one before it)
-      const fromScene = blendIndex >= 0 ? blendIndex : sceneIndex
-      const fromImage = sceneImage(fromScene, p)
-      const toImage = blendIndex >= 0 ? sceneImage(blendIndex + 1, p) : null
+        // keep the current scene (and, when blending, the two being dissolved)
+        // loaded; the next scene warms up a whole runway ahead of when it is seen
+        const keep = new Set<string>()
+        focusScene(bounds[sceneIndex], p)
+        keep.add(sourceKey(bounds[sceneIndex]))
+        if (p > 0 && sceneIndex + 1 < bounds.length) {
+          focusScene(bounds[sceneIndex + 1], p)
+          keep.add(sourceKey(bounds[sceneIndex + 1]))
+        }
+        if (blendIndex >= 0) {
+          focusScene(bounds[blendIndex], p)
+          focusScene(bounds[blendIndex + 1], p)
+          keep.add(sourceKey(bounds[blendIndex]))
+          keep.add(sourceKey(bounds[blendIndex + 1]))
+        }
+        evictDistantScenes(keep)
 
-      // a slow, continuous push-in across the whole journey
-      const zoom = 1 + p * 0.045
+        // the scene being shown now (and, when dissolving, the one before it)
+        const fromScene = blendIndex >= 0 ? blendIndex : sceneIndex
+        const fromImage = sceneImage(bounds[fromScene], p)
+        const toImage =
+          blendIndex >= 0 ? sceneImage(bounds[blendIndex + 1], p) : null
 
-      ctx.setTransform(1, 0, 0, 1, 0, 0)
-      ctx.imageSmoothingEnabled = true
-      ctx.imageSmoothingQuality = "high"
-      ctx.globalAlpha = 1
-      ctx.fillStyle = BRAND_COLORS.navy
-      ctx.fillRect(0, 0, width, height)
+        // a slow, continuous push-in across the whole journey
+        const zoom = 1 + p * 0.045
 
-      // while a frame is still in flight the navy ground stands in, so the
-      // canvas is never a transparent (black) flash
-      if (!fromImage && !toImage) return
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        ctx.imageSmoothingEnabled = true
+        ctx.imageSmoothingQuality = "high"
+        ctx.globalAlpha = 1
+        ctx.fillStyle = BRAND_COLORS.navy
+        ctx.fillRect(0, 0, width, height)
 
-      // On a phone the 16:9 frame overflows the screen sideways, so the crop
-      // follows the cheetah through each scene (see SCENE_FOCUS) and holds it
-      // framed instead of sweeping past it. On a wide screen the frame fits
-      // and stays centred — nothing changes there.
-      const portrait = height > width
+        // while a frame is still in flight the navy ground stands in, so the
+        // canvas is never a transparent (black) flash
+        if (!fromImage && !toImage) return
 
-      const drawCover = (
-        img: HTMLImageElement,
-        alpha: number,
-        sceneIndexOf: number
-      ) => {
-        const scale = Math.max(width / img.width, height / img.height) * zoom
-        const drawWidth = img.width * scale
-        const drawHeight = img.height * scale
-        /* On a phone the frame overflows sideways; centre the cheetah in that
-           crop so the camera locks onto it instead of sweeping past. On a wide
-           screen the focus is 0.5, which keeps the frame centred exactly as
-           before. The offset is clamped so the frame never uncovers an edge. */
-        const focus = portrait
-          ? focusAt(sceneIndexOf, localProgress(sceneIndexOf, p))
-          : 0.5
-        const x = Math.min(
-          0,
-          Math.max(width - drawWidth, width / 2 - focus * drawWidth)
-        )
-        ctx.globalAlpha = alpha
-        ctx.drawImage(img, x, (height - drawHeight) / 2, drawWidth, drawHeight)
-      }
+        // Only the wide desktop frames need the cheetah-following crop on a
+        // portrait screen. The dedicated phone frames are already portrait and
+        // centred, so they simply cover the canvas.
+        const portrait = height > width
+        const useCheetahFocus = mode === "desktop" && portrait
 
-      if (fromImage) drawCover(fromImage, 1, fromScene)
-      if (toImage) drawCover(toImage, blendAmount, blendIndex + 1)
-      ctx.globalAlpha = 1
-    }, [])
+        const drawCover = (
+          img: HTMLImageElement,
+          alpha: number,
+          sceneOfFrame: number
+        ) => {
+          const scale = Math.max(width / img.width, height / img.height) * zoom
+          const drawWidth = img.width * scale
+          const drawHeight = img.height * scale
+          /* On a portrait screen the wide frame overflows sideways; centre the
+             cheetah in that crop so the camera locks onto it instead of
+             sweeping past. Otherwise centre the frame exactly. The offset is
+             clamped so the frame never uncovers an edge. */
+          const focus = useCheetahFocus
+            ? focusAt(
+                scenes[sceneOfFrame].id,
+                localProgress(bounds[sceneOfFrame], p)
+              )
+            : 0.5
+          const x = Math.min(
+            0,
+            Math.max(width - drawWidth, width / 2 - focus * drawWidth)
+          )
+          ctx.globalAlpha = alpha
+          ctx.drawImage(
+            img,
+            x,
+            (height - drawHeight) / 2,
+            drawWidth,
+            drawHeight
+          )
+        }
+
+        if (fromImage) drawCover(fromImage, 1, fromScene)
+        if (toImage) drawCover(toImage, blendAmount, blendIndex + 1)
+        ctx.globalAlpha = 1
+      },
+      [bounds, mode, scenes]
+    )
 
     useEffect(() => {
       // repaint the current frame the moment any freshly-decoded frame lands,
@@ -298,11 +327,12 @@ export const AboutCanvas = forwardRef<AboutCanvasHandle>(
       // paint the navy ground immediately, then the first frame the moment it
       // is decoded — no 60 fps poll waiting for it to land
       draw(0)
-      const firstFolder = SCENE_BOUNDS[0].folder
-      void windowFor(firstFolder)
+      const first = bounds[0]
+      if (!first) return
+      void windowFor(first)
         .whenReady(0)
         .then(() => draw(lastProgressRef.current))
-    }, [draw])
+    }, [draw, bounds])
 
     useEffect(() => {
       const onResize = () => draw(lastProgressRef.current)

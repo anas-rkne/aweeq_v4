@@ -1,20 +1,37 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { CIVILIZATION_SCENES } from "./about-data"
+import { resolveScenes, type StoryMode } from "./about-data"
 import { AboutCanvas, type AboutCanvasHandle } from "./about-canvas"
 import { AboutSceneOverlay } from "./about-scene-overlay"
+
+/** Phones get the dedicated portrait frame run; everything wider keeps the
+ *  desktop folders. Matches the `md` breakpoint used across the site. */
+const MOBILE_QUERY = "(max-width: 767px)"
 
 export function AboutSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const roomRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<AboutCanvasHandle>(null)
   const textRef = useRef<HTMLDivElement>(null)
-  const sceneIndexRef = useRef(0)
+  const sceneIndexRef = useRef(-1)
 
+  const [mode, setMode] = useState<StoryMode>("desktop")
   const [currentSceneIndex, setCurrentSceneIndex] = useState(0)
+
+  // pick the frame set for the current viewport
+  const scenes = useMemo(() => resolveScenes(mode), [mode])
+
+  // follow the breakpoint so a resize (or rotation) swaps the frame set live
+  useEffect(() => {
+    const query = window.matchMedia(MOBILE_QUERY)
+    const sync = () => setMode(query.matches ? "mobile" : "desktop")
+    sync()
+    query.addEventListener("change", sync)
+    return () => query.removeEventListener("change", sync)
+  }, [])
 
   useEffect(() => {
     const section = sectionRef.current
@@ -23,13 +40,15 @@ export function AboutSection() {
 
     gsap.registerPlugin(ScrollTrigger)
 
-    const totalFrames = CIVILIZATION_SCENES.reduce(
+    const totalFrames = scenes.reduce(
       (acc, scene) => acc + scene.frameCount,
       0
     )
     const totalRunway = totalFrames * 70
 
     room.style.height = `${totalRunway}px`
+    // force the overlay to announce the scene on the first update
+    sceneIndexRef.current = -1
 
     let st: ScrollTrigger | undefined
 
@@ -57,8 +76,8 @@ export function AboutSection() {
           let sceneIndex = 0
           let localFrame = 0
 
-          for (let i = 0; i < CIVILIZATION_SCENES.length; i++) {
-            const count = CIVILIZATION_SCENES[i].frameCount
+          for (let i = 0; i < scenes.length; i++) {
+            const count = scenes[i].frameCount
             if (targetFrame < accumulatedFrames + count) {
               sceneIndex = i
               localFrame = targetFrame - accumulatedFrames
@@ -69,7 +88,7 @@ export function AboutSection() {
             localFrame = count
           }
 
-          const scene = CIVILIZATION_SCENES[sceneIndex]
+          const scene = scenes[sceneIndex]
           const local = Math.min(1, localFrame / scene.frameCount)
 
           if (sceneIndex !== sceneIndexRef.current) {
@@ -110,7 +129,7 @@ export function AboutSection() {
       st?.kill()
       if (room) room.style.height = ""
     }
-  }, [])
+  }, [scenes])
 
   return (
     <>
@@ -119,7 +138,7 @@ export function AboutSection() {
         ref={sectionRef}
         className="relative z-10 h-screen w-screen overflow-hidden bg-royal-navy"
       >
-        <AboutCanvas ref={canvasRef} />
+        <AboutCanvas ref={canvasRef} scenes={scenes} mode={mode} />
 
         {/* the divider shared by the rest of the page: the top of the section
             melts into the midnight of the hero above */}
@@ -134,7 +153,7 @@ export function AboutSection() {
 
         <AboutSceneOverlay
           ref={textRef}
-          currentSceneIndex={currentSceneIndex}
+          scene={scenes[currentSceneIndex]}
         />
       </section>
 
