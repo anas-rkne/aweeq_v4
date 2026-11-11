@@ -305,11 +305,13 @@ export function CartPageClient() {
               </div>
               <div className="flex items-center justify-between gap-4">
                 <dt className="text-royal-navy/60">{t("shipping")}</dt>
-                <dd className="text-royal-navy/60">{t("calculatedAtCheckout")}</dd>
+                <dd className="text-royal-navy/60">
+                  {t("calculatedAtCheckout")}
+                </dd>
               </div>
               <div className="flex items-center justify-between gap-4">
                 <dt className="text-royal-navy/60">{t("taxes")}</dt>
-                <dd className="text-royal-navy/60">{t("calculatedAtCheckout")}</dd>
+                <dd className="text-royal-navy/60">{t("taxesIncluded")}</dd>
               </div>
             </dl>
 

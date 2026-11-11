@@ -112,9 +112,16 @@ export function CheckoutFlow() {
   const storeLocale = locale === "en" ? "en" : "ar"
   const currencyCode = cart?.currency_code ?? "aed"
   const total = cart?.total ?? 0
-  const subtotal = cart?.subtotal ?? 0
   const shippingTotal = cart?.shipping_total ?? 0
   const items = cart?.items ?? []
+
+  /* Medusa's `subtotal` already folds the shipping method in once one is
+     added, so showing it as "subtotal" double-counts the shipping. Sum the
+     line items instead, so the receipt reads items + shipping = total. */
+  const itemsSubtotal = items.reduce(
+    (sum, item) => sum + Number(item.total ?? item.subtotal ?? 0),
+    0
+  )
 
   /* Abu Dhabi is the only emirate with a priced list of areas; everywhere
      else the area stays free text and the fee is the flat national rate. */
@@ -137,7 +144,8 @@ export function CheckoutFlow() {
       : Number.isFinite(selectedAmount)
         ? selectedAmount
         : (zoneFee ?? 0)
-  const totalDisplay = shippingTotal > 0 ? total : subtotal + shippingDisplay
+  const totalDisplay =
+    shippingTotal > 0 ? total : itemsSubtotal + shippingDisplay
 
   const loadOptions = useCallback(async () => {
     if (!cartId || optionsLoading || options.length > 0) return
@@ -651,7 +659,7 @@ export function CheckoutFlow() {
               <div className="flex justify-between gap-4">
                 <dt className="text-royal-navy/60">{t("subtotalLabel")}</dt>
                 <dd className="text-royal-navy">
-                  {formatPrice(subtotal, currencyCode, storeLocale)}
+                  {formatPrice(itemsSubtotal, currencyCode, storeLocale)}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
