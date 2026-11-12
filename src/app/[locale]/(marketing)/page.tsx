@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server"
 import { BeyondSection } from "@/components/beyond-section"
-import { CivilizationsSection } from "@/components/civilizations-section"
+import { CivilizationsSectionSwitch } from "@/components/civilizations-section-switch"
 import { CuneiformWall } from "@/components/cuneiform-wall"
 import { FeaturedFragrance } from "@/components/featured-fragrance"
 import { FirstChapter } from "@/components/first-chapter"
@@ -39,7 +39,7 @@ export default async function Home({
       <PackagingSection />
       {/* same wrapper for the film below: block parent, sticky stage */}
       <div className="relative">
-        <CivilizationsSection />
+        <CivilizationsSectionSwitch />
       </div>
       <div className="relative">
         <BeyondSection locale={locale} />

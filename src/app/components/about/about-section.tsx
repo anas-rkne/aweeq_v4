@@ -11,7 +11,13 @@ import { AboutSceneOverlay } from "./about-scene-overlay"
  *  desktop folders. Matches the `md` breakpoint used across the site. */
 const MOBILE_QUERY = "(max-width: 767px)"
 
-export function AboutSection() {
+interface AboutSectionProps {
+  /** Anchor id: the story page keeps `story`, the home page uses
+   *  `civilizations` so the header/hero anchors still land here. */
+  sectionId?: string
+}
+
+export function AboutSection({ sectionId = "story" }: AboutSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const roomRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<AboutCanvasHandle>(null)
@@ -19,6 +25,7 @@ export function AboutSection() {
   const sceneIndexRef = useRef(-1)
 
   const [mode, setMode] = useState<StoryMode>("desktop")
+  const [modeReady, setModeReady] = useState(false)
   const [currentSceneIndex, setCurrentSceneIndex] = useState(0)
 
   // pick the frame set for the current viewport
@@ -27,13 +34,20 @@ export function AboutSection() {
   // follow the breakpoint so a resize (or rotation) swaps the frame set live
   useEffect(() => {
     const query = window.matchMedia(MOBILE_QUERY)
-    const sync = () => setMode(query.matches ? "mobile" : "desktop")
+    const sync = () => {
+      setMode(query.matches ? "mobile" : "desktop")
+      setModeReady(true)
+    }
     sync()
     query.addEventListener("change", sync)
     return () => query.removeEventListener("change", sync)
   }, [])
 
   useEffect(() => {
+    // wait for the viewport sync above, so we build the right film once
+    // instead of building the desktop one and immediately tearing it down
+    if (!modeReady) return
+
     const section = sectionRef.current
     const room = roomRef.current
     if (!section || !room) return
@@ -126,13 +140,14 @@ export function AboutSection() {
       st?.kill()
       if (room) room.style.height = ""
     }
-  }, [scenes])
+  }, [scenes, modeReady])
 
   return (
     <>
       <section
-        id="story"
+        id={sectionId}
         ref={sectionRef}
+        data-no-reveal
         className="relative z-10 h-screen w-screen overflow-hidden bg-royal-navy"
       >
         <AboutCanvas ref={canvasRef} scenes={scenes} mode={mode} />
