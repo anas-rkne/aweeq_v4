@@ -9,6 +9,7 @@ import { notFound } from "next/navigation"
 import { BRAND_COLORS } from "@/shared/config/brand"
 import { routing } from "@/i18n/routing"
 import { siteUrl } from "@/shared/lib/seo"
+import { MetaPixel } from "@/app/components/meta-pixel"
 import { fontPreloads } from "../fonts"
 import "../globals.css"
 
@@ -137,6 +138,7 @@ export default async function LocaleLayout({
         </noscript>
       </head>
       <body className="min-h-full flex flex-col">
+        <MetaPixel />
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>

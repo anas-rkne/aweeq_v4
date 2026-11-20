@@ -215,6 +215,7 @@ export interface CartItem {
   product_title?: string | null
   product_handle?: string | null
   variant_title?: string | null
+  sku?: string | null
   thumbnail?: string | null
   quantity: number
   unit_price: number | null

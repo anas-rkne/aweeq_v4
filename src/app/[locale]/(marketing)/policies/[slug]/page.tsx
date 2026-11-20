@@ -252,6 +252,30 @@ const POLICIES: Policy[] = [
         ],
       },
       {
+        headingAr: "ملفات تعريف الارتباط وأدوات التحليل",
+        headingEn: "Cookies and analytics",
+        bodyAr: [
+          "نستخدم ملفات تعريف الارتباط (Cookies) وتقنيات مشابهة لتشغيل سلة الشراء وتذكّر تفضيلاتك وقياس أداء الموقع والإعلانات.",
+          "نستخدم Meta Pixel وواجهة Conversions API التابعة لـMeta لقياس زيارات الصفحات وإضافة المنتجات إلى السلة وإتمام الطلبات، بما يساعدنا على تحسين إعلاناتنا. قد تُشارك معلومات مشفّرة (مثل البريد الإلكتروني ورقم الهاتف) مع Meta لغرض مطابقة الإعلانات (المطابقة المتقدمة).",
+          "يمكنك تعطيل ملفات تعريف الارتباط أو حظر أدوات التتبع من إعدادات متصفحك، مع العلم أن ذلك قد يؤثر على بعض وظائف الموقع مثل سلة الشراء.",
+        ],
+        bodyEn: [
+          "We use cookies and similar technologies to run the shopping cart, remember your preferences, and measure how the site and our ads perform.",
+          "We use Meta Pixel and Meta's Conversions API to measure page views, add-to-cart and completed orders, which helps us improve our advertising. Hashed information such as your email address and phone number may be shared with Meta for ad matching (advanced matching).",
+          "You can disable cookies or block tracking tools in your browser settings. Note that this may affect parts of the site, such as the shopping cart.",
+        ],
+      },
+      {
+        headingAr: "مشاركة البيانات مع مزوّدي الخدمة",
+        headingEn: "Sharing with service providers",
+        bodyAr: [
+          "لا نبيع بياناتك. نشاركها فقط مع الجهات التي تحتاجها لتشغيل المتجر: مزوّد الدفع (Stripe) لمعالجة الدفع، وشركة الشحن (Topex) لتوصيل الطلب، ومزوّد البريد الإلكتروني لإرسال تأكيد الطلب وتحديثاته، وأدوات Meta لقياس الإعلانات — وبالحد الأدنى اللازم لكل غرض.",
+        ],
+        bodyEn: [
+          "We do not sell your data. We share it only with the parties needed to run the store: our payment provider (Stripe) to process payment, the courier (Topex) to deliver your order, our email provider to send your order confirmation and updates, and Meta's tools to measure advertising — limited to what each purpose requires.",
+        ],
+      },
+      {
         headingAr: "حقوقك",
         headingEn: "Your rights",
         bodyAr: [

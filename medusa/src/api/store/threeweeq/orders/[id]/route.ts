@@ -9,6 +9,7 @@ type OrderItem = {
   title?: string | null
   product_title?: string | null
   variant_title?: string | null
+  variant_id?: string | null
   thumbnail?: string | null
   quantity?: number
   unit_price?: number
@@ -64,6 +65,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       "items.title",
       "items.product_title",
       "items.variant_title",
+      "items.variant_id",
       "items.thumbnail",
       "items.quantity",
       "items.unit_price",
@@ -85,6 +87,26 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     )
   }
 
+  /* Meta Purchase uses the variant SKU as its Content ID. */
+  const variantIds = Array.from(
+    new Set(
+      (order.items ?? [])
+        .map((item) => item.variant_id)
+        .filter((id): id is string => Boolean(id))
+    )
+  )
+  const skuByVariant = new Map<string, string | null>()
+  if (variantIds.length) {
+    const { data: variantRows } = await query.graph({
+      entity: "product_variant",
+      fields: ["id", "sku"],
+      filters: { id: variantIds },
+    })
+    for (const row of variantRows ?? []) {
+      skuByVariant.set(row.id, row.sku ?? null)
+    }
+  }
+
   res.status(200).json({
     order: {
       id: order.id,
@@ -101,6 +123,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         id: item.id,
         title: item.product_title ?? item.title ?? null,
         variant_title: item.variant_title ?? null,
+        sku: item.variant_id ? (skuByVariant.get(item.variant_id) ?? null) : null,
         thumbnail: item.thumbnail ?? null,
         quantity: Number(item.quantity ?? 0),
         unit_price: item.unit_price ?? null,

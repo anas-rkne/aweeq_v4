@@ -1,9 +1,10 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import type { Product, ProductVariant } from "@/types"
 import { concentrationLabel, formatPrice, stockLabel } from "@/lib/format"
+import { trackAddToCart, trackViewContent } from "@/lib/meta-pixel"
 import { useCart } from "./cart-provider"
 
 interface ProductPurchasePanelProps {
@@ -41,6 +42,31 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
     selectedVariant?.is_serialized ?? product.is_serialized
   )
 
+  /* Meta tracking: Content ID is the variant SKU so it matches the catalog. */
+  const metaContentId = selectedVariant?.sku ?? selectedVariant?.id ?? null
+  const metaCurrency = (
+    selectedVariant?.price?.currency_code ?? "aed"
+  ).toUpperCase()
+  const metaValue = selectedVariant?.price?.amount ?? undefined
+  const viewedRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!metaContentId || viewedRef.current === product.id) {
+      return
+    }
+
+    viewedRef.current = product.id
+    trackViewContent({
+      content_ids: [metaContentId],
+      content_type: "product",
+      content_name: product.title,
+      value: metaValue,
+      currency: metaCurrency,
+    })
+    // fire once per product, not on every variant switch
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id, metaContentId])
+
   const purchaseLimit = useMemo(() => {
     const limits = [
       product.max_per_customer,
@@ -67,6 +93,21 @@ export function ProductPurchasePanel({ product }: ProductPurchasePanelProps) {
 
     try {
       await addItem(selectedVariant.id, quantity)
+
+      if (metaContentId) {
+        trackAddToCart({
+          content_ids: [metaContentId],
+          content_type: "product",
+          content_name: product.title,
+          value:
+            metaValue != null
+              ? Math.round(metaValue * quantity * 100) / 100
+              : undefined,
+          currency: metaCurrency,
+          quantity,
+        })
+      }
+
       setQuantity(1)
     } catch (error) {
       setAddError(error instanceof Error ? error.message : t("addError"))

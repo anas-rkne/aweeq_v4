@@ -199,6 +199,20 @@ export async function serializeCart(
     variantIds
   )) as Map<string, number>
 
+  /* Meta needs the variant SKU as its Content ID, so the cart carries it. */
+  const query = container.resolve<any>(ContainerRegistrationKeys.QUERY)
+  const skuByVariant = new Map<string, string | null>()
+  if (variantIds.length) {
+    const { data: variantRows } = await query.graph({
+      entity: "product_variant",
+      fields: ["id", "sku"],
+      filters: { id: variantIds },
+    })
+    for (const row of variantRows ?? []) {
+      skuByVariant.set(row.id, row.sku ?? null)
+    }
+  }
+
   const enrichedItems = items.map((item) => {
     const variantProfile = item.variant_id
       ? variantProfileByVariant.get(item.variant_id)
@@ -212,6 +226,7 @@ export async function serializeCart(
 
     return {
       ...item,
+      sku: item.variant_id ? (skuByVariant.get(item.variant_id) ?? null) : null,
       thumbnail:
         heroUrlByProduct.get(item.product_id as string) ??
         item.thumbnail ??

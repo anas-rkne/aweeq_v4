@@ -23,6 +23,9 @@ const eslintConfig = defineConfig([
     // Local diagnostic scripts (diag-*.js) are throwaway debugging helpers,
     // not application source — keep them out of lint.
     "diag-*.js",
+    // Local one-off verification scripts.
+    "tmp-*.cjs",
+    "tmp-*.js",
   ]),
 ]);
 

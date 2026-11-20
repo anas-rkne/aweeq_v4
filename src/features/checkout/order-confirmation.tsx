@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { formatPrice, normalizeImageUrl } from "@/lib/format"
 import type { StoreLocale } from "@/lib/format"
+import { trackPurchase } from "@/lib/meta-pixel"
 import { fetchGuestOrder, type GuestOrder } from "./api"
 
 const CHECKOUT_EMAIL_KEY = "threeweeq_checkout_email"
@@ -32,6 +33,11 @@ export function OrderConfirmation({ orderId }: { orderId: string }) {
         if (!active) return
         setOrder(response.order)
         setState("ready")
+        try {
+          firePurchase(response.order)
+        } catch {
+          /* tracking must never break the confirmation page */
+        }
       } catch {
         if (active) {
           setState("error")
@@ -185,5 +191,48 @@ export function OrderConfirmation({ orderId }: { orderId: string }) {
         </div>
       </div>
     </div>
+  )
+}
+
+/**
+ * Purchase fires once per order. The server-side Conversions API sends the same
+ * `event_id` (the order id), so Meta deduplicates the two into one purchase.
+ */
+function firePurchase(order: GuestOrder) {
+  if (typeof window === "undefined") return
+
+  const guard = `meta_purchase_${order.id}`
+  try {
+    if (window.sessionStorage.getItem(guard)) return
+    window.sessionStorage.setItem(guard, "1")
+  } catch {
+    /* private mode: rely on the event_id dedup instead */
+  }
+
+  const contents = order.items.flatMap((item) => {
+    if (!item.sku) return []
+    return [
+      {
+        id: item.sku,
+        quantity: Number(item.quantity ?? 0),
+        item_price: Number(item.unit_price ?? 0),
+      },
+    ]
+  })
+
+  trackPurchase(
+    {
+      content_ids: contents.map((entry) => entry.id),
+      content_type: "product",
+      contents,
+      value: Number(order.total ?? 0),
+      currency: (order.currency_code ?? "aed").toUpperCase(),
+      num_items: order.items.reduce(
+        (sum, item) => sum + Number(item.quantity ?? 0),
+        0
+      ),
+      order_id: order.id,
+    },
+    order.id
   )
 }

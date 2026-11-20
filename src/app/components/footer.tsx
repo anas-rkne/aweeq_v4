@@ -4,6 +4,7 @@ import Image from "next/image"
 import { useLocale, useTranslations } from "next-intl"
 import { Instagram, Youtube } from "lucide-react"
 import { Link, usePathname } from "@/i18n/navigation"
+import { MetaContactLink } from "@/app/components/meta-contact-link"
 import { RollingText } from "@/shared/ui/rolling-text"
 import { SectionFade } from "@/shared/ui/section-fade"
 import { TextReveal } from "@/shared/ui/text-reveal"
@@ -111,25 +112,21 @@ export function Footer({ className = "" }: { className?: string }) {
         {/* far left: follow */}
         <div className="col-start-2 row-start-1 flex items-center  gap-3 text-start md:block">
           <div className="flex items-center justify-end gap-3">
-            <a
+            <MetaContactLink
               href="https://www.instagram.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Instagram"
+              label="Instagram"
               className="inline-flex rounded-full bg-gold p-2 text-royal-navy transition-colors duration-300 hover:bg-sand"
             >
               <Instagram className="h-4 w-4" strokeWidth={1.4} />
-            </a>
+            </MetaContactLink>
 
-            <a
+            <MetaContactLink
               href="https://www.youtube.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Youtube"
+              label="Youtube"
               className="inline-flex rounded-full bg-gold p-2 text-royal-navy transition-colors duration-300 hover:bg-sand"
             >
               <Youtube className="h-4 w-4" strokeWidth={1.4} />
-            </a>
+            </MetaContactLink>
           </div>
         </div>
       </div>

@@ -76,6 +76,9 @@ const REQUIRED_API = [
 ]
 
 const OPTIONAL_IN_PRODUCTION = {
+  web: {
+    NEXT_PUBLIC_META_PIXEL_ID: "Meta Pixel browser events",
+  },
   api: {
     STRIPE_SECRET_KEY:
       "online card payments (checkout cannot complete without it)",
@@ -83,6 +86,8 @@ const OPTIONAL_IN_PRODUCTION = {
       "Stripe webhooks (orders stay unauthorised without it)",
     RESEND_API_KEY: "order confirmation emails (outbox events stay pending)",
     EMAIL_FROM: "verified sender address for Resend",
+    META_PIXEL_ID: "Meta Conversions API (server-side Purchase)",
+    META_CAPI_ACCESS_TOKEN: "Meta Conversions API (server-side Purchase)",
   },
 }
 
@@ -119,11 +124,16 @@ function checkRequired(source, keys, label) {
 checkRequired(web, REQUIRED_WEB, ".env.production")
 checkRequired(api, REQUIRED_API, "medusa/.env")
 
-for (const [key, why] of Object.entries(OPTIONAL_IN_PRODUCTION.api)) {
-  if (!api[key]) {
-    const message = `medusa/.env: ${key} is not set — ${why}`
-    if (PRODUCTION) warnings.push(message)
-    else warnings.push(`${message} (optional outside production)`)
+for (const [label, source, config] of [
+  [".env.production", web, OPTIONAL_IN_PRODUCTION.web],
+  ["medusa/.env", api, OPTIONAL_IN_PRODUCTION.api],
+]) {
+  for (const [key, why] of Object.entries(config)) {
+    if (!source[key]) {
+      const message = `${label}: ${key} is not set — ${why}`
+      if (PRODUCTION) warnings.push(message)
+      else warnings.push(`${message} (optional outside production)`)
+    }
   }
 }
 

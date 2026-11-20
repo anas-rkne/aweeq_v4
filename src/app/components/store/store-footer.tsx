@@ -2,6 +2,7 @@ import Image from "next/image"
 import { getLocale, getTranslations } from "next-intl/server"
 import { Instagram, Youtube } from "lucide-react"
 import { Link } from "@/i18n/navigation"
+import { MetaContactLink } from "@/app/components/meta-contact-link"
 
 /* The store's own footer: a two-column stack on a phone (the house runs full
    width, the link lists sit side by side), four columns on a desktop, and a
@@ -60,25 +61,21 @@ export async function StoreFooter() {
               </Link>
 
               <div className="flex items-center gap-2">
-                <a
+                <MetaContactLink
                   href="https://www.instagram.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
+                  label="Instagram"
                   className="grid h-11 w-11 place-items-center rounded-full border border-sand/15 text-sand/70 transition-colors duration-200 hover:border-gold hover:text-gold"
                 >
                   <Instagram className="h-4 w-4" strokeWidth={1.4} />
-                </a>
+                </MetaContactLink>
 
-                <a
+                <MetaContactLink
                   href="https://www.youtube.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Youtube"
+                  label="Youtube"
                   className="grid h-11 w-11 place-items-center rounded-full border border-sand/15 text-sand/70 transition-colors duration-200 hover:border-gold hover:text-gold"
                 >
                   <Youtube className="h-4 w-4" strokeWidth={1.4} />
-                </a>
+                </MetaContactLink>
               </div>
             </div>
 

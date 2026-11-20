@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl"
 import { useState, type FormEvent } from "react"
+import { trackLead } from "@/lib/meta-pixel"
 
 type FormStatus = "idle" | "submitting" | "success" | "error"
 
@@ -45,6 +46,7 @@ export function NewsletterPanel() {
       setStatus("success")
       setMessage(t("newsletter.success"))
       setEmail("")
+      trackLead()
     } catch {
       setStatus("error")
       setMessage(t("newsletter.error"))

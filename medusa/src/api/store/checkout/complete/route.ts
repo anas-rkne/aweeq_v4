@@ -16,6 +16,7 @@ import {
   ThreeweeqRepository,
   type Locale,
 } from "../../../../lib/threeweeq/repository"
+import { sendPurchaseEvent } from "../../../../lib/meta/capi"
 import {
   findOrderByCart,
   findPaymentBySession,
@@ -417,6 +418,93 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       dropVariantIds,
     })
     finalized = true
+
+    /* Meta Conversions API: the reliable half of Purchase. The browser pixel
+       sends the same event_id (the order id), so Meta deduplicates the two. */
+    void (async () => {
+      try {
+        const query = req.scope.resolve<any>(ContainerRegistrationKeys.QUERY)
+        const rawItems = (order.items ?? []) as Array<Record<string, any>>
+        const variantIds = Array.from(
+          new Set(
+            rawItems
+              .map((item) => item.variant_id)
+              .filter((id): id is string => Boolean(id))
+          )
+        )
+
+        const skuByVariant = new Map<string, string | null>()
+        if (variantIds.length) {
+          const { data } = await query.graph({
+            entity: "product_variant",
+            fields: ["id", "sku"],
+            filters: { id: variantIds },
+          })
+          for (const row of data ?? []) {
+            skuByVariant.set(row.id, row.sku ?? null)
+          }
+        }
+
+        const metaItems = rawItems.flatMap((item) => {
+          const sku = item.variant_id
+            ? skuByVariant.get(item.variant_id)
+            : null
+          if (!sku) return []
+          return [
+            {
+              sku,
+              quantity: Number(item.quantity ?? 0),
+              itemPrice: Number(item.unit_price ?? 0),
+            },
+          ]
+        })
+
+        const orderLocale =
+          body.locale === "en" ||
+          (cart.metadata as Record<string, unknown> | null)?.locale === "en"
+            ? "en"
+            : "ar"
+        const storefrontUrl = (
+          process.env.MEDUSA_STOREFRONT_URL ??
+          process.env.STOREFRONT_URL ??
+          ""
+        ).replace(/\/+$/, "")
+
+        const forwardedFor = req.headers["x-forwarded-for"]
+        const clientIp =
+          typeof forwardedFor === "string"
+            ? forwardedFor.split(",")[0]?.trim() || null
+            : null
+        const userAgent =
+          typeof req.headers["user-agent"] === "string"
+            ? req.headers["user-agent"]
+            : null
+        const shippingPhone = (
+          order.shipping_address as Record<string, unknown> | null
+        )?.phone
+
+        await sendPurchaseEvent({
+          orderId: order.id,
+          value: Number(order.total ?? 0),
+          currency: order.currency_code ?? cart.currency_code ?? "aed",
+          items: metaItems,
+          email: order.email ?? cart.email ?? null,
+          phone: typeof shippingPhone === "string" ? shippingPhone : null,
+          clientIp,
+          userAgent,
+          eventSourceUrl: storefrontUrl
+            ? `${storefrontUrl}/${orderLocale}/order/${order.id}`
+            : null,
+        })
+      } catch (error) {
+        const logger = req.scope.resolve<any>(ContainerRegistrationKeys.LOGGER)
+        logger.warn(
+          `Meta CAPI purchase failed for order ${order.id}: ${
+            error instanceof Error ? error.message : "unknown error"
+          }`
+        )
+      }
+    })()
 
     const responseBody = {
       order_id: order.id,

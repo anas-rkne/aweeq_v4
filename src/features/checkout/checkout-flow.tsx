@@ -1,9 +1,21 @@
 "use client"
 
-import { useCallback, useState, type FormEvent } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { formatPrice } from "@/lib/format"
+import {
+  trackAddPaymentInfo,
+  trackInitiateCheckout,
+  type MetaEventParams,
+} from "@/lib/meta-pixel"
 import { useCart } from "@/app/components/store/cart-provider"
 import {
   fetchShippingOptions,
@@ -113,7 +125,7 @@ export function CheckoutFlow() {
   const currencyCode = cart?.currency_code ?? "aed"
   const total = cart?.total ?? 0
   const shippingTotal = cart?.shipping_total ?? 0
-  const items = cart?.items ?? []
+  const items = useMemo(() => cart?.items ?? [], [cart?.items])
 
   /* Medusa's `subtotal` already folds the shipping method in once one is
      added, so showing it as "subtotal" double-counts the shipping. Sum the
@@ -122,6 +134,43 @@ export function CheckoutFlow() {
     (sum, item) => sum + Number(item.total ?? item.subtotal ?? 0),
     0
   )
+
+  /* Meta: one event per cart, with every line item's SKU as its Content ID. */
+  const metaParams = useMemo<MetaEventParams>(() => {
+    const contents = items.flatMap((item) => {
+      const id = item.sku ?? item.variant_id
+      if (!id) return []
+      return [
+        {
+          id,
+          quantity: Number(item.quantity ?? 0),
+          item_price: Number(item.unit_price ?? 0),
+        },
+      ]
+    })
+
+    return {
+      content_ids: contents.map((entry) => entry.id),
+      content_type: "product",
+      contents,
+      value: itemsSubtotal,
+      currency: currencyCode.toUpperCase(),
+      num_items: items.reduce(
+        (sum, item) => sum + Number(item.quantity ?? 0),
+        0
+      ),
+    }
+  }, [items, itemsSubtotal, currencyCode])
+
+  const initiatedRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!cartId || items.length === 0) return
+    if (initiatedRef.current === cartId) return
+
+    initiatedRef.current = cartId
+    trackInitiateCheckout(metaParams)
+  }, [cartId, items.length, metaParams])
 
   /* Abu Dhabi is the only emirate with a priced list of areas; everywhere
      else the area stays free text and the fee is the flat national rate. */
@@ -277,6 +326,8 @@ export function CheckoutFlow() {
       // Stripe hosts the payment page (Checkout Sessions). The order is
       // finalised by the callback page after Stripe redirects back.
       if (response.redirect_url) {
+        // the customer is about to enter card details on Stripe's page
+        trackAddPaymentInfo(metaParams)
         window.location.assign(response.redirect_url)
         return
       }
