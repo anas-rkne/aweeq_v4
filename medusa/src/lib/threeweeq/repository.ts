@@ -1056,6 +1056,45 @@ export class ThreeweeqRepository {
     })
   }
 
+  /**
+   * Paid Stripe checkouts whose cart never produced an order — the shopper paid
+   * and closed the tab before the storefront called `complete`. Only events old
+   * enough that the normal browser flow has finished are returned, so the
+   * recovery job never races the callback page.
+   */
+  async listRecoverablePaidCarts(olderThanMinutes: number, limit: number) {
+    const cartIdExpr = "payload->'data'->'object'->'metadata'->>'cart_id'"
+
+    const rows = await this.db("ops.webhook_event")
+      .select({
+        cart_id: this.db.raw(cartIdExpr),
+        webhook_event_id: this.db.raw(
+          "(array_agg(id order by received_at desc))[1]"
+        ),
+        received_at: this.db.raw("max(received_at)"),
+      })
+      .where({
+        provider: "stripe",
+        event_type: "checkout.session.completed",
+        status: "processed",
+      })
+      .whereRaw("payload->'data'->'object'->>'payment_status' = 'paid'")
+      .whereRaw(`${cartIdExpr} is not null`)
+      .whereRaw("received_at < now() - (? || ' minutes')::interval", [
+        String(olderThanMinutes),
+      ])
+      .whereRaw("received_at > now() - interval '48 hours'")
+      .groupByRaw(cartIdExpr)
+      .orderByRaw(`${cartIdExpr} asc`)
+      .limit(limit)
+
+    return rows as Array<{
+      cart_id: string
+      webhook_event_id: string
+      received_at: string
+    }>
+  }
+
   async findCivilizationIdByCode(code: string) {
     const row = await this.db("catalog.civilization")
       .whereRaw("lower(code) = ?", [code.trim().toLowerCase()])
