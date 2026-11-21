@@ -238,8 +238,21 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   })
 
   if (record.duplicate) {
-    res.status(200).json({ received: true, duplicate: true })
-    return
+    /* A failed attempt must be retryable: Stripe re-delivers the same event,
+       and answering "duplicate" without re-running would lose the payment
+       forever. Cap the retries so a permanently broken event cannot loop. */
+    const previous = record.event as
+      | { id?: string; status?: string; attempts?: number }
+      | undefined
+    const canRetry =
+      previous?.id &&
+      previous.status === "failed" &&
+      Number(previous.attempts ?? 0) < 5
+
+    if (!canRetry) {
+      res.status(200).json({ received: true, duplicate: true })
+      return
+    }
   }
 
   const eventId = record.event.id as string
