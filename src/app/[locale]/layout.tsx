@@ -66,6 +66,11 @@ export async function generateMetadata({
       ],
       apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
     },
+    // Meta Business domain verification for 3weeq.ae. The token is public and
+    // must be in the server-rendered <head>, not injected by client JS.
+    other: {
+      "facebook-domain-verification": "51x7azsye5fh1jzs7zubuhbabt2mxg",
+    },
   }
 }
 
