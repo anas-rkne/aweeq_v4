@@ -87,6 +87,16 @@ function addressText(address?: Record<string, unknown> | null) {
   return addressParts(address).join(" · ")
 }
 
+/** The address customers are told to write to; follows EMAIL_REPLY_TO. */
+function supportEmail() {
+  const configured = String(process.env.EMAIL_REPLY_TO ?? "")
+    .split(/[,;]/)
+    .map((entry) => entry.trim())
+    .find((entry) => entry.includes("@"))
+
+  return configured ?? "care@3weeq.ae"
+}
+
 /** Dubai time, Latin digits — an order alert is read on a phone, not parsed. */
 function formatDateTime(value: unknown) {
   if (!value) return ""
@@ -113,6 +123,7 @@ function orderConfirmationEmail(event: OutboxEvent) {
   const orderNumber = payload.display_id ? `#${payload.display_id}` : payload.order_id ?? ""
   const items = Array.isArray(payload.items) ? payload.items : []
   const name = payload.customer_name?.trim()
+  const support = supportEmail()
 
   const rows = items
     .map(
@@ -143,8 +154,7 @@ function orderConfirmationEmail(event: OutboxEvent) {
           itemsLabel: "القطع",
           totalLabel: "الإجمالي (شامل الضريبة)",
           addressLabel: "عنوان الشحن",
-          footer:
-            "التوصيل داخل الإمارات فقط. للاستفسار: care@3weeq.ae",
+          footer: `التوصيل داخل الإمارات فقط. للاستفسار: ${support}`,
           dir: "rtl",
         }
       : {
@@ -157,7 +167,7 @@ function orderConfirmationEmail(event: OutboxEvent) {
           itemsLabel: "Items",
           totalLabel: "Total (VAT included)",
           addressLabel: "Shipping address",
-          footer: "Delivery inside the UAE only. Questions: care@3weeq.ae",
+          footer: `Delivery inside the UAE only. Questions: ${support}`,
           dir: "ltr",
         }
 
@@ -241,6 +251,7 @@ function shippedEmail(event: OutboxEvent) {
         .map((entry) => String(entry))
     : []
   const trackingUrl = "https://topex.ae/Home/tracking2"
+  const support = supportEmail()
 
   const copy =
     locale === "ar"
@@ -255,7 +266,7 @@ function shippedEmail(event: OutboxEvent) {
           trackingButton: "تتبع الشحنة",
           window:
             "التوصيل خلال 24 ساعة من الاستلام، يومياً من 10 صباحاً حتى 10 مساءً.",
-          footer: "لللاستفسار: care@3weeq.ae",
+          footer: `للاستفسار: ${support}`,
           dir: "rtl",
         }
       : {
@@ -269,7 +280,7 @@ function shippedEmail(event: OutboxEvent) {
           trackingButton: "Track shipment",
           window:
             "Delivery within 24 hours of pickup, daily from 10 AM to 10 PM.",
-          footer: "Questions: care@3weeq.ae",
+          footer: `Questions: ${support}`,
           dir: "ltr",
         }
 
