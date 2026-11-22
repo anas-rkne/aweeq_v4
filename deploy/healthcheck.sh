@@ -19,13 +19,37 @@ pass() { echo "  ok    $1"; }
 check_status() {
   local label="$1" url="$2" expect="${3:-200}"
   local code
-  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$url" || echo 000)"
+  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$url" 2>/dev/null || true)"
+  [ -n "$code" ] || code="000"
   if [ "$code" = "$expect" ]; then
     pass "$label ($code)"
   else
     fail "$label (expected $expect, got $code) — $url"
   fi
 }
+
+# `pm2 reload` returns as soon as the old process is signalled — the new one is
+# still booting (Medusa needs ~13s). Checking HTTP before that only proves the
+# port is closed, so wait for both apps to answer 200 first.
+wait_ready() {
+  local label="$1" url="$2" timeout="${3:-90}"
+  local waited=0 code
+  while [ "$waited" -lt "$timeout" ]; do
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$url" 2>/dev/null || true)"
+    if [ "$code" = "200" ]; then
+      pass "$label ready after ${waited}s"
+      return 0
+    fi
+    sleep 2
+    waited=$((waited + 2))
+  done
+  fail "$label not ready after ${timeout}s — $url"
+  return 1
+}
+
+echo "== Readiness =="
+wait_ready "storefront" "$WEB_URL/ar"
+wait_ready "medusa api" "$API_URL/health"
 
 echo "== HTTP =="
 check_status "storefront /ar" "$WEB_URL/ar"
@@ -39,7 +63,8 @@ check_status "medusa admin" "$API_URL/app"
 if [ -n "$PUBLISHABLE_KEY" ]; then
   echo "== Store API =="
   code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
-    -H "x-publishable-api-key: $PUBLISHABLE_KEY" "$API_URL/store/products?limit=1" || echo 000)"
+    -H "x-publishable-api-key: $PUBLISHABLE_KEY" "$API_URL/store/products?limit=1" 2>/dev/null || true)"
+  [ -n "$code" ] || code="000"
   [ "$code" = "200" ] && pass "store/products ($code)" || fail "store/products ($code)"
 fi
 
