@@ -50,6 +50,7 @@ MISSING=""
 for artifact in \
   "medusa/.medusa/server/src/jobs/outbox-dispatch.js" \
   "medusa/.medusa/server/src/jobs/recover-paid-carts.js" \
+  "medusa/.medusa/server/src/lib/threeweeq/email.js" \
   "medusa/.medusa/server/src/subscribers/product-changed.js" \
   "medusa/.medusa/server/src/modules/payment-stripe/service.js" \
   "medusa/.medusa/server/public/admin/index.html"

@@ -4,10 +4,16 @@ export type OrderConfirmationPayload = {
   email?: string | null
   phone?: string | null
   customer_name?: string | null
+  customer_email?: string | null
+  customer_phone?: string | null
   locale?: "ar" | "en"
   currency_code?: string | null
   total?: number | string | null
+  shipping_total?: number | string | null
   shipping_address?: Record<string, unknown> | null
+  created_at?: string | Date | null
+  status?: string | null
+  admin_url?: string | null
   items?: Array<{
     title?: string | null
     quantity?: number | null
@@ -15,7 +21,7 @@ export type OrderConfirmationPayload = {
   }>
 }
 
-type OutboxEvent = {
+export type OutboxEvent = {
   id: string
   event_type: string
   payload: OrderConfirmationPayload & Record<string, unknown>
@@ -59,8 +65,8 @@ function formatMoney(value: unknown, locale: "ar" | "en", currency: string) {
   }
 }
 
-function addressLines(address?: Record<string, unknown> | null) {
-  if (!address) return ""
+function addressParts(address?: Record<string, unknown> | null) {
+  if (!address) return []
   return [
     address.address_1,
     address.address_2,
@@ -70,8 +76,33 @@ function addressLines(address?: Record<string, unknown> | null) {
     address.country_code,
   ]
     .filter(Boolean)
-    .map((part) => escapeHtml(part))
-    .join(" · ")
+    .map((part) => String(part))
+}
+
+function addressLines(address?: Record<string, unknown> | null) {
+  return addressParts(address).map((part) => escapeHtml(part)).join(" · ")
+}
+
+function addressText(address?: Record<string, unknown> | null) {
+  return addressParts(address).join(" · ")
+}
+
+/** Dubai time, Latin digits — an order alert is read on a phone, not parsed. */
+function formatDateTime(value: unknown) {
+  if (!value) return ""
+
+  const date = value instanceof Date ? value : new Date(String(value))
+  if (Number.isNaN(date.getTime())) return ""
+
+  try {
+    return new Intl.DateTimeFormat("ar-AE-u-nu-latn", {
+      timeZone: "Asia/Dubai",
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(date)
+  } catch {
+    return date.toISOString()
+  }
 }
 
 function orderConfirmationEmail(event: OutboxEvent) {
@@ -186,8 +217,8 @@ function orderConfirmationEmail(event: OutboxEvent) {
         )}`
     ),
     `${copy.totalLabel}: ${total}`,
-    addressLines(payload.shipping_address)
-      ? `${copy.addressLabel}: ${addressLines(payload.shipping_address)}`
+    addressText(payload.shipping_address)
+      ? `${copy.addressLabel}: ${addressText(payload.shipping_address)}`
       : "",
     copy.footer,
   ]
@@ -290,15 +321,238 @@ function shippedEmail(event: OutboxEvent) {
   return { subject: copy.subject, html, text }
 }
 
+/**
+ * Merchant alert. Deliberately denser than the customer email: the operator
+ * needs the phone, the address, every line item, and a one-click jump to the
+ * order — usually read on a phone while away from the dashboard.
+ */
+function adminOrderEmail(event: OutboxEvent) {
+  const payload = event.payload ?? {}
+  const currency = String(payload.currency_code ?? "aed").toUpperCase()
+  const orderNumber = payload.display_id
+    ? `#${payload.display_id}`
+    : String(payload.order_id ?? "")
+  const items = Array.isArray(payload.items) ? payload.items : []
+  const total = formatMoney(payload.total, "ar", currency)
+  const shipping = Number(payload.shipping_total ?? 0)
+  const itemTotal = items.reduce(
+    (sum, item) =>
+      sum + Number(item.unit_price ?? 0) * Number(item.quantity ?? 0),
+    0
+  )
+  const customerName = String(payload.customer_name ?? "").trim()
+  const customerEmail = String(payload.customer_email ?? "").trim()
+  const customerPhone = String(payload.customer_phone ?? "").trim()
+  const adminUrl = String(payload.admin_url ?? "").trim()
+  const createdAt = formatDateTime(payload.created_at)
+  const subject = `${["طلب جديد", orderNumber]
+    .filter(Boolean)
+    .join(" ")} — ${total}`
+
+  const itemRows = items
+    .map((item) => {
+      const quantity = Number(item.quantity ?? 0)
+      const lineTotal = Number(item.unit_price ?? 0) * quantity
+      return `<tr>
+        <td style="padding:10px 0;border-top:1px solid #ece7df;color:#1f2937">${escapeHtml(
+          item.title ?? ""
+        )}</td>
+        <td style="padding:10px 0;border-top:1px solid #ece7df;text-align:center;color:#1f2937">${quantity}</td>
+        <td style="padding:10px 0;border-top:1px solid #ece7df;text-align:left;color:#1f2937;white-space:nowrap">${formatMoney(
+          lineTotal,
+          "ar",
+          currency
+        )}</td>
+      </tr>`
+    })
+    .join("")
+
+  const contactLines = [
+    customerName
+      ? `<p style="margin:0 0 6px"><strong>الاسم:</strong> ${escapeHtml(
+          customerName
+        )}</p>`
+      : "",
+    customerPhone
+      ? `<p style="margin:0 0 6px"><strong>الجوال:</strong> <a href="tel:${escapeHtml(
+          customerPhone.replace(/[^\d+]/g, "")
+        )}" style="color:#0b1020">${escapeHtml(customerPhone)}</a></p>`
+      : "",
+    customerEmail
+      ? `<p style="margin:0 0 6px"><strong>البريد:</strong> <a href="mailto:${escapeHtml(
+          customerEmail
+        )}" style="color:#0b1020">${escapeHtml(customerEmail)}</a></p>`
+      : "",
+    addressLines(payload.shipping_address)
+      ? `<p style="margin:8px 0 0"><strong>عنوان الشحن:</strong><br/>${addressLines(
+          payload.shipping_address
+        )}</p>`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("")
+
+  const totals = [
+    itemTotal > 0
+      ? `<tr><td style="padding:4px 0;color:#6b7280">قيمة القطع</td><td style="padding:4px 0;text-align:left;color:#1f2937;white-space:nowrap">${formatMoney(
+          itemTotal,
+          "ar",
+          currency
+        )}</td></tr>`
+      : "",
+    shipping > 0
+      ? `<tr><td style="padding:4px 0;color:#6b7280">الشحن</td><td style="padding:4px 0;text-align:left;color:#1f2937;white-space:nowrap">${formatMoney(
+          shipping,
+          "ar",
+          currency
+        )}</td></tr>`
+      : "",
+    `<tr><td style="padding:10px 0 0;border-top:1px solid #ece7df;font-weight:bold;color:#0b1020">الإجمالي</td><td style="padding:10px 0 0;border-top:1px solid #ece7df;text-align:left;font-weight:bold;color:#0b1020;white-space:nowrap">${total}</td></tr>`,
+  ]
+    .filter(Boolean)
+    .join("")
+
+  const html = `<!doctype html>
+<html dir="rtl" lang="ar">
+  <body style="margin:0;background:#f4f1ec;padding:24px;font-family:Arial,Helvetica,sans-serif">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;margin:0 auto">
+      <tr>
+        <td style="background:#0b1020;padding:20px 24px;border-radius:10px 10px 0 0">
+          <span style="color:#cd9e61;font-size:20px;letter-spacing:6px;font-weight:bold">3WEEQ</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="background:#ffffff;padding:24px;border-radius:0 0 10px 10px;color:#1f2937;font-size:14px;line-height:1.7">
+          <p style="margin:0;color:#6b7280;font-size:13px">طلب جديد</p>
+          <h1 style="margin:2px 0 0;font-size:26px;color:#0b1020">${escapeHtml(
+            orderNumber
+          )}</h1>
+          ${
+            createdAt
+              ? `<p style="margin:4px 0 0;color:#6b7280;font-size:13px">${escapeHtml(
+                  createdAt
+                )} بتوقيت الإمارات</p>`
+              : ""
+          }
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0;background:#faf8f5;border:1px solid #ece7df;border-radius:8px">
+            <tr>
+              <td style="padding:14px 16px;color:#6b7280;font-size:13px">الإجمالي المدفوع</td>
+              <td style="padding:14px 16px;text-align:left;color:#0b1020;font-size:20px;font-weight:bold;white-space:nowrap">${total}</td>
+            </tr>
+          </table>
+
+          <h2 style="margin:0 0 8px;font-size:15px;color:#0b1020">بيانات العميل</h2>
+          <div style="margin:0 0 18px">${
+            contactLines ||
+            `<p style="margin:0;color:#6b7280">لا توجد بيانات تواصل</p>`
+          }</div>
+
+          <h2 style="margin:0 0 6px;font-size:15px;color:#0b1020">القطع</h2>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px">
+            <thead>
+              <tr style="color:#6b7280;font-size:12px">
+                <th style="padding:0 0 6px;text-align:right;font-weight:normal">القطعة</th>
+                <th style="padding:0 0 6px;text-align:center;font-weight:normal">الكمية</th>
+                <th style="padding:0 0 6px;text-align:left;font-weight:normal">الإجمالي</th>
+              </tr>
+            </thead>
+            <tbody>${
+              itemRows ||
+              `<tr><td colspan="3" style="padding:10px 0;border-top:1px solid #ece7df;color:#6b7280">لا توجد قطع</td></tr>`
+            }</tbody>
+          </table>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:12px 0 0;font-size:14px">
+            ${totals}
+          </table>
+
+          ${
+            adminUrl
+              ? `<p style="margin:24px 0 0">
+                   <a href="${escapeHtml(
+                     adminUrl
+                   )}" style="display:inline-block;background:#cd9e61;color:#0b1020;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:bold">افتح الطلب في لوحة التحكم</a>
+                 </p>`
+              : ""
+          }
+
+          <p style="margin:24px 0 0;color:#6b7280;font-size:12px">رسالة تلقائية من متجر 3WEEQ${
+            customerEmail ? " — الرد على هذه الرسالة يصل إلى بريد العميل." : "."
+          }</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`
+
+  const itemLines = items.length
+    ? items.map(
+        (item) =>
+          `- ${item.title ?? ""} × ${Number(item.quantity ?? 0)} — ${formatMoney(
+            Number(item.unit_price ?? 0) * Number(item.quantity ?? 0),
+            "ar",
+            currency
+          )}`
+      )
+    : ["- لا توجد قطع"]
+
+  const text = [
+    [
+      "طلب جديد — 3WEEQ",
+      `رقم الطلب: ${orderNumber}`,
+      createdAt ? `التاريخ: ${createdAt} (بتوقيت الإمارات)` : "",
+      `الإجمالي المدفوع: ${total}`,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    [
+      "بيانات العميل",
+      customerName ? `الاسم: ${customerName}` : "",
+      customerPhone ? `الجوال: ${customerPhone}` : "",
+      customerEmail ? `البريد: ${customerEmail}` : "",
+      addressText(payload.shipping_address)
+        ? `عنوان الشحن: ${addressText(payload.shipping_address)}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    [
+      "القطع",
+      ...itemLines,
+      itemTotal > 0
+        ? `قيمة القطع: ${formatMoney(itemTotal, "ar", currency)}`
+        : "",
+      shipping > 0 ? `الشحن: ${formatMoney(shipping, "ar", currency)}` : "",
+      `الإجمالي: ${total}`,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    adminUrl ? `لوحة التحكم: ${adminUrl}` : "",
+    customerEmail ? "الرد على هذه الرسالة يصل إلى بريد العميل." : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n")
+
+  return { subject, html, text }
+}
+
 function templateFor(event: OutboxEvent) {
   switch (event.event_type) {
     case "order.confirmation":
       return orderConfirmationEmail(event)
     case "order.shipped":
       return shippedEmail(event)
+    case "order.admin_notification":
+      return adminOrderEmail(event)
     default:
       return null
   }
+}
+
+/** Exposed so scripts and tests can render without sending anything. */
+export function renderOutboxEvent(event: OutboxEvent) {
+  return templateFor(event)
 }
 
 /**
@@ -308,14 +562,20 @@ function templateFor(event: OutboxEvent) {
 export async function sendOutboxEvent(event: OutboxEvent): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.EMAIL_FROM ?? "3WEEQ <care@3weeq.ae>"
-  const replyTo = process.env.EMAIL_REPLY_TO ?? "care@3weeq.ae"
+  const defaultReplyTo = process.env.EMAIL_REPLY_TO ?? "care@3weeq.ae"
 
   if (!apiKey) {
     return { sent: false, skipped: true, reason: "email_not_configured" }
   }
 
-  const to = String(event.payload?.email ?? "").trim()
-  if (!to) {
+  // `ORDER_NOTIFICATION_EMAIL` accepts a comma-separated list so the operator
+  // can fan an alert out to a shared inbox and a personal one.
+  const to = String(event.payload?.email ?? "")
+    .split(/[,;]/)
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.includes("@"))
+
+  if (!to.length) {
     return { sent: false, skipped: true, reason: "missing_recipient" }
   }
 
@@ -323,6 +583,15 @@ export async function sendOutboxEvent(event: OutboxEvent): Promise<SendResult> {
   if (!template) {
     return { sent: false, skipped: true, reason: "no_template" }
   }
+
+  // Replying to a new-order alert should reach the buyer, not bounce off the
+  // store's own sender address.
+  const customerEmail = String(event.payload?.customer_email ?? "").trim()
+  const replyTo =
+    event.event_type === "order.admin_notification" &&
+    customerEmail.includes("@")
+      ? customerEmail
+      : defaultReplyTo
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -332,7 +601,7 @@ export async function sendOutboxEvent(event: OutboxEvent): Promise<SendResult> {
     },
     body: JSON.stringify({
       from,
-      to: [to],
+      to,
       reply_to: replyTo,
       subject: template.subject,
       html: template.html,

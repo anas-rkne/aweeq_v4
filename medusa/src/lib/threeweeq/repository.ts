@@ -891,7 +891,34 @@ export class ThreeweeqRepository {
     return id
   }
 
+  /**
+   * One event per (aggregate, type). The insert is the lock: a unique index
+   * makes two concurrent callers (webhook + `payment.captured` subscriber)
+   * collapse into one row instead of sending the same email twice.
+   */
   async enqueueOutboxOnce(input: OutboxInput) {
+    const id = randomUUID()
+
+    const inserted = await this.db("ops.outbox_event")
+      .insert({
+        id,
+        aggregate_type: input.aggregateType,
+        aggregate_id: input.aggregateId,
+        event_type: input.eventType,
+        payload: input.payload,
+        status: "pending",
+        attempts: 0,
+        available_at: this.db.fn.now(),
+        created_at: this.db.fn.now(),
+      })
+      .onConflict(["aggregate_type", "aggregate_id", "event_type"])
+      .ignore()
+      .returning("id")
+
+    if (inserted?.[0]?.id) {
+      return inserted[0].id as string
+    }
+
     const existing = await this.db("ops.outbox_event")
       .where({
         aggregate_type: input.aggregateType,
@@ -900,11 +927,7 @@ export class ThreeweeqRepository {
       })
       .first()
 
-    if (existing) {
-      return existing.id
-    }
-
-    return this.enqueueOutbox(input)
+    return existing?.id ?? id
   }
 
   /**

@@ -16,6 +16,13 @@ type AbandonedCartReminderInput = {
 const enqueueAbandonedCartRemindersStep = createStep(
   "enqueue-abandoned-cart-reminders",
   async (input: AbandonedCartReminderInput, { container }) => {
+    /* No template or consent flow exists for this email yet. Without the gate,
+       every abandoned cart queues an event that no template can send, and the
+       outbox retries it forever. Opt in only when the email is actually built. */
+    if (process.env.ABANDONED_CART_EMAILS_ENABLED !== "true") {
+      return new StepResponse({ scanned: 0, queued: 0, disabled: true })
+    }
+
     const db = container.resolve<any>(ContainerRegistrationKeys.PG_CONNECTION)
     const repository = new ThreeweeqRepository(container as MedusaContainer)
     const olderThanMinutes = Math.max(input.older_than_minutes ?? 60, 60)

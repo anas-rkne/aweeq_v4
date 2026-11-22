@@ -9,7 +9,8 @@
     "db:migrate": "medusa db:migrate",
     "db:rollback": "medusa db:rollback",
     "seed": "medusa exec ./src/scripts/seed.ts",
-    "cleanup": "medusa exec ./src/scripts/cleanup-legacy-rafid.ts"
+    "cleanup": "medusa exec ./src/scripts/cleanup-legacy-rafid.ts",
+    "email:test": "medusa exec ./src/scripts/send-test-email.ts"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "2.22.0",

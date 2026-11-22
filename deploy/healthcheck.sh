@@ -14,6 +14,7 @@ PUBLISHABLE_KEY="${MEDUSA_PUBLISHABLE_KEY:-}"
 
 failures=0
 fail() { echo "  FAIL  $1"; failures=$((failures + 1)); }
+warn() { echo "  warn  $1"; }
 pass() { echo "  ok    $1"; }
 
 check_status() {
@@ -102,6 +103,17 @@ if command -v psql >/dev/null 2>&1 && [ -n "${DATABASE_URL:-}" ]; then
     pass "no stuck outbox events"
   else
     fail "$stuck outbox event(s) older than 1h"
+  fi
+
+  failed="$(psql "$DATABASE_URL" -tAc \
+    "select count(*) from ops.outbox_event where status = 'failed'" \
+    2>/dev/null || echo "")"
+  if [ -z "$failed" ]; then
+    echo "  skip  failed outbox query failed"
+  elif [ "$failed" = "0" ]; then
+    pass "no permanently failed outbox events"
+  else
+    warn "$failed outbox event(s) permanently failed — inspect ops.outbox_event"
   fi
 else
   echo "  skip  psql/DATABASE_URL unavailable"

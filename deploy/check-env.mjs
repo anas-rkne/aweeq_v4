@@ -86,6 +86,9 @@ const OPTIONAL_IN_PRODUCTION = {
       "Stripe webhooks (orders stay unauthorised without it)",
     RESEND_API_KEY: "order confirmation emails (outbox events stay pending)",
     EMAIL_FROM: "verified sender address for Resend",
+    EMAIL_REPLY_TO: "reply-to address on customer emails",
+    ORDER_NOTIFICATION_EMAIL:
+      "merchant new-order alerts (comma-separated list is allowed)",
     META_PIXEL_ID: "Meta Conversions API (server-side Purchase)",
     META_CAPI_ACCESS_TOKEN: "Meta Conversions API (server-side Purchase)",
   },
@@ -123,6 +126,27 @@ function checkRequired(source, keys, label) {
 
 checkRequired(web, REQUIRED_WEB, ".env.production")
 checkRequired(api, REQUIRED_API, "medusa/.env")
+
+/* The merchant alert is opt-in. A typo would either silently queue nothing or
+   bounce every order, so reject malformed addresses before deploy. */
+if (api.ORDER_NOTIFICATION_EMAIL) {
+  const invalid = api.ORDER_NOTIFICATION_EMAIL.split(/[,;]/)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .filter((entry) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(entry))
+
+  if (invalid.length) {
+    problems.push(
+      `medusa/.env: ORDER_NOTIFICATION_EMAIL has invalid address(es): ${invalid.join(", ")}`
+    )
+  }
+}
+
+if (api.ABANDONED_CART_EMAILS_ENABLED === "true") {
+  warnings.push(
+    "medusa/.env: ABANDONED_CART_EMAILS_ENABLED is on, but no abandoned-cart email template exists yet — those events will never send."
+  )
+}
 
 for (const [label, source, config] of [
   [".env.production", web, OPTIONAL_IN_PRODUCTION.web],
