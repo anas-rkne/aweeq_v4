@@ -44,6 +44,9 @@ export default async function outboxDispatchJob(container: MedusaContainer) {
       if (result.sent) {
         await repository.markOutboxPublished(event.id)
         sent += 1
+        logger.info(
+          `outbox sent ${event.event_type} for ${event.aggregate_id} (${event.id})`
+        )
         continue
       }
 
