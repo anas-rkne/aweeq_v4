@@ -927,7 +927,13 @@ export class ThreeweeqRepository {
       })
       .first()
 
-    return existing?.id ?? id
+    if (!existing?.id) {
+      throw new Error(
+        "outbox insert conflicted but the existing row could not be read"
+      )
+    }
+
+    return existing.id as string
   }
 
   /**
