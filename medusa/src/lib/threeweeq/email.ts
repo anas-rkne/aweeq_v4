@@ -87,11 +87,18 @@ function addressText(address?: Record<string, unknown> | null) {
   return addressParts(address).join(" · ")
 }
 
+/** Accept `Name <address>` as well as a bare address. */
+function emailAddress(value: unknown) {
+  const raw = String(value ?? "").trim()
+  const bracketed = raw.match(/<([^>]+)>/)
+  return (bracketed ? bracketed[1] : raw).trim()
+}
+
 /** The address customers are told to write to; follows EMAIL_REPLY_TO. */
 function supportEmail() {
   const configured = String(process.env.EMAIL_REPLY_TO ?? "")
     .split(/[,;]/)
-    .map((entry) => entry.trim())
+    .map((entry) => emailAddress(entry))
     .find((entry) => entry.includes("@"))
 
   return configured ?? "care@3weeq.ae"
@@ -583,7 +590,7 @@ export async function sendOutboxEvent(event: OutboxEvent): Promise<SendResult> {
   // can fan an alert out to a shared inbox and a personal one.
   const to = String(event.payload?.email ?? "")
     .split(/[,;]/)
-    .map((entry) => entry.trim())
+    .map((entry) => emailAddress(entry))
     .filter((entry) => entry.includes("@"))
 
   if (!to.length) {
@@ -597,7 +604,7 @@ export async function sendOutboxEvent(event: OutboxEvent): Promise<SendResult> {
 
   // Replying to a new-order alert should reach the buyer, not bounce off the
   // store's own sender address.
-  const customerEmail = String(event.payload?.customer_email ?? "").trim()
+  const customerEmail = emailAddress(event.payload?.customer_email)
   const replyTo =
     event.event_type === "order.admin_notification" &&
     customerEmail.includes("@")
