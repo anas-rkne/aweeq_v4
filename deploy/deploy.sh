@@ -22,7 +22,9 @@ git checkout "$BRANCH"
 git pull --ff-only
 
 echo "==> Checking environment"
-node deploy/check-env.mjs
+# `--production` turns silent measurement outages (e.g. a leftover
+# META_TEST_EVENT_CODE) into hard failures instead of warnings.
+node deploy/check-env.mjs --production
 
 echo "==> Installing dependencies"
 npm install --no-audit --no-fund
