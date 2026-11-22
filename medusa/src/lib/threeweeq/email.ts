@@ -180,6 +180,11 @@ function orderConfirmationEmail(event: OutboxEvent) {
 
   const html = `<!doctype html>
 <html dir="${copy.dir}" lang="${locale}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>3WEEQ</title>
+  </head>
   <body style="margin:0;background:#0b1020;padding:24px;font-family:Arial,Helvetica,sans-serif">
     <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden">
       <tr>
@@ -299,6 +304,11 @@ function shippedEmail(event: OutboxEvent) {
 
   const html = `<!doctype html>
 <html dir="${copy.dir}" lang="${locale}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>3WEEQ</title>
+  </head>
   <body style="margin:0;background:#0b1020;padding:24px;font-family:Arial,Helvetica,sans-serif">
     <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden">
       <tr>
@@ -432,6 +442,11 @@ function adminOrderEmail(event: OutboxEvent) {
 
   const html = `<!doctype html>
 <html dir="rtl" lang="ar">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>3WEEQ</title>
+  </head>
   <body style="margin:0;background:#f4f1ec;padding:24px;font-family:Arial,Helvetica,sans-serif">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;margin:0 auto">
       <tr>
