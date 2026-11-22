@@ -177,8 +177,14 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
     )
     form.set("cancel_url", `${storefrontUrl}/${locale}/checkout`)
 
-    if (customer.email || data.email) {
-      form.set("customer_email", String(customer.email ?? data.email))
+    const customerEmail = String(customer.email || data.email || "").trim()
+    if (customerEmail) {
+      form.set("customer_email", customerEmail)
+      // Stripe creates a receipt for every successful payment but only emails
+      // it when the Dashboard's automatic-receipts toggle is on. Supplying the
+      // address on the PaymentIntent makes delivery deterministic even if that
+      // toggle is off (Stripe docs: receipts#specify-a-receipt-email-address).
+      form.set("payment_intent_data[receipt_email]", customerEmail)
     }
 
     for (const [key, value] of Object.entries(this.metadataFrom(data))) {
