@@ -495,7 +495,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           eventSourceUrl: storefrontUrl
             ? `${storefrontUrl}/${orderLocale}/order/${order.id}`
             : null,
-        })) as { sent: boolean; reason?: string; status?: number }
+        })) as {
+          sent: boolean
+          reason?: string
+          status?: number
+          body?: string
+        }
 
         /* The return value used to be discarded, so a rejected or unconfigured
            CAPI call was invisible in the logs. Log the outcome only — never the
@@ -509,7 +514,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           metaLogger.warn(
             `Meta CAPI purchase not sent for order ${order.id}: ${
               metaResult.reason ?? "unknown"
-            }${metaResult.status ? ` (HTTP ${metaResult.status})` : ""}`
+            }${metaResult.status ? ` (HTTP ${metaResult.status})` : ""}${
+              metaResult.body ? ` — ${metaResult.body.slice(0, 300)}` : ""
+            }`
           )
         }
       } catch (error) {

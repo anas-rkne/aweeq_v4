@@ -137,6 +137,16 @@ for (const [label, source, config] of [
   }
 }
 
+/* A leftover test code silently reroutes every Conversions API event to
+   Test Events, where it is visible but never counted against ads. Treat it as
+   a hard failure in production instead of a silent measurement outage. */
+if (api.META_TEST_EVENT_CODE) {
+  const message =
+    "medusa/.env: META_TEST_EVENT_CODE is set — every Conversions API event is treated as a test event and excluded from reporting. Remove it."
+  if (PRODUCTION) problems.push(message)
+  else warnings.push(message)
+}
+
 // --- cross-file consistency -------------------------------------------------
 const webBackend = web.MEDUSA_BACKEND_URL?.replace(/\/+$/, "")
 const apiBackend = api.MEDUSA_BACKEND_URL?.replace(/\/+$/, "")

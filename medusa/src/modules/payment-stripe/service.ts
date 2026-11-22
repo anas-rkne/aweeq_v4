@@ -239,14 +239,35 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
     }
   }
 
+  /**
+   * Checkout Sessions are refunded/cancelled through their PaymentIntent.
+   * `data.id` is the session (`cs_...`) because `authorizePayment` spreads the
+   * session object over the input, so using it as a PaymentIntent id makes
+   * Stripe answer "No such payment_intent". Older payments may only carry the
+   * session id, hence the fallback.
+   */
+  private paymentIntentId(data?: Record<string, unknown>) {
+    const intent = data?.payment_intent
+    if (typeof intent === "string" && intent.startsWith("pi_")) {
+      return intent
+    }
+
+    const id = data?.id
+    if (typeof id === "string" && id.startsWith("pi_")) {
+      return id
+    }
+
+    return null
+  }
+
   async refundPayment(
     input: RefundPaymentInput
   ): Promise<RefundPaymentOutput> {
-    const id = input.data?.id as string | undefined
+    const id = this.paymentIntentId(input.data)
     if (!id) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
-        "Stripe payment intent id is missing"
+        "Stripe PaymentIntent id is missing; refund this checkout session from the Stripe Dashboard"
       )
     }
 
@@ -264,11 +285,11 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
   async cancelPayment(
     input: CancelPaymentInput
   ): Promise<CancelPaymentOutput> {
-    const id = input.data?.id as string | undefined
+    const id = this.paymentIntentId(input.data)
     if (!id) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
-        "Stripe payment intent id is missing"
+        "Stripe PaymentIntent id is missing; cancel this checkout session from the Stripe Dashboard"
       )
     }
 
