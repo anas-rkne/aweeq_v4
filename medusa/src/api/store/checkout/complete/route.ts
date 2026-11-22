@@ -483,7 +483,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           order.shipping_address as Record<string, unknown> | null
         )?.phone
 
-        await sendPurchaseEvent({
+        const metaResult = (await sendPurchaseEvent({
           orderId: order.id,
           value: Number(order.total ?? 0),
           currency: order.currency_code ?? cart.currency_code ?? "aed",
@@ -495,7 +495,23 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           eventSourceUrl: storefrontUrl
             ? `${storefrontUrl}/${orderLocale}/order/${order.id}`
             : null,
-        })
+        })) as { sent: boolean; reason?: string; status?: number }
+
+        /* The return value used to be discarded, so a rejected or unconfigured
+           CAPI call was invisible in the logs. Log the outcome only — never the
+           token — so a real order can be traced end to end. */
+        const metaLogger = req.scope.resolve<any>(
+          ContainerRegistrationKeys.LOGGER
+        )
+        if (metaResult.sent) {
+          metaLogger.info(`Meta CAPI purchase sent for order ${order.id}`)
+        } else {
+          metaLogger.warn(
+            `Meta CAPI purchase not sent for order ${order.id}: ${
+              metaResult.reason ?? "unknown"
+            }${metaResult.status ? ` (HTTP ${metaResult.status})` : ""}`
+          )
+        }
       } catch (error) {
         const logger = req.scope.resolve<any>(ContainerRegistrationKeys.LOGGER)
         logger.warn(
