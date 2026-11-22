@@ -161,6 +161,10 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
 
     const form = new URLSearchParams()
     form.set("mode", "payment")
+    // The order flow captures immediately and has no async-payment path, so
+    // pin the session to cards (Apple Pay / Google Pay ride on `card`). Without
+    // this, any method enabled in the Dashboard could appear at Checkout.
+    form.set("payment_method_types[0]", "card")
     form.set(
       "line_items[0][price_data][currency]",
       input.currency_code.toLowerCase()
