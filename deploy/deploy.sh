@@ -23,8 +23,10 @@ git pull --ff-only
 
 echo "==> Checking environment"
 # `--production` turns silent measurement outages (e.g. a leftover
-# META_TEST_EVENT_CODE) into hard failures instead of warnings.
-node deploy/check-env.mjs --production
+# META_TEST_EVENT_CODE) into hard failures instead of warnings. NODE_ENV is
+# belt-and-braces: it also covers a self-updating deploy.sh that was read
+# before the pull and therefore still runs the old command line.
+NODE_ENV=production node deploy/check-env.mjs --production
 
 echo "==> Installing dependencies"
 npm install --no-audit --no-fund
