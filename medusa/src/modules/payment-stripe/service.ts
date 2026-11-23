@@ -52,6 +52,7 @@ type StripeCheckoutSession = {
   payment_intent?: string
   amount_total?: number
   currency?: string
+  payment_method_types?: string[]
   metadata?: Record<string, string>
   [key: string]: unknown
 }
@@ -162,10 +163,10 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
     const form = new URLSearchParams()
     form.set("mode", "payment")
     form.set("locale", locale)
-    // The order flow captures immediately and has no async-payment path, so
-    // pin the session to cards (Apple Pay / Google Pay ride on `card`). Without
-    // this, any method enabled in the Dashboard could appear at Checkout.
-    form.set("payment_method_types[0]", "card")
+    // Stripe no longer accepts `payment_method_types` when creating a Checkout
+    // Session (dynamic payment methods): the session resolves its methods from
+    // Dashboard -> Settings -> Payment methods. Card-only is therefore a
+    // Dashboard setting, and we assert the outcome on the created session below.
     form.set(
       "line_items[0][price_data][currency]",
       input.currency_code.toLowerCase()
@@ -201,6 +202,20 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
       "POST",
       form
     )
+
+    // The store accepts cards only. Dynamic payment methods mean Stripe now
+    // ignores any method list we send, so make it loud when the Dashboard still
+    // exposes something else at Checkout.
+    const nonCardMethods = (session.payment_method_types ?? []).filter(
+      (method) => method !== "card"
+    )
+    if (nonCardMethods.length) {
+      this.logger_.warn(
+        `stripe: checkout session ${session.id} exposes non-card payment methods (${nonCardMethods.join(
+          ", "
+        )}). Disable them in Dashboard -> Settings -> Payment methods.`
+      )
+    }
 
     return {
       id: session.id,
