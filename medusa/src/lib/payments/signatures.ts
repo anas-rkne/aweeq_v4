@@ -41,13 +41,21 @@ function objectValue(value: unknown) {
     : {}
 }
 
+/* Stripe's own libraries default to five minutes: a captured request replayed
+   later must not authorise a second order. The unique webhook-event row is the
+   second line of defence, this is the first. */
+const STRIPE_TOLERANCE_SECONDS = 300
+
 export function verifyStripeSignature(
   rawBody: string,
   headers: Record<string, unknown>,
-  secret: string | undefined
+  secret: string | undefined,
+  options: { toleranceSeconds?: number; now?: number } = {}
 ) {
+  /* Fail closed. A missing secret used to accept every payload, so a
+     half-configured deploy silently became an open webhook endpoint. */
   if (!secret) {
-    return true
+    return false
   }
 
   const signatureHeader = headerValue(headers, "stripe-signature")
@@ -55,25 +63,40 @@ export function verifyStripeSignature(
     return false
   }
 
-  const parts = signatureHeader.split(",").reduce<Record<string, string>>(
-    (result, part) => {
-      const [key, value] = part.split("=", 2)
-      if (key && value) {
-        result[key.trim()] = value.trim()
-      }
-      return result
-    },
-    {}
-  )
+  const timestamp = signatureHeader
+    .split(",")
+    .map((part) => part.split("=", 2))
+    .find(([key]) => key?.trim() === "t")?.[1]
+    ?.trim()
 
-  const timestamp = parts.t
-  const signature = parts.v1
+  /* A rotating endpoint secret makes Stripe sign with the old and the new
+     secret at once, so every v1 entry has to be tried — not just the last. */
+  const signatures = signatureHeader
+    .split(",")
+    .map((part) => part.split("=", 2))
+    .filter(([key]) => key?.trim() === "v1")
+    .map(([, value]) => value?.trim())
+    .filter((value): value is string => Boolean(value))
 
-  if (!timestamp || !signature) {
+  if (!timestamp || !signatures.length) {
     return false
   }
 
-  return safeEqual(hmacHex(`${timestamp}.${rawBody}`, secret), signature)
+  const stamp = Number(timestamp)
+  if (!Number.isFinite(stamp)) {
+    return false
+  }
+
+  const tolerance = options.toleranceSeconds ?? STRIPE_TOLERANCE_SECONDS
+  const now = options.now ?? Math.floor(Date.now() / 1000)
+
+  if (tolerance > 0 && Math.abs(now - stamp) > tolerance) {
+    return false
+  }
+
+  const expected = hmacHex(`${timestamp}.${rawBody}`, secret)
+
+  return signatures.some((signature) => safeEqual(expected, signature))
 }
 
 export function verifyTapSignature(
@@ -82,8 +105,9 @@ export function verifyTapSignature(
   secret: string | undefined,
   body?: Record<string, unknown>
 ) {
+  /* Fail closed: without a secret there is nothing to verify against. */
   if (!secret) {
-    return true
+    return false
   }
 
   const signature =

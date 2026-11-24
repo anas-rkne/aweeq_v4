@@ -10,7 +10,8 @@
     "db:rollback": "medusa db:rollback",
     "seed": "medusa exec ./src/scripts/seed.ts",
     "cleanup": "medusa exec ./src/scripts/cleanup-legacy-rafid.ts",
-    "email:test": "medusa exec ./src/scripts/send-test-email.ts"
+    "email:test": "medusa exec ./src/scripts/send-test-email.ts",
+    "stripe:smoke": "medusa exec ./src/scripts/stripe-smoke.ts"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "2.22.0",

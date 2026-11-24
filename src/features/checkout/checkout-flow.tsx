@@ -281,9 +281,10 @@ export function CheckoutFlow() {
         setError(t("noShippingOptions"))
       }
     } catch (prepareError) {
-      setError(
-        prepareError instanceof Error ? prepareError.message : t("genericError")
-      )
+      // Provider/backend errors can contain Stripe JSON and account ids; keep
+      // them in the console and show the customer a message we wrote.
+      console.error("checkout prepare failed", prepareError)
+      setError(t("genericError"))
     } finally {
       setLoading(false)
       setOptionsLoading(false)
@@ -334,9 +335,10 @@ export function CheckoutFlow() {
 
       setStep("payment")
     } catch (initError) {
-      setError(
-        initError instanceof Error ? initError.message : t("genericError")
-      )
+      // Never surface the provider message: it may carry Stripe error JSON,
+      // the account id and Dashboard links. The customer gets a fixed line.
+      console.error("checkout init failed", initError)
+      setError(t("paymentError"))
     } finally {
       setLoading(false)
     }

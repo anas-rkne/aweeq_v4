@@ -80,10 +80,6 @@ const OPTIONAL_IN_PRODUCTION = {
     NEXT_PUBLIC_META_PIXEL_ID: "Meta Pixel browser events",
   },
   api: {
-    STRIPE_SECRET_KEY:
-      "online card payments (checkout cannot complete without it)",
-    STRIPE_WEBHOOK_SECRET:
-      "Stripe webhooks (orders stay unauthorised without it)",
     RESEND_API_KEY: "order confirmation emails (outbox events stay pending)",
     EMAIL_FROM: "verified sender address for Resend",
     EMAIL_REPLY_TO: "reply-to address on customer emails",
@@ -159,6 +155,41 @@ for (const [label, source, config] of [
       else warnings.push(`${message} (optional outside production)`)
     }
   }
+}
+
+/* Stripe keys are not warnings. Without STRIPE_SECRET_KEY the Checkout Session
+   call fails and every customer sees a 500; without STRIPE_WEBHOOK_SECRET the
+   endpoint cannot verify a single event, so it now rejects them all. A
+   production deploy must stop before it restarts a process in that state. */
+for (const key of ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"]) {
+  const value = api[key]
+  if (value) {
+    continue
+  }
+
+  const message = `medusa/.env: ${key} is not set — ${
+    key === "STRIPE_SECRET_KEY"
+      ? "online card payments cannot start a Checkout Session"
+      : "Stripe webhooks are rejected (signature cannot be verified)"
+  }`
+  if (PRODUCTION) problems.push(message)
+  else warnings.push(message)
+}
+
+if (
+  api.STRIPE_SECRET_KEY &&
+  !/^(sk|rk)_(live|test)_/.test(api.STRIPE_SECRET_KEY)
+) {
+  problems.push(
+    "medusa/.env: STRIPE_SECRET_KEY does not look like a Stripe secret/restricted key"
+  )
+}
+
+if (
+  api.STRIPE_WEBHOOK_SECRET &&
+  !api.STRIPE_WEBHOOK_SECRET.startsWith("whsec_")
+) {
+  problems.push("medusa/.env: STRIPE_WEBHOOK_SECRET does not start with whsec_")
 }
 
 /* A leftover test code silently reroutes every Conversions API event to
