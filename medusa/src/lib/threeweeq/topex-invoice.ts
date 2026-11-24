@@ -47,6 +47,17 @@ const fonts = {
 
 /* a Latin letter or a digit means the latin subset must carry that run */
 const LATIN_RE = /[A-Za-z0-9]/
+/* ...unless the run also carries Arabic, and only the Arabic subset has both */
+const ARABIC_RE = /[\u0600-\u06FF]/
+
+/**
+ * pdfmake breaks a line at every ordinary space and then places the pieces
+ * left-to-right, which reverses the words of an Arabic sentence. Joining the
+ * words with a non-breaking space keeps the run in one piece, so the shaper
+ * lays it out right-to-left as written.
+ */
+const NBSP = "\u00A0"
+const glue = (text: string) => text.trim().replace(/\s+/g, NBSP)
 
 type RunOptions = {
   bold?: boolean
@@ -55,7 +66,7 @@ type RunOptions = {
 }
 
 const ar = (text: string, options?: RunOptions): Content => ({
-  text,
+  text: glue(text),
   font: "Cairo",
   ...options,
 })
@@ -72,15 +83,17 @@ function value(raw: string | null | undefined, options?: RunOptions): Content {
   if (!clean) {
     return ar("—", options)
   }
-  return LATIN_RE.test(clean) ? en(clean, options) : ar(clean, options)
+  return LATIN_RE.test(clean) && !ARABIC_RE.test(clean)
+    ? en(clean, options)
+    : ar(clean, options)
 }
 
-/** an amount, Arabic-style: the currency sits left of the number */
+/** an amount, Arabic-style: the number first, the currency after it */
 function amount(v: number, options?: RunOptions): Content {
   return {
     text: [
-      { text: "د.إ ", font: "Cairo" },
       { text: v.toFixed(2), font: "CairoLatin", ...options },
+      { text: `${NBSP}د.إ`, font: "Cairo" },
     ],
   }
 }
@@ -92,7 +105,7 @@ function field(
   options?: RunOptions
 ): Content {
   return {
-    text: [content, { text: ` ${label}`, font: "Cairo", bold: true }],
+    text: [content, { text: ` ${glue(label)}`, font: "Cairo", bold: true }],
     alignment: "right",
     fontSize: 10,
     ...options,
@@ -203,13 +216,13 @@ function buildDocument(order: TopexInvoiceOrder): TDocumentDefinitions {
           alignment: "left",
           stack: [
             en("3WEEQ", { bold: true, fontSize: 18 }),
-            ar("ثري ويك", { fontSize: 10 }),
+            ar("عويق", { fontSize: 10 }),
             ...(STORE_TRN
               ? [
                   {
                     text: [
-                      { text: "الرقم الضريبي: ", font: "Cairo" },
-                      { text: STORE_TRN, font: "CairoLatin" },
+                      { text: `الرقم${NBSP}الضريبي:`, font: "Cairo" },
+                      { text: `${NBSP}${STORE_TRN}`, font: "CairoLatin" },
                     ],
                     fontSize: 9,
                   } as Content,
@@ -226,7 +239,7 @@ function buildDocument(order: TopexInvoiceOrder): TDocumentDefinitions {
             {
               text: [
                 { text: String(order.display_id), font: "CairoLatin" },
-                { text: " رقم الفاتورة: ", font: "Cairo" },
+                { text: ` ${glue("رقم الفاتورة:")}`, font: "Cairo" },
               ],
               alignment: "right",
               fontSize: 10,
@@ -234,7 +247,7 @@ function buildDocument(order: TopexInvoiceOrder): TDocumentDefinitions {
             {
               text: [
                 { text: date, font: "CairoLatin" },
-                { text: " التاريخ: ", font: "Cairo" },
+                { text: ` ${glue("التاريخ:")}`, font: "Cairo" },
               ],
               alignment: "right",
               fontSize: 10,
