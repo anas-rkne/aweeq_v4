@@ -380,7 +380,13 @@ function SoldOutBlock({ handle }: { handle: string }) {
             autoComplete="email"
             dir="ltr"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => {
+              setEmail(event.target.value)
+              // The complaint belongs to the attempt, not to the typing.
+              if (error) {
+                setError(null)
+              }
+            }}
             placeholder={t("notifyPlaceholder")}
             disabled={state === "sending"}
             className="h-12 w-full rounded-[var(--store-radius-sm)] border border-royal-navy/25 bg-royal-navy/[0.04] px-4 text-center font-primary text-small text-royal-navy placeholder:text-royal-navy/40 focus:border-gold focus:outline-none disabled:opacity-60"
@@ -396,7 +402,7 @@ function SoldOutBlock({ handle }: { handle: string }) {
           {error && (
             <p
               role="alert"
-              className="rounded-[var(--store-radius-sm)] border border-royal-navy/30 bg-royal-navy/[0.04] px-3 py-2 text-center font-primary text-small leading-6 text-royal-navy"
+              className="rounded-[var(--store-radius-sm)] border border-red-900/25 bg-red-900/[0.06] px-3 py-2 text-center font-primary text-small leading-6 text-red-900/85"
             >
               {error}
             </p>

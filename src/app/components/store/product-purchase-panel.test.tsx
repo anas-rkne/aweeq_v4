@@ -168,4 +168,17 @@ describe("ProductPurchasePanel sold-out state", () => {
     expect(screen.getByText("أدخل بريداً إلكترونياً صحيحاً.")).toBeTruthy()
     expect(fetchMock).not.toHaveBeenCalled()
   })
+
+  test("clears the complaint as soon as the shopper types", () => {
+    renderPanel(false)
+
+    fireEvent.click(screen.getByRole("button", { name: "أعلمني عند التوفّر" }))
+    expect(screen.getByText("أدخل بريداً إلكترونياً صحيحاً.")).toBeTruthy()
+
+    fireEvent.change(screen.getByPlaceholderText("بريدك الإلكتروني"), {
+      target: { value: "a" },
+    })
+
+    expect(screen.queryByText("أدخل بريداً إلكترونياً صحيحاً.")).toBeNull()
+  })
 })
