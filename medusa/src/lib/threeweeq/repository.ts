@@ -265,6 +265,49 @@ export class ThreeweeqRepository {
           return { subscriber: updated, created: false, resubscribed: true }
         }
 
+        /* One row per address, so a restock signup from someone already on the
+           newsletter would otherwise be dropped. Keep the product handles in
+           metadata so each waiting list stays exportable. */
+        const restockHandle = input.source?.startsWith("restock:")
+          ? input.source.slice("restock:".length).trim()
+          : ""
+
+        if (restockHandle) {
+          let metadata: Record<string, unknown> = {}
+
+          if (existing.metadata && typeof existing.metadata === "object") {
+            metadata = { ...(existing.metadata as Record<string, unknown>) }
+          } else if (typeof existing.metadata === "string") {
+            try {
+              const parsed = JSON.parse(existing.metadata)
+              metadata =
+                parsed && typeof parsed === "object"
+                  ? (parsed as Record<string, unknown>)
+                  : {}
+            } catch {
+              metadata = {}
+            }
+          }
+
+          const restock = Array.isArray(metadata.restock)
+            ? [...(metadata.restock as string[])]
+            : []
+
+          if (!restock.includes(restockHandle)) {
+            restock.push(restockHandle)
+
+            const [updated] = await trx("engagement.newsletter_subscriber")
+              .where({ id: existing.id })
+              .update({
+                metadata: JSON.stringify({ ...metadata, restock }),
+                updated_at: trx.fn.now(),
+              })
+              .returning("*")
+
+            return { subscriber: updated, created: false, resubscribed: false }
+          }
+        }
+
         return { subscriber: existing, created: false, resubscribed: false }
       }
 
