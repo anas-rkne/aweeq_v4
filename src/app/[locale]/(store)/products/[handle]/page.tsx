@@ -91,6 +91,12 @@ export default async function ProductDetailPage({
   const structuredPrice =
     product.default_variant?.price?.amount ?? product.price_range?.min
 
+  /* The whole plate is marked only when every size has run out, so a product
+     with one sold-out size keeps selling the others. */
+  const soldOut =
+    product.variants.length > 0 &&
+    product.variants.every((variant) => !variant.in_stock)
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -142,7 +148,7 @@ export default async function ProductDetailPage({
           )}
 
           <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
-            <ProductGallery product={product} />
+            <ProductGallery product={product} soldOut={soldOut} />
 
             <div className="lg:sticky lg:top-[calc(var(--store-header-h)+1.5rem)] lg:self-start">
               <ProductPurchasePanel product={product} />

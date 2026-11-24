@@ -73,7 +73,7 @@ export function HeroProductCard({ product }: { product: Product }) {
           className="inline-flex h-10 items-center rounded-[var(--store-radius-sm)] bg-gold px-4 font-primary text-sm font-bold text-royal-navy transition-colors duration-150 hover:bg-gold/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 md:h-11 md:flex-1 md:justify-center"
         >
           {!variant || !inStock
-            ? t("unavailable")
+            ? t("comingSoon")
             : isAdding
               ? t("adding")
               : t("addToCart")}

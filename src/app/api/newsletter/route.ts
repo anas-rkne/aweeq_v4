@@ -31,6 +31,20 @@ function resolveLocale(value: unknown): "ar" | "en" {
     : "ar"
 }
 
+/* A signup can say where it came from ("newsletter", "restock:rafid" …) so a
+   sold-out product keeps its own waiting list. Anything unexpected falls back
+   to the generic source rather than reaching the database. */
+const SOURCE_PATTERN = /^[a-z0-9][a-z0-9:_-]{0,60}$/
+
+function resolveSource(value: unknown): string {
+  if (typeof value !== "string") {
+    return "newsletter"
+  }
+
+  const source = value.trim().toLowerCase()
+  return SOURCE_PATTERN.test(source) ? source : "newsletter"
+}
+
 export async function POST(request: Request) {
   const forwardedFor = request.headers.get("x-forwarded-for")
   const clientKey = forwardedFor?.split(",")[0]?.trim() || "unknown"
@@ -49,11 +63,12 @@ export async function POST(request: Request) {
 
   const record =
     typeof payload === "object" && payload !== null
-      ? (payload as { email?: unknown; locale?: unknown })
+      ? (payload as { email?: unknown; locale?: unknown; source?: unknown })
       : {}
 
   const email = typeof record.email === "string" ? record.email.trim() : ""
   const locale = resolveLocale(record.locale)
+  const source = resolveSource(record.source)
 
   if (!EMAIL_PATTERN.test(email)) {
     return NextResponse.json({ error: "invalid_email" }, { status: 400 })
@@ -78,7 +93,7 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           email,
           locale,
-          source: "newsletter",
+          source,
         }),
         cache: "no-store",
       })
@@ -120,7 +135,7 @@ export async function POST(request: Request) {
           email,
           civilization_id: civilizationId,
           locale,
-          source: "newsletter",
+          source,
         }),
         cache: "no-store",
       })

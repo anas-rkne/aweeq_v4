@@ -8,6 +8,7 @@ import { normalizeImageUrl } from "@/lib/format"
 
 interface ProductGalleryProps {
   product: Product
+  soldOut?: boolean
 }
 
 /* The file provider stores an upload as `{timestamp}-{original name}.{ext}`,
@@ -27,7 +28,7 @@ function mediaIdentity(rawUrl: string | null | undefined) {
   return segment || null
 }
 
-export function ProductGallery({ product }: ProductGalleryProps) {
+export function ProductGallery({ product, soldOut = false }: ProductGalleryProps) {
   const t = useTranslations("Product")
   const images = useMemo(() => {
     const coverUrl = normalizeImageUrl(product.thumbnail)
@@ -104,9 +105,20 @@ export function ProductGallery({ product }: ProductGalleryProps) {
             alt={active.alt}
             fill
             preload
-            className="object-cover"
+            className={`object-cover ${soldOut ? "saturate-[0.85]" : ""}`}
             sizes="(min-width: 64rem) 50vw, 100vw"
           />
+
+          {soldOut && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-royal-navy/92 px-4 py-3 text-center backdrop-blur-sm">
+              <p className="font-primary text-[12px] font-bold leading-5 text-gold">
+                {t("outOfStock")}
+              </p>
+              <p className="font-primary text-[11px] leading-5 text-sand/75">
+                {t("comingSoon")}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

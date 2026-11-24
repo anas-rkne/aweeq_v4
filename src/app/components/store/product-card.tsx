@@ -62,7 +62,7 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
 
           {!hasStock && (
-            <span className="absolute end-2 top-2 rounded-full bg-royal-navy/90 px-2.5 py-1 font-primary text-[10px] leading-none text-sand/80">
+            <span className="absolute end-2 top-2 rounded-full border border-gold/40 bg-royal-navy/90 px-2.5 py-1 font-primary text-[10px] leading-none text-gold">
               {t("outOfStock")}
             </span>
           )}
@@ -77,6 +77,12 @@ export function ProductCard({ product }: ProductCardProps) {
         {origin && (
           <p className="mt-1 truncate font-primary text-[11px] leading-5 text-sand/60">
             {origin}
+          </p>
+        )}
+
+        {!hasStock && (
+          <p className="mt-1 font-primary text-[11px] leading-5 text-gold/70">
+            {t("comingSoon")}
           </p>
         )}
 
