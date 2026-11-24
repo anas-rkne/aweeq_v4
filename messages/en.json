@@ -427,6 +427,7 @@
     "pay": "Pay now",
     "processing": "Processing...",
     "paymentError": "Payment failed. Please try again.",
+    "stockBeforePayment": "An item in your cart is no longer available in the requested quantity. Update your cart and try again.",
     "genericError": "Something went wrong. Please try again.",
     "soldOutDuringPayment": "One of the pieces sold out while you were paying, so the order was not completed. You were not charged; any pending hold on your card is released automatically.",
     "invalidEmail": "Enter a valid email address.",

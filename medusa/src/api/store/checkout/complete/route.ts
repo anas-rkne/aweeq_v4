@@ -559,6 +559,61 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           }
         }
       }
+
+      /* A failure here can happen after the card was charged. Staying silent
+         is the worst outcome — the customer paid and nobody knows — so the
+         merchant gets one alert per cart. Never let the alert mask the
+         original failure. */
+      try {
+        const notifyTo = String(
+          process.env.ORDER_NOTIFICATION_EMAIL ?? ""
+        ).trim()
+
+        if (notifyTo) {
+          const settledCollection = await getCartPaymentCollection(
+            req.scope,
+            cartId
+          )
+          const settledSession = pickPaymentSession(settledCollection, {
+            sessionId: paymentSession?.id,
+          })
+
+          if (settledSession && isSessionAuthorized(settledSession)) {
+            const rawAmount = (settledSession as any).amount
+            const amount =
+              rawAmount && typeof rawAmount === "object" && "numeric" in rawAmount
+                ? Number((rawAmount as { numeric: number }).numeric)
+                : Number(rawAmount ?? 0)
+
+            await repository.enqueueOutboxOnce({
+              aggregateType: "cart",
+              aggregateId: cartId,
+              eventType: "order.payment_stuck",
+              payload: {
+                email: notifyTo,
+                cart_id: cartId,
+                payment_session_id: settledSession.id,
+                amount: Number.isFinite(amount) ? amount : 0,
+                currency_code:
+                  (settledSession as any).currency_code ??
+                  (cart as any).currency_code ??
+                  "aed",
+                reason:
+                  error instanceof Error ? error.message : "checkout_failed",
+                created_at: new Date().toISOString(),
+              },
+            })
+          }
+        }
+      } catch (alertError) {
+        req.scope
+          .resolve<any>(ContainerRegistrationKeys.LOGGER)
+          ?.warn?.(
+            `checkout: could not raise the stuck-payment alert for ${cartId}: ${
+              alertError instanceof Error ? alertError.message : String(alertError)
+            }`
+          )
+      }
     }
 
     await repository.failIdempotency(

@@ -163,10 +163,10 @@ const POLICIES: Policy[] = [
         headingAr: "كيف أطلب استرجاعًا؟",
         headingEn: "How to request a return",
         bodyAr: [
-          "راسلنا على care@3weeq.ae مع رقم الطلب خلال المهلة أعلاه. نرد خلال يوم عمل واحد، ونتحمّل نحن تكلفة الشحن في حال وجود عيب تصنيعي.",
+          "راسلنا على 3weeq.971@gmail.com مع رقم الطلب خلال المهلة أعلاه. نرد خلال يوم عمل واحد، ونتحمّل نحن تكلفة الشحن في حال وجود عيب تصنيعي.",
         ],
         bodyEn: [
-          "Email care@3weeq.ae with your order number within the window above. We reply within one business day, and we cover return shipping when there is a manufacturing defect.",
+          "Email 3weeq.971@gmail.com with your order number within the window above. We reply within one business day, and we cover return shipping when there is a manufacturing defect.",
         ],
       },
     ],
@@ -205,11 +205,11 @@ const POLICIES: Policy[] = [
         headingEn: "Payment",
         bodyAr: [
           "يُعالج الدفع عبر مزوّد دفع معتمد، ولا نحتفظ ببيانات بطاقتك على خوادمنا. يصدر إيصال الطلب بالبريد الإلكتروني بعد نجاح الدفع.",
-          "لأغراض الفوترة، رقم التسجيل الضريبي (TRN) متاح عند الطلب عبر care@3weeq.ae ويظهر على الفاتورة الضريبية.",
+          "لأغراض الفوترة، رقم التسجيل الضريبي (TRN) متاح عند الطلب عبر 3weeq.971@gmail.com ويظهر على الفاتورة الضريبية.",
         ],
         bodyEn: [
           "Payment is processed by an authorised payment provider and card details are never stored on our servers. An order receipt is emailed once payment succeeds.",
-          "For invoicing, our Tax Registration Number (TRN) is available on request at care@3weeq.ae and appears on the tax invoice.",
+          "For invoicing, our Tax Registration Number (TRN) is available on request at 3weeq.971@gmail.com and appears on the tax invoice.",
         ],
       },
       {

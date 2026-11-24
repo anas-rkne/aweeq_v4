@@ -5,7 +5,9 @@ import type {
 import {
   ContainerRegistrationKeys,
   MedusaError,
+  Modules,
 } from "@medusajs/framework/utils"
+import { refundPaymentWorkflow } from "@medusajs/medusa/core-flows"
 import { ThreeweeqRepository } from "../../../../lib/threeweeq/repository"
 import {
   normalizePaymentWebhook,
@@ -15,7 +17,7 @@ import {
   verifyStripeSignature,
   verifyTapSignature,
 } from "../../../../lib/payments/signatures"
-import { resolveOrderId } from "../../../../lib/threeweeq/orders"
+import { resolveOrderId, retrieveOrder } from "../../../../lib/threeweeq/orders"
 import {
   findOrderByCart,
   getCartPaymentCollection,
@@ -138,10 +140,124 @@ async function authorizeSession(
   }
 }
 
+/**
+ * Reconcile a refund that happened outside Medusa.
+ *
+ * The provider refuses to refund twice — it compares the PaymentIntent's
+ * `amount_refunded` — so recording the refund here updates the order without
+ * moving money again. When the refund was issued from Medusa the recorded total
+ * already matches, and nothing is written.
+ */
+async function reconcileRefund(
+  container: MedusaRequest["scope"],
+  event: NormalizedPaymentWebhook
+) {
+  const logger = container.resolve<any>(ContainerRegistrationKeys.LOGGER)
+  const paymentIntentId = event.paymentIntentId
+
+  if (!paymentIntentId) {
+    logger.warn("payments: charge.refunded without a payment_intent; skipped")
+    return
+  }
+
+  const repository = new ThreeweeqRepository(container)
+  const payment = await repository.findPaymentByPaymentIntent(paymentIntentId)
+
+  if (!payment?.id) {
+    logger.warn(
+      `payments: refund for ${paymentIntentId} has no Medusa payment; nothing to reconcile`
+    )
+    return
+  }
+
+  /* `amount_refunded` is cumulative, so comparing it with what Medusa already
+     recorded keeps partial refunds correct and makes a repeated event a no-op. */
+  const target = Number(event.refundedTotal ?? event.amount ?? 0)
+  if (!Number.isFinite(target) || target <= 0) {
+    return
+  }
+
+  const paymentModule = container.resolve<any>(Modules.PAYMENT)
+  const refunds = await paymentModule.listRefunds({ payment_id: payment.id })
+  const recorded = (refunds ?? []).reduce(
+    (sum: number, refund: any) =>
+      sum + Number(refund?.amount?.numeric ?? refund?.amount ?? 0),
+    0
+  )
+
+  const missing = target - recorded
+
+  if (missing <= 0.01) {
+    logger.info(
+      `payments: refund for ${paymentIntentId} already recorded in Medusa; nothing to do`
+    )
+    return
+  }
+
+  await refundPaymentWorkflow(container).run({
+    input: {
+      payment_id: payment.id,
+      amount: missing,
+      note: `stripe refund ${event.refundId ?? paymentIntentId}`,
+      idempotency_key: `stripe-refund:${event.refundId ?? paymentIntentId}`,
+    },
+  })
+
+  logger.info(
+    `payments: refund reconciled for order payment ${payment.id} (${missing})`
+  )
+
+  const orderId = await resolveOrderId(container, { paymentId: payment.id })
+  if (!orderId) {
+    logger.warn(
+      `payments: refund recorded for ${payment.id} but no order is linked to it`
+    )
+    return
+  }
+
+  const order = await retrieveOrder(container, orderId)
+  const notifyTo = String(process.env.ORDER_NOTIFICATION_EMAIL ?? "").trim()
+  const orderLocale =
+    (order?.metadata as Record<string, unknown> | null)?.locale === "en"
+      ? "en"
+      : "ar"
+  const base = {
+    order_id: orderId,
+    display_id: order?.display_id ?? null,
+    amount: missing,
+    currency_code: order?.currency_code ?? event.currency ?? "aed",
+    refund_id: event.refundId ?? null,
+    created_at: new Date().toISOString(),
+  }
+
+  if (order?.email) {
+    await repository.enqueueOutbox({
+      aggregateType: "order",
+      aggregateId: orderId,
+      eventType: "order.refunded",
+      payload: { ...base, email: order.email, locale: orderLocale },
+    })
+  }
+
+  if (notifyTo) {
+    await repository.enqueueOutbox({
+      aggregateType: "order",
+      aggregateId: orderId,
+      eventType: "order.refunded_admin",
+      payload: { ...base, email: notifyTo },
+    })
+  }
+}
+
 async function handlePaymentEvent(
   container: MedusaRequest["scope"],
   event: NormalizedPaymentWebhook
 ) {
+  if (event.action === "refunded") {
+    await reconcileRefund(container, event)
+    return
+  }
+
   if (event.action === "authorized") {
     await authorizeSession(container, event)
     return

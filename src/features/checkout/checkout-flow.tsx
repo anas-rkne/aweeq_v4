@@ -17,6 +17,7 @@ import {
   type MetaEventParams,
 } from "@/lib/meta-pixel"
 import { useCart } from "@/app/components/store/cart-provider"
+import { MedusaApiError } from "@/shared/lib/medusa-fetch"
 import {
   fetchShippingOptions,
   initCheckout,
@@ -335,6 +336,17 @@ export function CheckoutFlow() {
 
       setStep("payment")
     } catch (initError) {
+      // A cart that outlived its stock is refused before Stripe is involved,
+      // so the customer can fix the cart instead of paying for nothing.
+      if (
+        initError instanceof MedusaApiError &&
+        initError.status === 409 &&
+        String(initError.details ?? "").includes("insufficient_stock")
+      ) {
+        setError(t("stockBeforePayment"))
+        return
+      }
+
       // Never surface the provider message: it may carry Stripe error JSON,
       // the account id and Dashboard links. The customer gets a fixed line.
       console.error("checkout init failed", initError)

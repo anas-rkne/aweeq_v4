@@ -1129,6 +1129,18 @@ export class ThreeweeqRepository {
   }
 
   /**
+   * The Medusa payment behind a Stripe PaymentIntent. `charge.refunded` carries
+   * the intent, not our session id, so this is how a Dashboard refund finds the
+   * order it belongs to.
+   */
+  async findPaymentByPaymentIntent(paymentIntentId: string) {
+    return this.db("payment")
+      .whereRaw("data->>'payment_intent' = ?", [paymentIntentId])
+      .whereNull("deleted_at")
+      .first()
+  }
+
+  /**
    * Paid Stripe checkouts whose cart never produced an order — the shopper paid
    * and closed the tab before the storefront called `complete`. Only events old
    * enough that the normal browser flow has finished are returned, so the
@@ -1144,12 +1156,24 @@ export class ThreeweeqRepository {
           "(array_agg(id order by received_at desc))[1]"
         ),
         received_at: this.db.raw("max(received_at)"),
+        payment_session_id: this.db.raw(
+          "max(payload->'data'->'object'->'metadata'->>'session_id')"
+        ),
+        amount: this.db.raw(
+          "max((payload->'data'->'object'->>'amount_total')::numeric) / 100"
+        ),
+        currency_code: this.db.raw(
+          "max(payload->'data'->'object'->>'currency')"
+        ),
       })
       .where({
         provider: "stripe",
         event_type: "checkout.session.completed",
-        status: "processed",
       })
+      /* A failed event is still a verified one: signature failures never reach
+         the table. Excluding it meant a webhook that errored five times
+         dropped a real payment out of recovery for good. */
+      .whereIn("status", ["processed", "failed"])
       .whereRaw("payload->'data'->'object'->>'payment_status' = 'paid'")
       .whereRaw(`${cartIdExpr} is not null`)
       .whereRaw("received_at < now() - (? || ' minutes')::interval", [
@@ -1164,6 +1188,9 @@ export class ThreeweeqRepository {
       cart_id: string
       webhook_event_id: string
       received_at: string
+      payment_session_id: string | null
+      amount: string | null
+      currency_code: string | null
     }>
   }
 

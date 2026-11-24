@@ -22,6 +22,7 @@ import {
   isSessionAuthorized,
   pickPaymentSession,
 } from "../../../../lib/threeweeq/checkout"
+import { getVariantStockMap } from "../../../../lib/threeweeq/inventory"
 import type { Locale } from "../../../../lib/threeweeq/repository"
 
 type CheckoutInitBody = {
@@ -73,6 +74,49 @@ function serializableAmount(value: unknown) {
   }
 
   return value === undefined || value === null ? null : Number(value)
+}
+
+/* Stripe Checkout Sessions carry `expires_at` in seconds. A session that is
+   still payable is handed back instead of minting another one, so a second
+   click on «ادفع» cannot leave a second payable page behind. */
+function sessionExpiresAt(session: any) {
+  const raw = session?.data?.expires_at
+  const value = Number(raw)
+  return Number.isFinite(value) && value > 0 ? value : null
+}
+
+function isReusableSession(session: any, cartTotal: number) {
+  if (!session || isSessionAuthorized(session)) {
+    return false
+  }
+
+  if (!redirectUrlOf(session)) {
+    return false
+  }
+
+  /* The page was priced when it was created. Reusing it after the cart changed
+     would charge the old amount, so a different total always means a new page. */
+  const rawAmount = session?.amount
+  const sessionAmount =
+    rawAmount && typeof rawAmount === "object" && "numeric" in rawAmount
+      ? Number((rawAmount as { numeric: number }).numeric)
+      : Number(rawAmount ?? 0)
+
+  if (
+    Number.isFinite(cartTotal) &&
+    cartTotal > 0 &&
+    Math.abs(sessionAmount - cartTotal) > 0.01
+  ) {
+    return false
+  }
+
+  const expiresAt = sessionExpiresAt(session)
+  return expiresAt !== null && expiresAt * 1000 > Date.now() + 60_000
+}
+
+function stripeSessionIdOf(session: any) {
+  const id = String(session?.data?.id ?? "").trim()
+  return id.startsWith("cs_") ? id : undefined
 }
 
 function optionAmount(option: any) {
@@ -157,6 +201,45 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       MedusaError.Types.INVALID_DATA,
       "Cannot start checkout with an empty cart"
     )
+  }
+
+  /* Stock is reserved when the order is created, which is after the customer
+     has paid. A cart that sat open while the last piece sold would take the
+     money and then fail, so the shelf is checked before Stripe is involved. */
+  const variantIds = (cart.items ?? [])
+    .map((item) => item.variant_id)
+    .filter((id): id is string => Boolean(id))
+
+  if (variantIds.length) {
+    const stock = await getVariantStockMap(req.scope, variantIds)
+    const shortages = (cart.items ?? [])
+      .map((item) => {
+        const entry = item.variant_id ? stock.get(item.variant_id) : null
+        const quantity = Number(item.quantity ?? 0)
+
+        if (!entry?.managed || entry.available >= quantity) {
+          return null
+        }
+
+        return {
+          item_id: item.id,
+          variant_id: item.variant_id ?? null,
+          title: item.product_title ?? item.title ?? null,
+          requested: quantity,
+          available: entry.available,
+        }
+      })
+      .filter(Boolean)
+
+    if (shortages.length) {
+      res.status(409).json({
+        code: "insufficient_stock",
+        message:
+          "Some items in this cart are no longer available in the requested quantity",
+        items: shortages,
+      })
+      return
+    }
   }
 
   const email = body.email?.trim() || cart.email || null
@@ -252,8 +335,16 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   })
 
   let session = existingSession
+  const reuseSession = isReusableSession(
+    existingSession,
+    Number((cart as any).total ?? 0)
+  )
 
-  if (!session || !isSessionAuthorized(session)) {
+  if (!session || (!reuseSession && !isSessionAuthorized(session))) {
+    /* Capture the page we are about to replace before Medusa deletes the
+       session that points at it, so the provider can expire it at Stripe. */
+    const previousCheckoutSessionId = stripeSessionIdOf(existingSession)
+
     const createdSession = await createPaymentSessionsWorkflow(req.scope).run({
       input: {
         payment_collection_id: collection.id,
@@ -264,6 +355,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           ...(metadata.drop_id ? { drop_id: metadata.drop_id } : {}),
           locale,
           ...(email ? { email } : {}),
+          ...(previousCheckoutSessionId
+            ? { previous_checkout_session_id: previousCheckoutSessionId }
+            : {}),
         },
       },
     })

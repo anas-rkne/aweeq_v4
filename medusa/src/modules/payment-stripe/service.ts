@@ -3,6 +3,7 @@ import {
   BigNumber,
   MedusaError,
 } from "@medusajs/framework/utils"
+import { createHash } from "node:crypto"
 import type {
   AuthorizePaymentInput,
   AuthorizePaymentOutput,
@@ -39,6 +40,7 @@ type StripePaymentIntent = {
   status?: string
   amount?: number
   amount_received?: number
+  amount_refunded?: number
   currency?: string
   client_secret?: string
   metadata?: Record<string, string>
@@ -81,13 +83,15 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
   private async request<T>(
     path: string,
     method: "GET" | "POST",
-    form?: URLSearchParams
+    form?: URLSearchParams,
+    idempotencyKey?: string
   ): Promise<T> {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method,
       headers: {
         Authorization: `Bearer ${this.options_.apiKey}`,
         "Content-Type": "application/x-www-form-urlencoded",
+        ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
       },
       body: method === "POST" ? (form ?? new URLSearchParams()).toString() : undefined,
     })
@@ -197,10 +201,55 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
       form.set(`metadata[${key}]`, value)
     }
 
+    /* A network drop after Stripe accepted the request must not produce a
+       second payable page. The key is derived from the cart, the amount and the
+       session we are replacing, so an identical retry returns the same Stripe
+       session, a changed cart gets a fresh one, and a deliberate replacement
+       never collides with the page it replaced. */
+    const stableId = String(data.cart_id ?? data.session_id ?? "").trim()
+    const previousSessionId = String(
+      data.previous_checkout_session_id ?? ""
+    ).trim()
+    const idempotencyKey = stableId
+      ? createHash("sha256")
+          .update(
+            [
+              "checkout",
+              stableId,
+              previousSessionId || "0",
+              this.toMinorUnits(input.amount),
+              input.currency_code.toLowerCase(),
+            ].join(":")
+          )
+          .digest("hex")
+      : undefined
+
+    /* The page we are about to replace stays payable for 24 hours unless it is
+       expired first, and a payment on it would land on a session Medusa no
+       longer knows. Expiring is best-effort: an already-expired session answers
+       410 and a paid one cannot be expired, and neither should block checkout. */
+    if (previousSessionId.startsWith("cs_")) {
+      try {
+        await this.request(
+          `/checkout/sessions/${previousSessionId}/expire`,
+          "POST",
+          new URLSearchParams(),
+          `expire:${previousSessionId}`
+        )
+      } catch (error) {
+        this.logger_.warn(
+          `stripe: could not expire previous checkout session ${previousSessionId}: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        )
+      }
+    }
+
     const session = await this.request<StripeCheckoutSession>(
       "/checkout/sessions",
       "POST",
-      form
+      form,
+      idempotencyKey
     )
 
     // The store accepts cards only. Dynamic payment methods mean Stripe now
@@ -299,9 +348,33 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
 
     const form = new URLSearchParams()
     form.set("payment_intent", id)
-    form.set("amount", String(this.toMinorUnits(input.amount)))
+    const requested = this.toMinorUnits(input.amount)
+    form.set("amount", String(requested))
 
-    await this.request("/refunds", "POST", form)
+    /* A refund made from the Stripe Dashboard never reaches Medusa, so the
+       order can still look paid here. Reading the PaymentIntent first means
+       reconciling that refund never moves money twice. */
+    const intent = await this.request<StripePaymentIntent>(
+      `/payment_intents/${id}`,
+      "GET"
+    )
+    const alreadyRefunded = Number(intent.amount_refunded ?? 0)
+
+    if (alreadyRefunded >= requested) {
+      this.logger_.info(
+        `stripe: ${id} already refunded ${alreadyRefunded} of ${requested}; recording it without a second refund`
+      )
+      return {
+        data: input.data ?? {},
+      }
+    }
+
+    await this.request(
+      "/refunds",
+      "POST",
+      form,
+      `refund:${id}:${requested}`
+    )
 
     return {
       data: input.data ?? {},
@@ -322,7 +395,8 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
     await this.request(
       `/payment_intents/${id}/cancel`,
       "POST",
-      new URLSearchParams()
+      new URLSearchParams(),
+      `cancel:${id}`
     )
 
     return {

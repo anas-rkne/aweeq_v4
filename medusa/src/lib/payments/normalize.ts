@@ -3,6 +3,7 @@ export type PaymentAction =
   | "captured"
   | "failed"
   | "canceled"
+  | "refunded"
   | "ignored"
 
 export type NormalizedPaymentWebhook = {
@@ -14,6 +15,9 @@ export type NormalizedPaymentWebhook = {
   cartId?: string
   orderId?: string
   paymentId?: string
+  paymentIntentId?: string
+  refundId?: string
+  refundedTotal?: number
   amount?: number
   currency?: string
   payload: Record<string, unknown>
@@ -87,6 +91,41 @@ export function normalizePaymentWebhook(
             ? undefined
             : Number(object.amount_total) / 100,
         currency: stringValue(object.currency),
+        payload: body,
+      }
+    }
+
+    /* A refund made from the Stripe Dashboard never passes through Medusa, so
+       the order keeps saying "paid". The newest entry in `refunds.data` is the
+       refund this event is about; `amount_refunded` is cumulative and would
+       double-count when a payment is refunded in parts. */
+    if (type === "charge.refunded") {
+      const refundList = metadataOf(object.refunds)
+      const refunds = Array.isArray(refundList.data)
+        ? (refundList.data as Array<Record<string, unknown>>)
+        : []
+      const latest = refunds[0] ?? {}
+      const refundedMinor =
+        latest.amount !== undefined
+          ? Number(latest.amount)
+          : Number(object.amount_refunded ?? 0)
+
+      return {
+        provider: "stripe",
+        externalId: stringValue(body.id) ?? null,
+        eventType: type,
+        action: "refunded",
+        paymentIntentId: stringValue(object.payment_intent),
+        refundId: stringValue(latest.id),
+        refundedTotal: Number.isFinite(Number(object.amount_refunded))
+          ? Number(object.amount_refunded) / 100
+          : undefined,
+        amount: Number.isFinite(refundedMinor) ? refundedMinor / 100 : undefined,
+        currency: stringValue(object.currency),
+        sessionId: stringValue(metadata.session_id),
+        cartId: stringValue(metadata.cart_id),
+        orderId: stringValue(metadata.order_id),
+        paymentId: stringValue(metadata.payment_id),
         payload: body,
       }
     }

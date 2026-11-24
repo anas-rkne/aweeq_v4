@@ -101,7 +101,7 @@ function supportEmail() {
     .map((entry) => emailAddress(entry))
     .find((entry) => entry.includes("@"))
 
-  return configured ?? "care@3weeq.ae"
+  return configured ?? "3weeq.971@gmail.com"
 }
 
 /** Dubai time, Latin digits — an order alert is read on a phone, not parsed. */
@@ -570,6 +570,177 @@ function adminOrderEmail(event: OutboxEvent) {
   return { subject, html, text }
 }
 
+/**
+ * The operator alert for money that arrived without an order. Written to be
+ * read on a phone: what happened, how much, and which cart to open.
+ */
+function paymentStuckEmail(event: OutboxEvent) {
+  const payload = event.payload ?? {}
+  const currency = String(payload.currency_code ?? "aed").toUpperCase()
+  const amount = formatMoney(payload.amount ?? payload.total, "ar", currency)
+  const cartId = String(payload.cart_id ?? payload.order_id ?? "")
+  const sessionId = String(payload.payment_session_id ?? "")
+  const reason = String(payload.reason ?? "").trim()
+  const createdAt = formatDateTime(payload.created_at)
+  const subject = `⚠️ دفعة بدون طلب — ${amount}`
+
+  const row = (label: string, value: string) =>
+    value
+      ? `<tr>
+           <td style="padding:6px 0;color:#6b7280">${label}</td>
+           <td style="padding:6px 0;color:#1f2937;font-weight:bold;text-align:end;word-break:break-all">${escapeHtml(
+             value
+           )}</td>
+         </tr>`
+      : ""
+
+  const html = `<!doctype html>
+<html dir="rtl" lang="ar">
+  <head><meta charset="utf-8"><title>3WEEQ</title></head>
+  <body style="margin:0;background:#0b1020;padding:24px;font-family:Arial,Helvetica,sans-serif">
+    <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden">
+      <tr>
+        <td style="background:#0b1020;color:#cd9e61;padding:20px;font-size:20px;letter-spacing:4px">3WEEQ</td>
+      </tr>
+      <tr>
+        <td style="padding:24px;color:#1f2937;font-size:15px;line-height:1.7">
+          <p style="margin:0 0 12px;font-size:18px;font-weight:bold;color:#b91c1c">دفعة ناجحة لكن الطلب لم يُنشأ</p>
+          <p style="margin:0 0 16px">وصلنا تأكيد دفع من Stripe، لكن إنشاء الطلب فشل. المبلغ محتجز لدى Stripe والعميل بلا طلب — تدخّل مطلوب.</p>
+          <table role="presentation" width="100%" style="font-size:14px">
+            ${row("المبلغ", amount)}
+            ${row("السلة", cartId)}
+            ${row("جلسة الدفع", sessionId)}
+            ${row("الوقت", createdAt)}
+            ${row("السبب", reason)}
+          </table>
+          <p style="margin:16px 0 0;font-size:13px;color:#6b7280">افتح الطلب من Medusa، وتحقّق من Stripe قبل أي استرجاع.</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`
+
+  const text = [
+    "دفعة ناجحة لكن الطلب لم يُنشأ — تدخّل مطلوب",
+    `المبلغ: ${amount}`,
+    cartId ? `السلة: ${cartId}` : "",
+    sessionId ? `جلسة الدفع: ${sessionId}` : "",
+    createdAt ? `الوقت: ${createdAt}` : "",
+    reason ? `السبب: ${reason}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+
+  return { subject, html, text }
+}
+
+/** The customer learns the money is coming back without having to ask. */
+function refundedEmail(event: OutboxEvent) {
+  const payload = event.payload ?? {}
+  const locale = payload.locale === "en" ? "en" : "ar"
+  const currency = String(payload.currency_code ?? "aed").toUpperCase()
+  const amount = formatMoney(payload.amount, locale, currency)
+  const orderNumber = payload.display_id
+    ? `#${payload.display_id}`
+    : String(payload.order_id ?? "")
+  const support = supportEmail()
+
+  const copy =
+    locale === "ar"
+      ? {
+          subject: `تم استرجاع مبلغ الطلب ${orderNumber} — 3WEEQ`,
+          heading: "تم استرجاع المبلغ",
+          intro: `أعدنا لك ${amount} عن الطلب ${orderNumber}. يظهر المبلغ في حسابك حسب مدة إصدار البطاقة، وقد يستغرق من ٥ إلى ١٠ أيام عمل.`,
+          footer: `لأي استفسار: ${support}`,
+          dir: "rtl",
+        }
+      : {
+          subject: `Refund issued for order ${orderNumber} — 3WEEQ`,
+          heading: "Refund issued",
+          intro: `We refunded ${amount} for order ${orderNumber}. Your bank decides when it appears — usually within 5 to 10 business days.`,
+          footer: `Questions: ${support}`,
+          dir: "ltr",
+        }
+
+  const html = `<!doctype html>
+<html dir="${copy.dir}" lang="${locale}">
+  <head><meta charset="utf-8"><title>3WEEQ</title></head>
+  <body style="margin:0;background:#0b1020;padding:24px;font-family:Arial,Helvetica,sans-serif">
+    <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden">
+      <tr>
+        <td style="background:#0b1020;color:#cd9e61;padding:20px;font-size:20px;letter-spacing:4px">3WEEQ</td>
+      </tr>
+      <tr>
+        <td style="padding:24px;color:#1f2937;font-size:15px;line-height:1.7">
+          <p style="margin:0 0 12px;font-size:18px;font-weight:bold">${copy.heading}</p>
+          <p style="margin:0 0 16px">${escapeHtml(copy.intro)}</p>
+          <p style="margin:0;font-size:13px;color:#6b7280">${escapeHtml(
+            copy.footer
+          )}</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`
+
+  return {
+    subject: copy.subject,
+    html,
+    text: `${copy.heading}\n\n${copy.intro}\n\n${copy.footer}`,
+  }
+}
+
+/** The merchant gets the same fact, with the refund id for the books. */
+function refundedAdminEmail(event: OutboxEvent) {
+  const payload = event.payload ?? {}
+  const orderNumber = payload.display_id
+    ? `#${payload.display_id}`
+    : String(payload.order_id ?? "")
+  const amount = formatMoney(
+    payload.amount,
+    "ar",
+    String(payload.currency_code ?? "aed").toUpperCase()
+  )
+  const refundId = String(payload.refund_id ?? "")
+  const subject = `استرجاع على الطلب ${orderNumber} — ${amount}`
+
+  const html = `<!doctype html>
+<html dir="rtl" lang="ar">
+  <head><meta charset="utf-8"><title>3WEEQ</title></head>
+  <body style="margin:0;background:#0b1020;padding:24px;font-family:Arial,Helvetica,sans-serif">
+    <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden">
+      <tr>
+        <td style="background:#0b1020;color:#cd9e61;padding:20px;font-size:20px;letter-spacing:4px">3WEEQ</td>
+      </tr>
+      <tr>
+        <td style="padding:24px;color:#1f2937;font-size:15px;line-height:1.7">
+          <p style="margin:0 0 12px;font-size:18px;font-weight:bold">تم تسجيل استرجاع</p>
+          <p style="margin:0 0 6px"><strong>الطلب:</strong> ${escapeHtml(
+            orderNumber
+          )}</p>
+          <p style="margin:0 0 6px"><strong>المبلغ:</strong> ${escapeHtml(amount)}</p>
+          ${
+            refundId
+              ? `<p style="margin:0;font-size:13px;color:#6b7280">معرّف الاسترجاع: ${escapeHtml(
+                  refundId
+                )}</p>`
+              : ""
+          }
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`
+
+  return {
+    subject,
+    html,
+    text: [`تم تسجيل استرجاع — ${orderNumber}`, `المبلغ: ${amount}`, refundId ? `المعرّف: ${refundId}` : ""]
+      .filter(Boolean)
+      .join("\n"),
+  }
+}
+
 function templateFor(event: OutboxEvent) {
   switch (event.event_type) {
     case "order.confirmation":
@@ -578,6 +749,12 @@ function templateFor(event: OutboxEvent) {
       return shippedEmail(event)
     case "order.admin_notification":
       return adminOrderEmail(event)
+    case "order.payment_stuck":
+      return paymentStuckEmail(event)
+    case "order.refunded":
+      return refundedEmail(event)
+    case "order.refunded_admin":
+      return refundedAdminEmail(event)
     default:
       return null
   }
@@ -594,8 +771,8 @@ export function renderOutboxEvent(event: OutboxEvent) {
  */
 export async function sendOutboxEvent(event: OutboxEvent): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY
-  const from = process.env.EMAIL_FROM ?? "3WEEQ <care@3weeq.ae>"
-  const defaultReplyTo = process.env.EMAIL_REPLY_TO ?? "care@3weeq.ae"
+  const from = process.env.EMAIL_FROM ?? "3WEEQ <orders@3weeq.ae>"
+  const defaultReplyTo = process.env.EMAIL_REPLY_TO ?? "3weeq.971@gmail.com"
 
   if (!apiKey) {
     return { sent: false, skipped: true, reason: "email_not_configured" }

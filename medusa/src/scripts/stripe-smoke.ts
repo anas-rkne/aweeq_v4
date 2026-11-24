@@ -30,13 +30,15 @@ async function stripe<T>(
   path: string,
   method: "GET" | "POST",
   key: string,
-  form?: URLSearchParams
+  form?: URLSearchParams,
+  idempotencyKey?: string
 ): Promise<T> {
   const response = await fetch(`${API}${path}`, {
     method,
     headers: {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/x-www-form-urlencoded",
+      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
     },
     body: method === "POST" ? (form ?? new URLSearchParams()).toString() : undefined,
   })
@@ -82,14 +84,33 @@ export default async function stripeSmoke(_args: ExecArgs) {
   form.set("payment_intent_data[receipt_email]", "smoke-test@3weeq.ae")
   form.set("metadata[smoke_test]", "1")
 
+  /* A retried request must return the same page. Creating it twice with one
+     Idempotency-Key is the cheapest proof that Stripe treats the call as one. */
+  const smokeKey = `smoke:${Date.now()}`
+
   const session = await stripe<StripeSession>(
     "/checkout/sessions",
     "POST",
     key,
-    form
+    form,
+    smokeKey
+  )
+
+  const duplicate = await stripe<StripeSession>(
+    "/checkout/sessions",
+    "POST",
+    key,
+    form,
+    smokeKey
   )
 
   const problems: string[] = []
+
+  if (duplicate.id !== session.id) {
+    problems.push(
+      `idempotency is not honoured: ${session.id} then ${duplicate.id}`
+    )
+  }
 
   if (!session.id?.startsWith("cs_")) {
     problems.push(`unexpected session id: ${session.id ?? "(missing)"}`)
@@ -115,6 +136,51 @@ export default async function stripeSmoke(_args: ExecArgs) {
     )
   }
 
+  /* The refund reconciliation only runs if Stripe is allowed to send the event.
+     Reading the endpoint list turns "remember to click Add events" into a
+     deploy-time check. A restricted key that cannot read webhooks is only a
+     warning — the endpoint itself is still verified from the Dashboard. */
+  const requiredEvents = [
+    "checkout.session.completed",
+    "payment_intent.succeeded",
+    "charge.refunded",
+  ]
+  let webhookStatus = "not checked"
+
+  try {
+    const endpoints = await stripe<{
+      data?: Array<{ url?: string; enabled_events?: string[] }>
+    }>("/webhook_endpoints?limit=100", "GET", key)
+
+    const endpoint = (endpoints.data ?? []).find((entry) =>
+      String(entry.url ?? "").includes("/api/webhooks/payments")
+    )
+
+    if (!endpoint) {
+      webhookStatus = "MISSING"
+      problems.push(
+        "no Stripe webhook endpoint points at /api/webhooks/payments"
+      )
+    } else {
+      const events = endpoint.enabled_events ?? []
+      const wildcard = events.includes("*")
+      const missing = wildcard
+        ? []
+        : requiredEvents.filter((name) => !events.includes(name))
+
+      if (missing.length) {
+        webhookStatus = `missing ${missing.join(", ")}`
+        problems.push(`the Stripe endpoint does not send: ${missing.join(", ")}`)
+      } else {
+        webhookStatus = wildcard ? "all events" : requiredEvents.join(", ")
+      }
+    }
+  } catch (error) {
+    webhookStatus = `not checked (${
+      error instanceof Error ? error.message : "unknown error"
+    })`
+  }
+
   if (session.id) {
     await stripe(`/checkout/sessions/${session.id}/expire`, "POST", key)
   }
@@ -122,6 +188,8 @@ export default async function stripeSmoke(_args: ExecArgs) {
   console.log(`session: ${session.id} (expired)`)
   console.log(`amount:  ${session.amount_total} ${session.currency}`)
   console.log(`methods: ${methods.join(", ") || "(none returned)"}`)
+  console.log(`idempotent: ${duplicate.id === session.id ? "yes" : "NO"}`)
+  console.log(`webhook events: ${webhookStatus}`)
 
   if (problems.length) {
     for (const problem of problems) console.log(`  FAIL  ${problem}`)
