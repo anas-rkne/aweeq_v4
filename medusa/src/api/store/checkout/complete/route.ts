@@ -17,6 +17,7 @@ import {
   type Locale,
 } from "../../../../lib/threeweeq/repository"
 import { sendPurchaseEvent } from "../../../../lib/meta/capi"
+import { retrieveOrder } from "../../../../lib/threeweeq/orders"
 import {
   findOrderByCart,
   findPaymentBySession,
@@ -40,27 +41,6 @@ type CartItem = {
   id: string
   variant_id?: string | null
   quantity: number
-}
-
-function extractOrder(result: any) {
-  const output = result?.result ?? result
-  if (!output) {
-    return null
-  }
-
-  if (output.order) {
-    return output.order
-  }
-
-  if (output.type === "order" && output.id) {
-    return output
-  }
-
-  if (output.id && Array.isArray(output.items)) {
-    return output
-  }
-
-  return null
 }
 
 async function countPurchasedQuantities(
@@ -352,19 +332,39 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       })),
     })
 
-    const result = await completeCartWorkflow(req.scope).run({
+    const completeResult = await completeCartWorkflow(req.scope).run({
       input: { id: cartId },
     })
-    const order = extractOrder(result)
 
-    if (!order?.id) {
+    /* `completeCartWorkflow` answers `{ id }` — never a { type, order } or
+       { type: "cart", error } envelope; that shape belongs to the store API
+       route built on top of it. Reading it as an envelope made every real
+       payment look like a failed completion after the order already existed. */
+    const completed = (completeResult?.result ?? completeResult) as {
+      id?: string
+    } | null
+    const completedOrderId = completed?.id
+
+    if (!completedOrderId) {
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
         "The cart could not be completed. Confirm the payment session is authorized."
       )
     }
 
+    /* The order exists from this point on: never release its reservations. */
     orderPlaced = true
+
+    const order =
+      (await findOrderByCart(req.scope, cartId)) ??
+      (await retrieveOrder(req.scope, completedOrderId))
+
+    if (!order?.id) {
+      throw new MedusaError(
+        MedusaError.Types.UNEXPECTED_STATE,
+        `Order ${completedOrderId} was created but could not be read back`
+      )
+    }
 
     let paymentCaptured = false
     let paymentId: string | null = null

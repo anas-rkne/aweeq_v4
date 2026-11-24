@@ -1,5 +1,6 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { retrieveOrder } from "./orders"
 
 export type CartPaymentSession = {
   id: string
@@ -81,28 +82,35 @@ export function pickPaymentSession(
   return usable[usable.length - 1] ?? null
 }
 
+/**
+ * The order that belongs to a cart.
+ *
+ * `Order` has no `cart_id` column — Medusa keeps the relationship in the
+ * `order_cart` link, exposed as `cart.order`. Filtering `order.cart_id` made
+ * every lookup throw "Trying to query by not existing property Order.cart_id",
+ * which is why paid carts never resolved to their order.
+ */
 export async function findOrderByCart(
   container: MedusaContainer,
   cartId: string
 ) {
   const query = container.resolve<any>(ContainerRegistrationKeys.QUERY)
+
   const { data } = await query.graph({
-    entity: "order",
-    fields: [
-      "id",
-      "status",
-      "customer_id",
-      "email",
-      "currency_code",
-      "items.id",
-      "items.variant_id",
-      "items.quantity",
-    ],
-    filters: { cart_id: cartId },
+    entity: "cart",
+    fields: ["id", "order.id"],
+    filters: { id: cartId },
     pagination: { skip: 0, take: 1 },
   })
 
-  return data?.[0] ?? null
+  const linked = data?.[0]?.order
+  const orderId = Array.isArray(linked) ? linked[0]?.id : linked?.id
+
+  if (!orderId) {
+    return null
+  }
+
+  return retrieveOrder(container, orderId)
 }
 
 export async function findPaymentBySession(
