@@ -1,4 +1,5 @@
 import type { Logger, MedusaContainer } from "@medusajs/framework/types"
+import { Modules } from "@medusajs/framework/utils"
 import { refundPaymentWorkflow } from "@medusajs/medusa/core-flows"
 import { ThreeweeqRepository } from "../lib/threeweeq/repository"
 import { findOrderByCart, findPaymentBySession } from "../lib/threeweeq/checkout"
@@ -57,6 +58,27 @@ export default async function resolveStuckPaymentsJob(
         )
 
         if (payment?.id) {
+          /* A refund made from the Dashboard (or a previous run of this job)
+             never disappears from the cash list, so check what Medusa already
+             recorded before asking for another one. */
+          const paymentModule = container.resolve<any>(Modules.PAYMENT)
+          const refunds = await paymentModule.listRefunds({
+            payment_id: payment.id,
+          })
+          const refundedTotal = (refunds ?? []).reduce(
+            (sum: number, refund: any) =>
+              sum + Number(refund?.amount?.numeric ?? refund?.amount ?? 0),
+            0
+          )
+          const paidAmount = Number(candidate.amount ?? 0)
+
+          if (paidAmount > 0 && refundedTotal >= paidAmount - 0.01) {
+            logger.info(
+              `resolve-stuck-payments: cart ${cartId} is already refunded; nothing to do`
+            )
+            continue
+          }
+
           try {
             await refundPaymentWorkflow(container).run({
               input: {

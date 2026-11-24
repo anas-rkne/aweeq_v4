@@ -8,6 +8,7 @@ import {
   createPaymentCollectionForCartWorkflow,
   createPaymentSessionsWorkflow,
   listShippingOptionsForCartWithPricingWorkflow,
+  refreshPaymentCollectionForCartWorkflow,
   updateCartWorkflow,
 } from "@medusajs/medusa/core-flows"
 import {
@@ -85,12 +86,29 @@ function sessionExpiresAt(session: any) {
   return Number.isFinite(value) && value > 0 ? value : null
 }
 
-function isReusableSession(session: any, cartTotal: number) {
+function isReusableSession(
+  session: any,
+  cartTotal: number,
+  email?: string | null
+) {
   if (!session || isSessionAuthorized(session)) {
     return false
   }
 
   if (!redirectUrlOf(session)) {
+    return false
+  }
+
+  /* The receipt address is fixed when the page is created. Reusing a page whose
+     email no longer matches would send the receipt to the wrong inbox. */
+  const sessionEmail = String(session?.data?.customer_email ?? "")
+    .trim()
+    .toLowerCase()
+  const wantedEmail = String(email ?? "")
+    .trim()
+    .toLowerCase()
+
+  if (sessionEmail && wantedEmail && sessionEmail !== wantedEmail) {
     return false
   }
 
@@ -330,20 +348,49 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     )
   }
 
-  const existingSession = pickPaymentSession(collection, {
-    providerId,
-  })
+  /* The page Medusa may replace: captured before a refresh can delete the
+     session that points at it, so the provider still knows what to expire. */
+  const priorSession = pickPaymentSession(collection, { providerId })
+  const priorStripeSessionId = stripeSessionIdOf(priorSession)
+
+  /* The collection keeps the amount it was created with. A cart that gained an
+     item or changed its emirate would otherwise be charged the old total, so
+     the amount is recomputed before a page is created or reused. An authorized
+     session is left alone — that cart is already paid for. */
+  if (!priorSession || !isSessionAuthorized(priorSession)) {
+    try {
+      await refreshPaymentCollectionForCartWorkflow(req.scope).run({
+        input: { cart_id: cartId },
+      })
+      collection =
+        (await getCartPaymentCollection(req.scope, cartId)) ?? collection
+    } catch (error) {
+      req.scope
+        .resolve<any>("logger")
+        ?.warn?.(
+          `checkout: could not refresh the payment collection for ${cartId}: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        )
+    }
+  }
+
+  const existingSession = priorSession
+    ? pickPaymentSession(collection, { sessionId: priorSession.id })
+    : pickPaymentSession(collection, { providerId })
 
   let session = existingSession
   const reuseSession = isReusableSession(
     existingSession,
-    Number((cart as any).total ?? 0)
+    Number((cart as any).total ?? 0),
+    email
   )
 
   if (!session || (!reuseSession && !isSessionAuthorized(session))) {
     /* Capture the page we are about to replace before Medusa deletes the
        session that points at it, so the provider can expire it at Stripe. */
-    const previousCheckoutSessionId = stripeSessionIdOf(existingSession)
+    const previousCheckoutSessionId =
+      stripeSessionIdOf(existingSession) ?? priorStripeSessionId
 
     const createdSession = await createPaymentSessionsWorkflow(req.scope).run({
       input: {

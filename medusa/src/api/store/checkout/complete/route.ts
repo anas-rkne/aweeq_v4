@@ -18,6 +18,7 @@ import {
 } from "../../../../lib/threeweeq/repository"
 import { sendPurchaseEvent } from "../../../../lib/meta/capi"
 import { retrieveOrder } from "../../../../lib/threeweeq/orders"
+import sendOrderConfirmationWorkflow from "../../../../workflows/send-order-confirmation"
 import {
   findOrderByCart,
   findPaymentBySession,
@@ -152,6 +153,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       "currency_code",
       "completed_at",
       "metadata",
+      "total",
       "items.id",
       "items.variant_id",
       "items.quantity",
@@ -320,6 +322,30 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       }
     }
 
+    /* The page was priced when it was created. If the cart changed in another
+       tab while the customer was on Stripe, the money taken and the order total
+       would disagree — refuse the order and let the merchant refund, instead of
+       booking an underpaid order. */
+    const rawSessionAmount = (paymentSession as any).amount
+    const sessionAmount =
+      rawSessionAmount &&
+      typeof rawSessionAmount === "object" &&
+      "numeric" in rawSessionAmount
+        ? Number((rawSessionAmount as { numeric: number }).numeric)
+        : Number(rawSessionAmount ?? 0)
+    const cartTotal = Number((cart as any).total ?? 0)
+
+    if (
+      sessionAmount > 0 &&
+      cartTotal > 0 &&
+      Math.abs(sessionAmount - cartTotal) > 0.01
+    ) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_DATA,
+        "The cart total changed after the payment page was created. Start checkout again so the amount charged matches the order."
+      )
+    }
+
     reservations = await repository.reserveCheckoutInventory({
       dropId: drop?.id ?? null,
       dropVariantIds,
@@ -418,6 +444,25 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       dropVariantIds,
     })
     finalized = true
+
+    /* The `payment_intent.succeeded` webhook is the usual sender, but Stripe
+       fires it before the browser reaches this route, so the order often does
+       not exist yet and the confirmation was silently dropped. Queuing it here
+       is the reliable half; `enqueueOutboxOnce` keeps a late webhook from
+       sending a second copy. */
+    try {
+      await sendOrderConfirmationWorkflow(req.scope).run({
+        input: { order_id: order.id },
+      })
+    } catch (error) {
+      req.scope
+        .resolve<any>(ContainerRegistrationKeys.LOGGER)
+        ?.warn?.(
+          `checkout: order ${order.id} was created but its confirmation was not queued: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        )
+    }
 
     /* Meta Conversions API: the reliable half of Purchase. The browser pixel
        sends the same event_id (the order id), so Meta deduplicates the two. */

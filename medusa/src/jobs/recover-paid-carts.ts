@@ -75,7 +75,15 @@ export default async function recoverPaidCartsJob(container: MedusaContainer) {
           "x-publishable-api-key": publishableKey,
           "x-idempotency-key": `recovery:${cartId}`,
         },
-        body: JSON.stringify({ cart_id: cartId }),
+        body: JSON.stringify({
+          cart_id: cartId,
+          /* Complete the session that was actually paid. Without it the route
+             picks whichever session is current, which may be a newer, unpaid
+             one and the retry would fail on a paid cart. */
+          ...(candidate.payment_session_id
+            ? { payment_session_id: candidate.payment_session_id }
+            : {}),
+        }),
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       })
 

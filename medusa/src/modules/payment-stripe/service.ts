@@ -226,8 +226,9 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
 
     /* The page we are about to replace stays payable for 24 hours unless it is
        expired first, and a payment on it would land on a session Medusa no
-       longer knows. Expiring is best-effort: an already-expired session answers
-       410 and a paid one cannot be expired, and neither should block checkout. */
+       longer knows. Expiring is best-effort — an already-expired session
+       answers 410 — but a page that is already *paid* must stop checkout
+       entirely, or the same cart could be charged twice. */
     if (previousSessionId.startsWith("cs_")) {
       try {
         await this.request(
@@ -237,6 +238,21 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
           `expire:${previousSessionId}`
         )
       } catch (error) {
+        const previous = await this.request<StripeCheckoutSession>(
+          `/checkout/sessions/${previousSessionId}`,
+          "GET"
+        ).catch(() => null)
+
+        if (
+          previous?.status === "complete" ||
+          previous?.payment_status === "paid"
+        ) {
+          throw new MedusaError(
+            MedusaError.Types.INVALID_DATA,
+            "This cart already has a completed payment page. Do not pay again — the order is being finalised."
+          )
+        }
+
         this.logger_.warn(
           `stripe: could not expire previous checkout session ${previousSessionId}: ${
             error instanceof Error ? error.message : String(error)
