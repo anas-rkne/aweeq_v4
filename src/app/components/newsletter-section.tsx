@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { useLocale, useTranslations } from "next-intl"
 import { useState, type FormEvent } from "react"
-import { trackLead } from "@/lib/meta-pixel"
+import { identifyMetaUser, trackLead } from "@/lib/meta-pixel"
 import { SectionFade } from "@/shared/ui/section-fade"
 
 type FormStatus = "idle" | "submitting" | "success" | "error"
@@ -60,7 +60,12 @@ export function NewsletterSection() {
       setStatus("success")
       setMessage(t("success"))
       setEmail("")
-      trackLead()
+      try {
+        identifyMetaUser({ email: value })
+        trackLead()
+      } catch {
+        /* tracking must never undo a saved subscription */
+      }
     } catch {
       setStatus("error")
       setMessage(t("network"))

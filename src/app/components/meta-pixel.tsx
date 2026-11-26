@@ -4,6 +4,7 @@ import Script from "next/script"
 import { usePathname } from "next/navigation"
 import { useEffect, useRef } from "react"
 import {
+  captureFbclid,
   flushMetaQueue,
   metaPixelId,
   trackPageView,
@@ -39,6 +40,10 @@ export function MetaPixel() {
      idempotent because flushing drains the queue. */
   useEffect(() => {
     if (!pixelId) return
+
+    /* Keep the click id even when an ad-blocker stops fbevents.js: the
+       server-side Purchase still needs `_fbc` to attribute the sale. */
+    captureFbclid()
 
     if (typeof window.fbq === "function") {
       flushMetaQueue()

@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { useSearchParams } from "next/navigation"
 import { useRouter } from "@/i18n/navigation"
 import { forgetCartId } from "@/lib/cart"
+import { readMetaCookies } from "@/lib/meta-pixel"
 import { completeCheckout } from "./api"
 
 const PENDING_CHECKOUT_KEY = "threeweeq_pending_checkout"
@@ -46,6 +47,9 @@ export function CheckoutCallback() {
           provider_id: pending.provider_id,
           locale,
           idempotency_key: pending.idempotency_key,
+          /* Sent in the body because the API host does not receive the
+             storefront's `_fbp` / `_fbc` cookies. */
+          ...readMetaCookies(),
         })
 
         if (active) {

@@ -4,7 +4,12 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import type { Product, ProductVariant } from "@/types"
 import { concentrationLabel, formatPrice, stockLabel } from "@/lib/format"
-import { trackAddToCart, trackViewContent } from "@/lib/meta-pixel"
+import {
+  identifyMetaUser,
+  trackAddToCart,
+  trackLead,
+  trackViewContent,
+} from "@/lib/meta-pixel"
 import { useCart } from "./cart-provider"
 
 interface ProductPurchasePanelProps {
@@ -328,6 +333,15 @@ function SoldOutBlock({ handle }: { handle: string }) {
 
       setState("sent")
       setEmail("")
+
+      try {
+        /* A restock signup is a lead: same identity treatment as the
+           newsletter, plus the Lead event the funnel was missing. */
+        identifyMetaUser({ email: value })
+        trackLead()
+      } catch {
+        /* tracking must never undo a saved signup */
+      }
     } catch {
       setState("idle")
       setError(t("notifyError"))

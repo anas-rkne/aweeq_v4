@@ -36,6 +36,9 @@ type CompleteCheckoutBody = {
   drop_id?: string | null
   gift_message?: string | null
   packaging_code?: string | null
+  /** Meta browser ids, used only for the Conversions API Purchase. */
+  fbp?: string
+  fbc?: string
 }
 
 type CartItem = {
@@ -83,6 +86,19 @@ async function countPurchasedQuantities(
   }
 
   return quantities
+}
+
+/**
+ * `_fbp` / `_fbc` are opaque browser ids with a fixed prefix. Anything else in
+ * the request body is dropped instead of being forwarded to Meta.
+ */
+function metaBrowserId(value: unknown): string | null {
+  if (typeof value !== "string") return null
+
+  const trimmed = value.trim()
+  if (!trimmed || trimmed.length > 300) return null
+
+  return /^fb\.\d+\.\d+\.[A-Za-z0-9._-]+$/.test(trimmed) ? trimmed : null
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
@@ -535,6 +551,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           items: metaItems,
           email: order.email ?? cart.email ?? null,
           phone: typeof shippingPhone === "string" ? shippingPhone : null,
+          fbp: metaBrowserId(body.fbp),
+          fbc: metaBrowserId(body.fbc),
           clientIp,
           userAgent,
           eventSourceUrl: storefrontUrl

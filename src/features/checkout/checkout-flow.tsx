@@ -12,6 +12,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { formatPrice } from "@/lib/format"
 import {
+  identifyMetaUser,
   trackAddPaymentInfo,
   trackInitiateCheckout,
   type MetaEventParams,
@@ -258,6 +259,11 @@ export function CheckoutFlow() {
     }
 
     localStorage.setItem(CHECKOUT_EMAIL_KEY, email.trim())
+
+    /* Meta advanced matching: from this point the buyer is known, so
+       AddPaymentInfo and Purchase carry the same email/phone as the CAPI. */
+    identifyMetaUser({ email: email.trim(), phone: phone.trim() })
+
     setError(null)
     setLoading(true)
     setOptionsLoading(true)

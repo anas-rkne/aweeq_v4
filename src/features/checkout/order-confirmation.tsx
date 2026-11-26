@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { formatPrice, normalizeImageUrl } from "@/lib/format"
 import type { StoreLocale } from "@/lib/format"
-import { trackPurchase } from "@/lib/meta-pixel"
+import { identifyMetaUser, trackPurchase } from "@/lib/meta-pixel"
 import { fetchGuestOrder, type GuestOrder } from "./api"
 
 const CHECKOUT_EMAIL_KEY = "threeweeq_checkout_email"
@@ -31,6 +31,15 @@ export function OrderConfirmation({ orderId }: { orderId: string }) {
 
         const response = await fetchGuestOrder(orderId, email)
         if (!active) return
+
+        /* The order page can be the first page after a redirect, so identify
+           the buyer again before Purchase fires. */
+        const shipping = response.order.shipping_address
+        identifyMetaUser({
+          email,
+          phone: typeof shipping?.phone === "string" ? shipping.phone : null,
+        })
+
         setOrder(response.order)
         setState("ready")
         try {

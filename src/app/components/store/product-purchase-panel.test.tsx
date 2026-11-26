@@ -10,8 +10,10 @@ vi.mock("./cart-provider", () => ({
 }))
 
 vi.mock("@/lib/meta-pixel", () => ({
-  trackViewContent: vi.fn(),
+  identifyMetaUser: vi.fn(),
   trackAddToCart: vi.fn(),
+  trackLead: vi.fn(),
+  trackViewContent: vi.fn(),
 }))
 
 const messages = {

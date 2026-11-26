@@ -17,6 +17,9 @@ const DEFAULT_API_VERSION = "v23.0"
 type MetaUserData = {
   email?: string | null
   phone?: string | null
+  externalId?: string | null
+  fbp?: string | null
+  fbc?: string | null
   clientIp?: string | null
   userAgent?: string | null
 }
@@ -41,11 +44,24 @@ function hashedEmail(email?: string | null) {
 }
 
 function normalizePhone(phone: string) {
-  const digits = phone.replace(/\D/g, "")
+  let digits = phone.replace(/\D/g, "")
 
-  /* UAE local mobile numbers are written 05XXXXXXXX; Meta's matching expects
-     the country code, so drop the trunk zero and prefix 971. */
+  if (digits.startsWith("00")) {
+    digits = digits.slice(2)
+  }
+
+  /* UAE numbers are written 05XXXXXXXX locally; Meta's matching expects the
+     country code, so drop the trunk zero and prefix 971. Landlines (0X XXXXXXX)
+     are handled the same way. */
   if (digits.length === 10 && digits.startsWith("0")) {
+    return `971${digits.slice(1)}`
+  }
+
+  if (digits.length === 9 && digits.startsWith("5")) {
+    return `971${digits}`
+  }
+
+  if (digits.length === 9 && digits.startsWith("0")) {
     return `971${digits.slice(1)}`
   }
 
@@ -73,6 +89,23 @@ export async function sendMetaEvent(event: MetaCapiEvent) {
   const phone = hashedPhone(event.userData.phone)
   if (email) userData.em = [email]
   if (phone) userData.ph = [phone]
+
+  /* A stable, hashed id for the same buyer across orders. The email is the only
+     identifier a guest checkout reliably has. */
+  const externalId = event.userData.externalId
+  if (externalId) {
+    const normalized = externalId.trim().toLowerCase()
+    if (normalized) userData.external_id = [sha256(normalized)]
+  }
+
+  /* The store sells in the UAE only; `country` is hashed like the other
+     customer-information fields. */
+  userData.country = [sha256("ae")]
+
+  /* `fbp` / `fbc` are browser ids, not PII: Meta expects them unhashed. */
+  if (event.userData.fbp) userData.fbp = event.userData.fbp
+  if (event.userData.fbc) userData.fbc = event.userData.fbc
+
   if (event.userData.clientIp) userData.client_ip_address = event.userData.clientIp
   if (event.userData.userAgent) userData.client_user_agent = event.userData.userAgent
 
@@ -143,6 +176,8 @@ export async function sendPurchaseEvent(input: {
   items: MetaPurchaseItem[]
   email?: string | null
   phone?: string | null
+  fbp?: string | null
+  fbc?: string | null
   clientIp?: string | null
   userAgent?: string | null
   eventSourceUrl?: string | null
@@ -160,6 +195,9 @@ export async function sendPurchaseEvent(input: {
     userData: {
       email: input.email,
       phone: input.phone,
+      externalId: input.email ?? input.phone ?? null,
+      fbp: input.fbp,
+      fbc: input.fbc,
       clientIp: input.clientIp,
       userAgent: input.userAgent,
     },

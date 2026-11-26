@@ -47,6 +47,9 @@ export type CheckoutCompleteInput = {
   provider_id?: string
   locale?: string
   idempotency_key?: string
+  /** Meta browser ids, forwarded to the Conversions API Purchase. */
+  fbp?: string
+  fbc?: string
 }
 
 export type CheckoutCompleteResponse = {
