@@ -19,6 +19,7 @@ import {
   type MetaEventParams,
 } from "@/lib/meta-pixel"
 import { useCart } from "@/app/components/store/cart-provider"
+import { forgetCartId } from "@/lib/cart"
 import { MedusaApiError } from "@/shared/lib/medusa-fetch"
 import {
   fetchShippingOptions,
@@ -105,7 +106,7 @@ export function CheckoutFlow() {
   const t = useTranslations("Checkout")
   const locale = useLocale()
   const router = useRouter()
-  const { cart, status } = useCart()
+  const { cart, status, refreshCart } = useCart()
 
   const [step, setStep] = useState<"details" | "shipping" | "payment">(
     "details"
@@ -358,15 +359,25 @@ export function CheckoutFlow() {
 
       setStep("payment")
     } catch (initError) {
-      // A cart that outlived its stock is refused before Stripe is involved,
-      // so the customer can fix the cart instead of paying for nothing.
-      if (
-        initError instanceof MedusaApiError &&
-        initError.status === 409 &&
-        String(initError.details ?? "").includes("insufficient_stock")
-      ) {
-        setError(t("stockBeforePayment"))
-        return
+      if (initError instanceof MedusaApiError && initError.status === 409) {
+        const details = String(initError.details ?? "")
+
+        /* The cart was already turned into an order (or closed by the
+           recovery job). Keeping it in the browser is what makes the next
+           click fail; drop it and let the customer start a fresh basket. */
+        if (details.includes("cart_completed")) {
+          forgetCartId()
+          await refreshCart()
+          setError(t("cartExpired"))
+          return
+        }
+
+        // A cart that outlived its stock is refused before Stripe is involved,
+        // so the customer can fix the cart instead of paying for nothing.
+        if (details.includes("insufficient_stock")) {
+          setError(t("stockBeforePayment"))
+          return
+        }
       }
 
       // Never surface the provider message: it may carry Stripe error JSON,

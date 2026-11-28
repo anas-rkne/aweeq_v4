@@ -427,6 +427,7 @@
     "pay": "Pay now",
     "processing": "Processing...",
     "paymentError": "Payment failed. Please try again.",
+    "cartExpired": "This cart has expired (you may have completed an earlier order). Please add the pieces again.",
     "stockBeforePayment": "An item in your cart is no longer available in the requested quantity. Update your cart and try again.",
     "genericError": "Something went wrong. Please try again.",
     "soldOutDuringPayment": "One of the pieces sold out while you were paying, so the order was not completed. You were not charged; any pending hold on your card is released automatically.",

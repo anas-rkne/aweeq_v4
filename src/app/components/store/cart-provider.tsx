@@ -238,6 +238,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
         applyCart(response)
       } catch (updateError) {
+        /* The cart can be changed in another tab, completed at checkout, or
+           merged after a login. The server then answers "line item not found"
+           while the page still shows the old row. Reloading the cart removes
+           the stale row instead of leaving the customer with a dead-end error. */
+        if (isMissingCartError(updateError)) {
+          await loadCart()
+          return
+        }
+
         const message = cartErrorMessage(updateError)
         setActionError(message)
         throw new Error(message)
@@ -245,7 +254,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setPendingItemId(null)
       }
     },
-    [applyCart, cart, storeLocale]
+    [applyCart, cart, loadCart, storeLocale]
   )
 
   const removeItem = useCallback(
@@ -261,6 +270,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const response = await removeCartItem(cart.id, itemId, storeLocale)
         applyCart(response)
       } catch (removeError) {
+        if (isMissingCartError(removeError)) {
+          await loadCart()
+          return
+        }
+
         const message = cartErrorMessage(removeError)
         setActionError(message)
         throw new Error(message)
@@ -268,7 +282,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setPendingItemId(null)
       }
     },
-    [applyCart, cart, storeLocale]
+    [applyCart, cart, loadCart, storeLocale]
   )
 
   const openCart = useCallback(() => {

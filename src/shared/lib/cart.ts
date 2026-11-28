@@ -160,8 +160,16 @@ export function cartErrorMessage(error: unknown) {
     return "انتهت صلاحية هذه السلة. أعد إضافة القطعة من جديد."
   }
 
+  if (/line item not found/i.test(message)) {
+    return "تغيّرت السلة. حدّثناها لك، جرّب مرة أخرى."
+  }
+
   if (/cart not found/i.test(message)) {
     return "تعذر العثور على السلة. أعد المحاولة."
+  }
+
+  if (error.status === 404) {
+    return "تغيّرت السلة. حدّثناها لك، جرّب مرة أخرى."
   }
 
   if (/variant is required|not available for the 3weeq store/i.test(message)) {

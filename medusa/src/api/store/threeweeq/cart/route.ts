@@ -35,7 +35,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
   const cart = await loadCart(req.scope, cartId)
 
-  if (!cart) {
+  /* A completed cart is an order, not a basket. Returning it would leave the
+     storefront showing rows it can no longer edit (the checkout already closed
+     it), so the client is given an empty cart and creates a fresh one on the
+     next add. */
+  if (!cart || cart.completed_at) {
     clearCartCookie(res)
     res.json({ cart: null, locale })
     return
