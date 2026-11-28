@@ -95,8 +95,28 @@ function isReusableSession(
     return false
   }
 
-  if (!redirectUrlOf(session) && !clientSecretOf(session)) {
-    return false
+  /* A session created before the Elements switch has no `payment_ui`; reusing
+     it would send the customer back to the hosted page that fails in the
+     in-app browser. Force a fresh Elements session instead. New sessions state
+     their mode explicitly, so a hosted fallback can still be reused. */
+  const configuredUi =
+    process.env.STRIPE_CHECKOUT_UI === "hosted_page"
+      ? "hosted_page"
+      : "elements"
+  const sessionUi = String(session?.data?.payment_ui ?? "")
+
+  if (sessionUi === "elements") {
+    if (!clientSecretOf(session)) {
+      return false
+    }
+  } else if (sessionUi === "hosted_page") {
+    if (!redirectUrlOf(session)) {
+      return false
+    }
+  } else {
+    if (configuredUi === "elements" || !redirectUrlOf(session)) {
+      return false
+    }
   }
 
   /* The receipt address is fixed when the page is created. Reusing a page whose
