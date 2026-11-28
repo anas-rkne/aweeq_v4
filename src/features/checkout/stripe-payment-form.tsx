@@ -127,6 +127,10 @@ function CheckoutPaymentForm({
         <p role="alert" className="font-primary text-sm text-gold">
           تعذّر تجهيز الدفع: {checkoutState.error.message}
         </p>
+        <p className="font-primary text-xs leading-6 text-sand/55">
+          إذا كنت تفتح المتجر من داخل إنستغرام أو فيسبوك، جرّب فتحه في Safari أو
+          Chrome ثم أعد المحاولة.
+        </p>
         <button
           type="button"
           onClick={onBack}
@@ -151,7 +155,7 @@ function CheckoutPaymentForm({
           onChange={(event) => setPaymentComplete(event.complete)}
           onLoadError={() =>
             fail(
-              "تعذّر تحميل خانات الدفع. تأكد من اتصالك بالإنترنت وحاول مرة أخرى."
+              "تعذّر تحميل خانات الدفع. تأكد من اتصالك بالإنترنت، أو افتح المتجر في Safari أو Chrome، ثم حاول مرة أخرى."
             )
           }
         />
