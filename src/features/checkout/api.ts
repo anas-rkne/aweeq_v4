@@ -35,6 +35,7 @@ export type CheckoutInitResponse = {
   provider_id: string | null
   redirect_url: string | null
   client_secret: string | null
+  payment_ui?: string | null
   amount: number | null
   currency_code: string | null
   authorized: boolean

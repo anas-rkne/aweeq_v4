@@ -49,14 +49,31 @@ type StripePaymentIntent = {
 
 type StripeCheckoutSession = {
   id: string
-  url?: string
+  url?: string | null
+  client_secret?: string | null
+  ui_mode?: string | null
+  status?: string | null
+  expires_at?: number | null
   payment_status?: string
-  payment_intent?: string
+  payment_intent?: string | null
   amount_total?: number
   currency?: string
   payment_method_types?: string[]
   metadata?: Record<string, string>
   [key: string]: unknown
+}
+
+/* Pinned so `ui_mode=elements` is always accepted and the response shape does
+   not drift with the account default. */
+const STRIPE_API_VERSION =
+  process.env.STRIPE_API_VERSION ?? "2026-11-18.endive"
+
+/* `elements` renders the payment form inside 3WEEQ (the only mode that works in
+   Instagram/Facebook in-app webviews). `hosted_page` is the rollback. */
+function checkoutUiMode() {
+  return process.env.STRIPE_CHECKOUT_UI === "hosted_page"
+    ? "hosted_page"
+    : "elements"
 }
 
 class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
@@ -91,6 +108,7 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
       headers: {
         Authorization: `Bearer ${this.options_.apiKey}`,
         "Content-Type": "application/x-www-form-urlencoded",
+        "Stripe-Version": STRIPE_API_VERSION,
         ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
       },
       body: method === "POST" ? (form ?? new URLSearchParams()).toString() : undefined,
@@ -181,11 +199,24 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
     )
     form.set("line_items[0][price_data][product_data][name]", "3WEEQ Order")
     form.set("line_items[0][quantity]", "1")
-    form.set(
-      "success_url",
-      `${storefrontUrl}/${locale}/checkout/callback?session_id={CHECKOUT_SESSION_ID}`
-    )
-    form.set("cancel_url", `${storefrontUrl}/${locale}/checkout`)
+
+    const uiMode = checkoutUiMode()
+    if (uiMode === "elements") {
+      /* The customer never leaves 3WEEQ. Stripe's Payment Element is the path
+         that keeps working inside Instagram/Facebook in-app webviews, where
+         the hosted checkout page fails to initialise its payment form. */
+      form.set("ui_mode", "elements")
+      form.set(
+        "return_url",
+        `${storefrontUrl}/${locale}/checkout/callback?session_id={CHECKOUT_SESSION_ID}`
+      )
+    } else {
+      form.set(
+        "success_url",
+        `${storefrontUrl}/${locale}/checkout/callback?session_id={CHECKOUT_SESSION_ID}`
+      )
+      form.set("cancel_url", `${storefrontUrl}/${locale}/checkout`)
+    }
 
     const customerEmail = String(customer.email || data.email || "").trim()
     if (customerEmail) {
@@ -261,12 +292,46 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
       }
     }
 
-    const session = await this.request<StripeCheckoutSession>(
-      "/checkout/sessions",
-      "POST",
-      form,
-      idempotencyKey
-    )
+    /* A pinned API version should always accept `ui_mode=elements`. If the
+       account is pinned to an older version anyway, fall back to the hosted
+       page rather than breaking checkout for every customer. The storefront
+       sees the returned `payment_ui` and uses the redirect path. */
+    let actualUiMode = uiMode
+    let session: StripeCheckoutSession
+    try {
+      session = await this.request<StripeCheckoutSession>(
+        "/checkout/sessions",
+        "POST",
+        form,
+        idempotencyKey
+      )
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      if (
+        uiMode !== "elements" ||
+        !/ui_mode|unknown parameter|not supported/i.test(message)
+      ) {
+        throw error
+      }
+
+      this.logger_.warn(
+        "stripe: the account rejected ui_mode=elements; falling back to the hosted checkout page"
+      )
+      actualUiMode = "hosted_page"
+      form.delete("ui_mode")
+      form.delete("return_url")
+      form.set(
+        "success_url",
+        `${storefrontUrl}/${locale}/checkout/callback?session_id={CHECKOUT_SESSION_ID}`
+      )
+      form.set("cancel_url", `${storefrontUrl}/${locale}/checkout`)
+      session = await this.request<StripeCheckoutSession>(
+        "/checkout/sessions",
+        "POST",
+        form,
+        idempotencyKey
+      )
+    }
 
     // The store accepts cards only. Dynamic payment methods mean Stripe now
     // ignores any method list we send, so make it loud when the Dashboard still
@@ -287,6 +352,7 @@ class StripePaymentProviderService extends AbstractPaymentProvider<Options> {
       data: {
         ...session,
         redirect_url: session.url,
+        payment_ui: actualUiMode,
         session_id: data.session_id,
         cart_id: data.cart_id,
         order_id: data.order_id,

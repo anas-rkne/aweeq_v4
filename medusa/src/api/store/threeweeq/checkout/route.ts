@@ -95,7 +95,7 @@ function isReusableSession(
     return false
   }
 
-  if (!redirectUrlOf(session)) {
+  if (!redirectUrlOf(session) && !clientSecretOf(session)) {
     return false
   }
 
@@ -425,7 +425,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   if (!redirectUrl && !clientSecret && !isSessionAuthorized(session)) {
     throw new MedusaError(
       MedusaError.Types.UNEXPECTED_STATE,
-      "The payment provider did not return a redirect URL"
+      "The payment provider did not return a redirect URL or a client secret"
     )
   }
 
@@ -440,6 +440,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     provider_id: session.provider_id ?? providerId,
     redirect_url: redirectUrl,
     client_secret: clientSecret,
+    payment_ui:
+      String(session?.data?.payment_ui ?? session?.data?.ui_mode ?? "") ||
+      null,
     amount: serializableAmount(session.amount ?? collection.amount),
     currency_code: session.currency_code ?? collection.currency_code ?? null,
     authorized: isSessionAuthorized(session),

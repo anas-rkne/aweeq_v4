@@ -39,6 +39,14 @@ vi.mock("@/app/components/store/cart-provider", () => ({
   }),
 }))
 
+vi.mock("./stripe-payment-form", () => ({
+  StripePaymentForm: () => <div>stripe-payment-form</div>,
+}))
+
+vi.mock("@/shared/lib/stripe", () => ({
+  getStripe: () => Promise.resolve({}),
+}))
+
 const options = [
   {
     id: "so_standard",
@@ -235,5 +243,27 @@ describe("CheckoutFlow delivery zones", () => {
     expect(initCheckout).toHaveBeenCalledWith(
       expect.objectContaining({ shipping_option_id: "so_standard" })
     )
+  })
+
+  test("renders the in-page Stripe form when the session returns a client secret", async () => {
+    vi.mocked(initCheckout).mockResolvedValueOnce({
+      cart_id: "cart_test",
+      payment_collection_id: "paycol_test",
+      payment_session_id: "payses_test",
+      provider_id: "pp_stripe_stripe",
+      redirect_url: null,
+      client_secret: "cs_test_secret",
+      amount: 400,
+      currency_code: "aed",
+      authorized: false,
+      cart: {},
+    })
+
+    renderCheckout()
+    fillDetails("دبي", "حتا")
+    await submitDetails()
+    await submitPayment()
+
+    expect(await screen.findByText("stripe-payment-form")).toBeTruthy()
   })
 })

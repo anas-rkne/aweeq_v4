@@ -16,9 +16,17 @@ import type { ExecArgs } from "@medusajs/framework/types"
  */
 const API = "https://api.stripe.com/v1"
 
+/* Must match the provider's pinned version, otherwise the smoke test can pass
+   against a different API shape than production. */
+const STRIPE_API_VERSION =
+  process.env.STRIPE_API_VERSION ?? "2026-11-18.endive"
+
 type StripeSession = {
   id?: string
-  url?: string
+  url?: string | null
+  client_secret?: string | null
+  ui_mode?: string | null
+  status?: string | null
   amount_total?: number
   currency?: string
   payment_status?: string
@@ -38,6 +46,7 @@ async function stripe<T>(
     headers: {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/x-www-form-urlencoded",
+      "Stripe-Version": STRIPE_API_VERSION,
       ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
     },
     body: method === "POST" ? (form ?? new URLSearchParams()).toString() : undefined,
@@ -72,14 +81,32 @@ export default async function stripeSmoke(_args: ExecArgs) {
   )
 
   const form = new URLSearchParams()
+  const uiMode =
+    process.env.STRIPE_CHECKOUT_UI === "hosted_page"
+      ? "hosted_page"
+      : "elements"
+
   form.set("mode", "payment")
   form.set("locale", "ar")
   form.set("line_items[0][price_data][currency]", "aed")
   form.set("line_items[0][price_data][unit_amount]", "19500")
   form.set("line_items[0][price_data][product_data][name]", "3WEEQ smoke test")
   form.set("line_items[0][quantity]", "1")
-  form.set("success_url", "https://3weeq.ae/ar/checkout/callback?session_id={CHECKOUT_SESSION_ID}")
-  form.set("cancel_url", "https://3weeq.ae/ar/checkout")
+
+  if (uiMode === "elements") {
+    form.set("ui_mode", "elements")
+    form.set(
+      "return_url",
+      "https://3weeq.ae/ar/checkout/callback?session_id={CHECKOUT_SESSION_ID}"
+    )
+  } else {
+    form.set(
+      "success_url",
+      "https://3weeq.ae/ar/checkout/callback?session_id={CHECKOUT_SESSION_ID}"
+    )
+    form.set("cancel_url", "https://3weeq.ae/ar/checkout")
+  }
+
   form.set("customer_email", "smoke-test@3weeq.ae")
   form.set("payment_intent_data[receipt_email]", "smoke-test@3weeq.ae")
   form.set("metadata[smoke_test]", "1")
@@ -116,7 +143,19 @@ export default async function stripeSmoke(_args: ExecArgs) {
     problems.push(`unexpected session id: ${session.id ?? "(missing)"}`)
   }
 
-  if (!session.url) {
+  if (uiMode === "elements") {
+    if (session.ui_mode !== "elements") {
+      problems.push(
+        `session ui_mode is ${session.ui_mode ?? "(missing)"}, expected elements`
+      )
+    }
+    if (!session.client_secret?.startsWith("cs_")) {
+      problems.push("elements session has no client secret")
+    }
+    if (session.url) {
+      problems.push("elements session unexpectedly has a hosted url")
+    }
+  } else if (!session.url) {
     problems.push("session has no redirect url")
   }
 
@@ -186,6 +225,10 @@ export default async function stripeSmoke(_args: ExecArgs) {
   }
 
   console.log(`session: ${session.id} (expired)`)
+  console.log(`ui:      ${uiMode}`)
+  console.log(
+    `secret:  ${session.client_secret ? "client secret returned" : "(none)"}`
+  )
   console.log(`amount:  ${session.amount_total} ${session.currency}`)
   console.log(`methods: ${methods.join(", ") || "(none returned)"}`)
   console.log(`idempotent: ${duplicate.id === session.id ? "yes" : "NO"}`)

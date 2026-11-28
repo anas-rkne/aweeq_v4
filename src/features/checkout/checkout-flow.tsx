@@ -11,6 +11,7 @@ import {
 import { useLocale, useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { formatPrice } from "@/lib/format"
+import { getStripe } from "@/shared/lib/stripe"
 import {
   identifyMetaUser,
   trackAddPaymentInfo,
@@ -26,6 +27,7 @@ import {
   type CheckoutInitResponse,
   type ShippingOption,
 } from "./api"
+import { StripePaymentForm } from "./stripe-payment-form"
 import {
   ABU_DHABI,
   ABU_DHABI_AREA_GROUPS,
@@ -173,6 +175,20 @@ export function CheckoutFlow() {
     initiatedRef.current = cartId
     trackInitiateCheckout(metaParams)
   }, [cartId, items.length, metaParams])
+
+  /* The embedded Payment Element is the default. A hosted session (rollback)
+     has a redirect_url and no client_secret, and keeps the old redirect. */
+  const stripe = getStripe()
+
+  const paymentTrackedRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (step !== "payment" || !checkout?.client_secret) return
+    if (paymentTrackedRef.current === checkout.payment_session_id) return
+
+    paymentTrackedRef.current = checkout.payment_session_id
+    trackAddPaymentInfo(metaParams)
+  }, [step, checkout?.client_secret, checkout?.payment_session_id, metaParams])
 
   /* Abu Dhabi is the only emirate with a priced list of areas; everywhere
      else the area stays free text and the fee is the flat national rate. */
@@ -679,7 +695,26 @@ export function CheckoutFlow() {
                   </span>
                 </div>
 
-                {checkout.redirect_url ? (
+                {checkout.payment_ui !== "hosted_page" &&
+                checkout.client_secret &&
+                stripe ? (
+                  <StripePaymentForm
+                    stripe={stripe}
+                    clientSecret={checkout.client_secret}
+                    payLabel={t("pay")}
+                    processingLabel={t("processing")}
+                    backLabel={t("back")}
+                    onBack={() => setStep("shipping")}
+                    onError={setError}
+                    onSuccess={(sessionId) =>
+                      router.push(
+                        `/checkout/callback?session_id=${encodeURIComponent(
+                          sessionId
+                        )}`
+                      )
+                    }
+                  />
+                ) : checkout.redirect_url ? (
                   <button
                     type="button"
                     onClick={() =>

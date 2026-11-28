@@ -57,6 +57,7 @@ const REQUIRED_WEB = [
   "NEXT_PUBLIC_SITE_URL",
   "NEXT_PUBLIC_MEDUSA_BACKEND_URL",
   "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY",
+  "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
   "MEDUSA_BACKEND_URL",
   "MEDUSA_PUBLISHABLE_KEY",
   "REVALIDATE_SECRET",
@@ -190,6 +191,27 @@ if (
   !api.STRIPE_WEBHOOK_SECRET.startsWith("whsec_")
 ) {
   problems.push("medusa/.env: STRIPE_WEBHOOK_SECRET does not start with whsec_")
+}
+
+const publishableKey = web.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+if (publishableKey && !/^pk_(live|test)_/.test(publishableKey)) {
+  problems.push(
+    ".env.production: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY does not look like a Stripe publishable key"
+  )
+}
+
+/* The Payment Element runs with the publishable key while the server creates
+   the session with the secret key. Mixing a live page with a test server (or
+   the reverse) makes every confirmation fail, so stop the deploy. */
+if (publishableKey && api.STRIPE_SECRET_KEY) {
+  const webIsLive = publishableKey.startsWith("pk_live_")
+  const apiIsLive = /^(sk|rk)_live_/.test(api.STRIPE_SECRET_KEY)
+
+  if (webIsLive !== apiIsLive) {
+    problems.push(
+      ".env.production and medusa/.env: Stripe publishable and secret keys are from different modes (live vs test)"
+    )
+  }
 }
 
 /* A leftover test code silently reroutes every Conversions API event to
